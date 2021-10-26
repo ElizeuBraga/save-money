@@ -115,10 +115,10 @@ export default {
   },
   data: () => {
     return {
-      name: 'Elizeu',
-      email: 'elizeu@gmail.com',
-      password: '123456',
-      passwordConfirm: '123456',
+      name: '',
+      email: '',
+      password: '',
+      passwordConfirm: '',
       processing: false
     };
   },
