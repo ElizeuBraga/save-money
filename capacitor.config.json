@@ -1,0 +1,6 @@
+{
+  "appId": "com.elizeubragasantos.expense",
+  "appName": "Expense",
+  "webDir": "public",
+  "bundledWebRuntime": false
+}
