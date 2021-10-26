@@ -70,19 +70,27 @@
 </template>
 
 <script>
+
+/* eslint-disable */
 import { signInWithEmailAndPassword,getAuth, signOut } from "firebase/auth";
 
 export default {
   data: () => {
     return {
-      email: 'elizeu@gmail.com',
-      password: '123456',
+      email: '',
+      password: '',
       authenticating: false
     };
   },
   mounted() {
     const auth = getAuth()
     signOut(auth)
+
+    // for testes finality
+    if(process.env.NODE_ENV === 'development'){
+      this.email = 'elizeu@gmail.com'
+      this.password = '123456'
+    }
   },
   methods: {
     async login() {

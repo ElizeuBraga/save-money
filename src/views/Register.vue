@@ -125,7 +125,15 @@ export default {
   mounted() {
     const auth = getAuth()
     signOut(auth)
-    console.log('Register mounted')
+    
+
+    // for testes finality
+    if(process.env.NODE_ENV === 'development'){
+      this.name = 'Elizeu'
+      this.email = 'elizeu@gmail.com'
+      this.password = '123456'
+      this.passwordConfirm = '123456'
+    }
   },
   methods: {
     async registerUser() {
