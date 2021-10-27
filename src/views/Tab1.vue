@@ -12,12 +12,11 @@
             size="6"
             style="background: #e2f9fa; border-radius: 15px; margin-right: 15px"
           >
-          <ion-title class="ion-text-right" color="success">
-            {{
-              formatMoney(
-                user.monthlyIncome - user.amountExpense
-              )
-            }}
+          <ion-title class="ion-text-right" color="success" v-if="(user.monthlyIncome - user.amountExpense) > 0">
+            {{formatMoney(user.monthlyIncome - user.amountExpense)}}
+          </ion-title>
+          <ion-title class="ion-text-right" color="danger" v-else>
+            {{formatMoney(user.monthlyIncome - user.amountExpense)}}
           </ion-title>
           </ion-col>
         </ion-row>

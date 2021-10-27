@@ -103,7 +103,7 @@ app.mixin({
     },
 
     formatMoney(amount: any) {
-      if(amount && amount > 0){
+      if(amount){
         return amount.toLocaleString('pt-br',{style: 'currency', currency: 'BRL'});
       }else{
         return "R$ " + parseFloat("0.00").toFixed(2).replace(".", ",");
