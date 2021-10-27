@@ -7,7 +7,7 @@
           <ion-label>Home</ion-label>
         </ion-tab-button>
           
-        <ion-tab-button tab="tab2" href="/tabs/tab2">
+        <ion-tab-button tab="tab2" @click="openModalNewExpense()">
           <ion-icon :icon="add" />
           <ion-label>Dados</ion-label>
         </ion-tab-button>
@@ -40,6 +40,10 @@ export default {
   methods:{
     tabChanged(){
       eventBus().emitter.emit("tabChanged");
+    },
+
+    openModalNewExpense(){
+      eventBus().emitter.emit("openModalNewExpense");
     }
   }
 

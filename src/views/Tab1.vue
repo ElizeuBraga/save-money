@@ -58,7 +58,7 @@
                 ></ion-progress-bar>
 
                 <ion-col style="padding-bottom: 0;" class="ion-text-left">
-                  <ion-label @click="openModalUpdateMonthlyIncome()" class="label-italic">Salário:<b>{{formatMoney(user.monthlyIncome)}}</b></ion-label>
+                  <ion-label @click="openModalUpdateMonthlyIncome()" class="label-italic">Renda mensal:<b>{{formatMoney(user.monthlyIncome)}}</b></ion-label>
                 </ion-col>
                 <ion-col style="padding-bottom: 0;" class="ion-text-right">
                   <ion-label class="label-italic">Gasto:<b>{{formatMoney(user.amountExpense)}}</b></ion-label>
@@ -136,7 +136,6 @@
         <ion-col>
             <ion-card>
               <ion-card-title color="primary" class="ion-text-center">Inseridos recentes</ion-card-title>
-              <ion-button @click="openModalNewExpense()">Novo gasto</ion-button>
               <ion-card-content align="center">
                 <ion-item>
                   <ion-label class="head-list ion-text-left"
@@ -224,8 +223,20 @@ export default {
           await this.loadExpenses()
         }, 3000)
     });
+
+    eventBus().emitter.on("openModalNewExpense", () => {
+        this.openModalNewExpense()
+    });
   },
   methods: {
+    clearExpenseObj(){
+      this.expense = {
+        name: '',
+        price: '',
+        repeat: true
+      }
+    },
+
     sumExpenses(){
       this.user.amountExpense = 0
       this.user.expenses.forEach((e)=>{
@@ -342,50 +353,76 @@ export default {
       })
     },
 
-    async openModalNewExpense(update = false) {
-      console.log(this.user)
-        const alert = await alertController
-        .create({
-          cssClass: 'my-custom-class',
-          header: 'Novo gasto',
-          inputs: [
-            {
-              name: 'description',
-              id: 'description',
-              type: 'text',
-              value: this.expense.description,
-              placeholder: 'Descrição do gasto',
+    async openModalNewExpense(update = false, obj = false) {
+      if(obj){
+        this.expense.description = obj.description
+        this.expense.price = obj.price
+      }
+      const alert = await alertController
+      .create({
+        cssClass: 'my-custom-class',
+        header: 'Novo gasto',
+        inputs: [
+          {
+            name: 'description',
+            id: 'description',
+            type: 'text',
+            value: this.expense.description,
+            placeholder: 'Descrição do gasto',
+          },
+          {
+            name: 'price',
+            id: 'price',
+            type: 'text',
+            value: this.expense.price,
+            placeholder: 'Valor do gasto',
+          }
+        ],
+        buttons: [
+          {
+            disabled: true,
+            text: 'Salvar',
+            cssClass: 'secondary',
+            handler: async values => {
+              if(values.description == '' || values.price == ''){
+                if(!update){
+                  this.openModalNewExpense(false, values)
+                }
+                this.showToast('danger', 'Todos os campos são obrigatórios')
+                return 
+              }
+              const uid = await this.getUid()
+              const userRef = doc(db, "users", uid);
+
+              if(update){
+                await updateDoc(userRef, {
+                  expenses : arrayRemove(this.expense)
+                })
+              }
+    
+              await updateDoc(userRef, {
+                expenses : arrayUnion({
+                  description: values.description, price: parseFloat(values.price)
+                })
+              })
+
+              this.clearExpenseObj()
+
+              this.showToast('success', 'Inserido com sucesso')
             },
-            {
-              name: 'price',
-              id: 'price',
-              type: 'text',
-              value: this.expense.price,
-              placeholder: 'Valor do gasto',
-            }
-          ],
-          buttons: ['OK'],
-        })
+          },
+          {
+            text: 'Cancelar',
+            role: 'cancel',
+            cssClass: 'secondary',
+            handler: blah => {
+              this.clearExpenseObj()
+            },
+          },
+        ],
+      })
       
       await alert.present();
-
-      const { data } = await alert.onDidDismiss();
-
-      console.log(data.values)
-      const uid = await this.getUid()
-      const userRef = doc(db, "users", uid);
-
-      if(update){
-        await updateDoc(userRef, {
-          expenses : arrayRemove(this.expense)
-        })
-      }
-      
-      await updateDoc(userRef, {
-        expenses : arrayUnion({
-          description: data.values.description, price: parseFloat(data.values.price)
-        })
-      })
     },
 
     async openModalUpdateEmergencyReserveGoal() {
