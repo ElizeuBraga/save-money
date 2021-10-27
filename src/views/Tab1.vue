@@ -45,19 +45,14 @@
             </ion-card-title>
             <ion-card-content>
               <ion-row>
-                <!--<ion-col class="ion-text-left">
-                  <ion-label class="label-italic">
-                      <b>{{getInformation('qtdDays', 0)}} dias</b> para fecharmos o mês.
-                  </ion-label><br>
-                </ion-col>-->
                 <ion-progress-bar
-                  :color="((user.amountExpense * 100)/ user.monthlyIncome)/100 > 0.5 ? 'danger' : 'success'"
+                  :color="colorForBarExpenses()"
                   :value="((user.amountExpense * 100)/ user.monthlyIncome)/100"
                   class="ion-progress-bar-infopercentage"
                 ></ion-progress-bar>
 
                 <ion-col style="padding-bottom: 0;" class="ion-text-left">
-                  <ion-label @click="openModalUpdateMonthlyIncome()" class="label-italic">Renda mensal:<b>{{formatMoney(user.monthlyIncome)}}</b></ion-label>
+                  <ion-label @click="openModalUpdateMonthlyIncome()" class="label-italic">Salário:<b>{{formatMoney(user.monthlyIncome)}}</b></ion-label>
                 </ion-col>
                 <ion-col style="padding-bottom: 0;" class="ion-text-right">
                   <ion-label class="label-italic">Gasto:<b>{{formatMoney(user.amountExpense)}}</b></ion-label>
@@ -68,7 +63,7 @@
 
               <ion-row>
                 <ion-progress-bar
-                  :color="(user.emergencyReserveReached * 100) / user.emergencyReserveGoal > 0.5 ? 'success' : 'danger'"
+                  :color="colorForBarEmergencyGoal()"
                   :value="((user.emergencyReserveReached * 100) / user.emergencyReserveGoal)/100"
                   class="ion-progress-bar-infopercentage"
                 ></ion-progress-bar>
@@ -228,6 +223,33 @@ export default {
     });
   },
   methods: {
+    colorForBarExpenses(){
+      const result = ((this.user.amountExpense * 100) / this.user.monthlyIncome)
+
+      console.log(result)
+      if(result < 33){
+        return 'success'
+      }else if(result > 66){
+        return 'danger' 
+      }else{
+        return 'warning'
+      }
+    },
+
+    colorForBarEmergencyGoal(){
+      const result = ((this.user.emergencyReserveReached * 100) / this.user.emergencyReserveGoal)
+
+      console.log(result)
+
+      if(result < 33){
+        return 'danger'
+      }else if(result > 66){
+        return 'success' 
+      }else{
+        return 'warning'
+      }
+    },
+
     clearExpenseObj(){
       this.expense = {
         name: '',
