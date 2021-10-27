@@ -82,13 +82,7 @@
                 </ion-col>
               </ion-row>
             </ion-card-content>
-
-            <ion-row>
-              <ion-col size="12" v-if="!formVisible">
-                <ion-button expand="block" shape="round" @click="showForm()">Inserir novo gasto</ion-button>
-              </ion-col>
-            </ion-row>
-
+            
             <!-- Form-->
             <ion-card id="form" v-if="formVisible">
               <ion-row>
