@@ -1,6 +1,5 @@
 <template>
   <ion-page id="ionPage">
-    
     <!-- Header -->
     <ion-header>
       <ion-toolbar color="primary">
@@ -10,7 +9,6 @@
           </ion-col>
           <ion-col
             size="6"
-            style="background: #e2f9fa; border-radius: 15px; margin-right: 15px"
           >
           <ion-title class="ion-text-right" color="success" v-if="(user.monthlyIncome - user.amountExpense) > 0">
             {{formatMoney(user.monthlyIncome - user.amountExpense)}}
@@ -26,21 +24,18 @@
 
 
     <ion-content :fullscreen="true">
-      
-      
       <ion-header collapse="condense">
         <ion-toolbar>
           <ion-title size="large">Home</ion-title>
         </ion-toolbar>
       </ion-header>
 
-
       <ion-row>
         <!--Resume card-->
-        <ion-col size="12">
+        <ion-grid>
           <ion-card>
             <ion-progress-bar v-if="!loaded" type="indeterminate"></ion-progress-bar>
-            <ion-card-title color="primary" class="ion-text-center">
+            <ion-card-title class="ion-text-center">
               Resumo
             </ion-card-title>
             <ion-card-content>
@@ -124,12 +119,13 @@
             </ion-card>
             <!-- Form-->
           </ion-card>
-        </ion-col>
-        <!--Resume card-->
+        </ion-grid>
 
-        <ion-col>
+        <!--Resume card-->
+        <ion-col size="12">
+          <ion-grid>
             <ion-card>
-              <ion-card-title color="primary" class="ion-text-center">Inseridos recentes</ion-card-title>
+              <ion-card-title class="ion-text-center">Inseridos recentes</ion-card-title>
               <ion-card-content align="center">
                 <ion-item>
                   <ion-label class="head-list ion-text-left"
@@ -154,7 +150,8 @@
               </ion-card-content>
               <!-- List of Text Items -->
             </ion-card>
-          </ion-col>
+          </ion-grid>
+        </ion-col>
       </ion-row>
     </ion-content>
   </ion-page>
@@ -598,5 +595,29 @@ ion-card {
 
 ion-content {
   --ion-background-color: #e9eff0;
+}
+
+@media screen and (min-width: 800px) {
+  ion-card {
+    width: 40%;
+  }
+
+  ion-grid{
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+  }
+}
+
+.ion-color-primary{
+  --ion-color-base: white!important
+}
+
+ion-title{
+  color: #3880ff;
+}
+
+ion-content {
+  --ion-background-color: #3880ff;
 }
 </style>

@@ -2,7 +2,7 @@
   <ion-page>
     <ion-header>
       <ion-toolbar color="primary">
-        <ion-title>Login</ion-title>
+        <ion-title>Cadastre-se</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content :fullscreen="true">
@@ -68,7 +68,7 @@
             <ion-row>
               <ion-col size="1"></ion-col>
               <ion-col size="10">
-                <ion-button expand="block" shape="round" @click="registerUser()"
+                <ion-button expand="block" :disabled="processing || !formValidate" shape="round" @click="registerUser()"
                   >Salvar</ion-button
                 >
               </ion-col>
@@ -189,6 +189,12 @@ export default {
       }
 
       return true;
+    }
+  },
+
+  computed:{
+    formValidate(){
+      return this.name == '' || this.email == '' || this.password == '' || this.passwordConfirm
     }
   }
 }

@@ -47,7 +47,7 @@
             <ion-row>
               <ion-col size="1"></ion-col>
               <ion-col size="10">
-                <ion-button expand="block" shape="round" @click="login"
+                <ion-button expand="block" shape="round" @click="login" :disabled="formValidate || authenticating"
                   >Entrar</ion-button
                 >
               </ion-col>
@@ -137,6 +137,11 @@ export default {
       };
     }
   },
+  computed:{
+    formValidate(){
+      return this.email == '' || this.password == ''
+    }
+  }
 };
 </script>
 
