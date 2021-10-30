@@ -99,8 +99,6 @@ http://ionicframework.com/docs/theming/ */
 
   /** fonts **/
   --ion-font-family: 'AppFont';
-
-  --ion-toolbar-background: #4c8dff;
 }
 
 @media (prefers-color-scheme: dark) {
