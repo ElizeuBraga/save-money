@@ -1,0 +1,16 @@
+{
+    "name": "Save Money",
+    "short_name": "Save Money",
+    "theme_color": "#3880ff",
+    "icons": [
+      {
+        "src": "./img/icons/android-chrome-maskable-512x512.png",
+        "sizes": "512x512",
+        "type": "image/png",
+        "purpose": "maskable"
+      }
+    ],
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#3880ff"
+}
