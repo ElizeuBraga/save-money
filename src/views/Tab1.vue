@@ -69,6 +69,12 @@
                 <ion-col style="padding-bottom: 0;" class="ion-text-right">
                   <ion-label class="label-italic" @click="openModalUpdateEmergencyReserveReached()">Conquista:<b>{{formatMoney(user.emergencyReserveReached)}}</b></ion-label>
                 </ion-col>
+                <ion-col class="label-italic ion-text-center" size="12" v-if="user.amountToConquist > 0">
+                  {{formatMoney(user.amountToConquist)}} para conquistar o {{colorForBarEmergencyGoal() == 'danger' ? 'vermelho' : colorForBarEmergencyGoal() == 'yellow' ? 'Amarelo' : 'verde'}}
+                </ion-col>
+                <ion-col class="label-italic ion-text-center" size="12" v-else>
+                  Parabéns pela conquista {{user.name}}!
+                </ion-col>
               </ion-row>
             </ion-card-content>
             
@@ -201,7 +207,8 @@ export default {
         emergencyReserveReached: 0,
         monthlyIncome: 0,
         amountExpense: 0,
-        expenses:[]
+        expenses:[],
+        amountToConquist: 0
       }
     };
   },
@@ -235,12 +242,20 @@ export default {
 
     colorForBarEmergencyGoal(){
       const result = ((this.user.emergencyReserveReached * 100) / this.user.emergencyReserveGoal)
+      const amountForColor = this.user.emergencyReserveGoal / 3;
 
-      if(result < 33){
+      console.log(result)
+      if(result < 33.333){
+        const amountToConquistRed = amountForColor - this.user.emergencyReserveReached
+        this.user.amountToConquist = amountToConquistRed
         return 'danger'
-      }else if(result > 66){
+      }else if(result > 66.666){
+        const amountToConquistRed = (amountForColor * 3) - this.user.emergencyReserveReached
+        this.user.amountToConquist = amountToConquistRed
         return 'success' 
       }else{
+        const amountToConquistRed = (amountForColor * 2) - this.user.emergencyReserveReached
+        this.user.amountToConquist = amountToConquistRed
         return 'warning'
       }
     },
