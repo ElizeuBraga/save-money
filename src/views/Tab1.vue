@@ -164,12 +164,13 @@
 import { alertController, IonList } from "@ionic/vue";
 import eventBus from '../eventBus'
 import { getDatabase, ref, set} from "firebase/database";
-import { getFirestore, doc, updateDoc, onSnapshot, arrayUnion, arrayRemove} from "firebase/firestore";
+import { getFirestore, doc, updateDoc, onSnapshot, arrayUnion, arrayRemove, collection, setDoc, serverTimestamp, query, where, deleteDoc} from "firebase/firestore";
 
 // import WonderPush from '@ionic-native/wonderpush';
 
 const db = getFirestore();
 
+/* eslint-disable */ 
 export default {
   name: "Tab1",
   components:{ IonList },
@@ -225,8 +226,7 @@ export default {
   methods: {
     colorForBarExpenses(){
       const result = ((this.user.amountExpense * 100) / this.user.monthlyIncome)
-
-      console.log(result)
+      
       if(result < 33){
         return 'success'
       }else if(result > 66){
@@ -238,8 +238,6 @@ export default {
 
     colorForBarEmergencyGoal(){
       const result = ((this.user.emergencyReserveReached * 100) / this.user.emergencyReserveGoal)
-
-      console.log(result)
 
       if(result < 33){
         return 'danger'
@@ -260,6 +258,7 @@ export default {
 
     sumExpenses(){
       this.user.amountExpense = 0
+
       this.user.expenses.forEach((e)=>{
         this.user.amountExpense += e.price
       })
@@ -279,27 +278,43 @@ export default {
 
     async loadExpenses(){
       const uid = await this.getUid()
-      await onSnapshot(doc(db, "users", uid), (doc) => {
-        const data = doc.data()
-        this.user = data
+      const userRef = doc(db, "users", uid);
 
-        this.sumExpenses()
-        setTimeout(()=>{
-          this.loaded = true
-          if(this.user.emergencyReserveGoal === 0){
-            this.openModalUpdateEmergencyReserveGoal()
-          }
+      const expRef = collection(userRef, "expenses");
 
-          if(this.user.monthlyIncome === 0){
-            this.openModalUpdateMonthlyIncome()
-          }
-        }, 300)
-      });
+      onSnapshot(userRef, (userSnapshot) => {
+        this.user = userSnapshot.data()
+
+        onSnapshot(expRef, (expSnapshot) => {
+          this.user.expenses = []
+          expSnapshot.docs.forEach((doc)=>{
+            let e = doc.data()
+            e.id = doc.id
+            this.user.expenses.push(e)
+
+          })
+
+          this.sumExpenses()
+        })
+      })
+
+
+      // const q = query(collection(userRef, "expenses"));
+      // onSnapshot(q, (querySnapshot) => {
+      //   this.user.expenses = []
+      //   querySnapshot.forEach((doc)=>{
+      //     this.user.expenses.push(doc.data())
+      //   })
+
+      //   this.sumExpenses()
+      // })
+
+      this.loaded = true
     },
 
     editExpense(e){
       this.expense = e
-      this.openModalNewExpense(true)
+      this.openModalNewExpense(true, e)
     },
 
     removeExpense(expense){
@@ -379,6 +394,11 @@ export default {
         this.expense.description = obj.description
         this.expense.price = obj.price
       }
+
+      const uid = await this.getUid()
+      const userRef = doc(db, "users", uid);
+      const expenseRef = collection(userRef, 'expenses');
+
       const alert = await alertController
       .create({
         cssClass: 'my-custom-class',
@@ -412,24 +432,25 @@ export default {
                 this.showToast('danger', 'Todos os campos são obrigatórios')
                 return 
               }
-              const uid = await this.getUid()
-              const userRef = doc(db, "users", uid);
 
               if(update){
-                await updateDoc(userRef, {
-                  expenses : arrayRemove(this.expense)
-                })
+                await updateDoc(doc(expenseRef, obj.id), {description: values.description, price: parseFloat(values.price), createdAt: serverTimestamp()});
+                this.showToast('success', 'Atualizado com sucesso')
+              }else{
+                await setDoc(doc(expenseRef), {description: values.description, price: parseFloat(values.price), createdAt: serverTimestamp()});
+                this.showToast('success', 'Inserido com sucesso')
               }
-    
-              await updateDoc(userRef, {
-                expenses : arrayUnion({
-                  description: values.description, price: parseFloat(values.price)
-                })
-              })
 
               this.clearExpenseObj()
 
-              this.showToast('success', 'Inserido com sucesso')
+            },
+          },
+          {
+            text: 'Excluir',
+            cssClass: 'secondary',
+            handler: blah => {
+              deleteDoc(doc(expenseRef, obj.id));
+              this.clearExpenseObj()
             },
           },
           {

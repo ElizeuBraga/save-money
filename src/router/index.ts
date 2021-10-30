@@ -73,7 +73,6 @@ router.beforeEach((to, from, next) => {
           // https://firebase.google.com/docs/reference/js/firebase.User
           const uid = user.uid;
           
-          console.log(uid)
           next()
           // ...
         } else {

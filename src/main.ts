@@ -111,10 +111,11 @@ app.mixin({
     },
 
     formatDate(date: any){
-      if(!date){
+      const day = new Date(date).getDate();
+      if(!date || isNaN(day)){
         return '-'
       }
-      const day = new Date(date).getDate();
+      
       let dateFormated = "dia " + day;
       const today = new Date().getDate();
       if(today == day){
