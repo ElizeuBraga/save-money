@@ -244,7 +244,6 @@ export default {
       const result = ((this.user.emergencyReserveReached * 100) / this.user.emergencyReserveGoal)
       const amountForColor = this.user.emergencyReserveGoal / 3;
 
-      console.log(result)
       if(result < 33.333){
         const amountToConquistRed = amountForColor - this.user.emergencyReserveReached
         this.user.amountToConquist = amountToConquistRed
@@ -477,6 +476,12 @@ export default {
       })
       
       await alert.present();
+
+      const inputDescription = document.getElementById("description")
+      const inputPrice = document.getElementById("price")
+
+      inputDescription.setAttribute("autocomplete", "off")
+      inputPrice.setAttribute("autocomplete", "off")
     },
 
     async openModalUpdateEmergencyReserveGoal() {
