@@ -10,10 +10,10 @@
           <ion-col
             size="6"
           >
-          <ion-title class="ion-text-right" color="success" v-if="(user.monthlyIncome - user.amountExpense) > 0">
+          <ion-title class="ion-text-right" style="color:#2dd36f" v-if="(user.monthlyIncome - user.amountExpense) > 0">
             {{formatMoney(user.monthlyIncome - user.amountExpense)}}
           </ion-title>
-          <ion-title class="ion-text-right" color="danger" v-else>
+          <ion-title class="ion-text-right" style="color:#eb445a" v-else>
             {{formatMoney(user.monthlyIncome - user.amountExpense)}}
           </ion-title>
           </ion-col>
