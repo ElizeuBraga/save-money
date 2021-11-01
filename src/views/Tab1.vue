@@ -167,11 +167,15 @@
 import { alertController, IonList } from "@ionic/vue";
 import eventBus from '../eventBus'
 import { getDatabase, ref, set} from "firebase/database";
-import { getFirestore, doc, updateDoc, onSnapshot, arrayUnion, arrayRemove, collection, setDoc, serverTimestamp, query, where, deleteDoc} from "firebase/firestore";
+import { getFirestore, doc, updateDoc, onSnapshot, arrayUnion, arrayRemove, addDoc, collection, setDoc, serverTimestamp, query, where, deleteDoc, Timestamp} from "firebase/firestore";
 
 // import WonderPush from '@ionic-native/wonderpush';
 
 const db = getFirestore();
+
+const milliseconds = Timestamp.now().toMillis();
+const year = String(new Date(milliseconds).getFullYear())
+const month = String(new Date(milliseconds).getMonth()+1)
 
 /* eslint-disable */ 
 export default {
@@ -189,18 +193,7 @@ export default {
 
       loaded: false,
 
-
-      // Resume card
-      expenses: [],
-      monthlyIncome: 0,
-      amountExpense: 0,
-      emergencyReserveGoal: 0,
-      emergencyReserveReached: 0,
-
       isUpdating: false,
-
-
-      productsInformationsModal:'',
 
       user:{
         emergencyReserveGoal: 0,
@@ -289,9 +282,10 @@ export default {
 
     async loadExpenses(){
       const uid = await this.getUid()
+      
       const userRef = doc(db, "users", uid);
 
-      const expRef = collection(userRef, "expenses");
+      const expRef = collection(userRef, year, month, "expenses");
 
       onSnapshot(userRef, (userSnapshot) => {
         this.user = userSnapshot.data()
@@ -300,6 +294,8 @@ export default {
           this.user.expenses = []
           expSnapshot.docs.forEach((doc)=>{
             let e = doc.data()
+
+            console.log(e)
             e.id = doc.id
             this.user.expenses.push(e)
 
@@ -401,14 +397,26 @@ export default {
     },
 
     async openModalNewExpense(update = false, obj = false) {
+    
+      // gets user reference
+      const uid = await this.getUid()
+      const userRef = doc(db, "users", uid);
+
+      const yearRef = collection(userRef, year)
+
+      await setDoc(doc(yearRef, month), {})
+
+      // get the year reference
+      const monthRef = doc(yearRef, month);
+
+      // set a colection month
+      const expRef = collection(monthRef, 'expenses')
+
+
       if(obj){
         this.expense.description = obj.description
         this.expense.price = obj.price
       }
-
-      const uid = await this.getUid()
-      const userRef = doc(db, "users", uid);
-      const expenseRef = collection(userRef, 'expenses');
 
       const alert = await alertController
       .create({
@@ -445,10 +453,11 @@ export default {
               }
 
               if(update){
-                await updateDoc(doc(expenseRef, obj.id), {description: values.description, price: parseFloat(values.price), createdAt: serverTimestamp()});
+                console.log(milliseconds)
+                await updateDoc(doc(expRef, obj.id), {description: values.description, price: parseFloat(values.price), updatedAt: milliseconds});
                 this.showToast('success', 'Atualizado com sucesso')
               }else{
-                await setDoc(doc(expenseRef), {description: values.description, price: parseFloat(values.price), createdAt: serverTimestamp()});
+                await addDoc(expRef, {description: values.description, price: parseFloat(values.price), createdAt: milliseconds})
                 this.showToast('success', 'Inserido com sucesso')
               }
 
@@ -540,11 +549,6 @@ export default {
       })
     },
 
-    closeModal() {
-        this.productsInformationsModal.dismiss().then(() => {
-        this.productsInformationsModal = null;
-      });
-    },
     getInformation(type, amount){
         const date = new Date();
         const today = date.getDate();
