@@ -287,6 +287,8 @@ export default {
 
       const expRef = collection(userRef, year, month, "expenses");
 
+      const monthRef = doc(userRef, year, month);
+
       onSnapshot(userRef, (userSnapshot) => {
         this.user = userSnapshot.data()
 
@@ -294,14 +296,15 @@ export default {
           this.user.expenses = []
           expSnapshot.docs.forEach((doc)=>{
             let e = doc.data()
-
-            console.log(e)
             e.id = doc.id
             this.user.expenses.push(e)
-
           })
 
           this.sumExpenses()
+
+          onSnapshot(monthRef, (monthSnapshot) => {
+            this.user.monthlyIncome = monthSnapshot.data().monthlyIncome
+          })
         })
       })
 
@@ -387,11 +390,11 @@ export default {
       await alert.present();
 
       const { data } = await alert.onDidDismiss();
-
       const uid = await this.getUid()
       const userRef = doc(db, "users", uid);
-
-      await updateDoc(userRef, {
+      const monthRef = doc(userRef, year, month);
+      
+      await updateDoc(monthRef, {
         monthlyIncome : parseFloat(data.values.monthlyincome)
       })
     },
