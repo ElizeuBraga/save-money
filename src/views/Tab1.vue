@@ -134,7 +134,7 @@
 
 
               <ion-list-header>
-                <ion-label>Mês</ion-label>
+                <ion-label>Próximo mês</ion-label>
                 <ion-select @ionChange="loadExpenses($event)" :value="monthSelected" ok-text="Mostrar" cancel-text="Cancelar">
                     <ion-select-option v-for="m in months" :key="m.number" :value="m.number">{{m.description}}</ion-select-option>
                 </ion-select>
@@ -183,7 +183,7 @@ const db = getFirestore();
 
 const milliseconds = Timestamp.now().toMillis();
 const year = String(new Date(milliseconds).getFullYear())
-const month = String(new Date(milliseconds).getMonth()+1)
+const month = String(new Date(milliseconds).getMonth()+2)
 
 /* eslint-disable */ 
 export default {
@@ -204,7 +204,7 @@ export default {
         {description: 'Setembro', number: '9'}, 
         {description: 'Outubro', number: '10'}, 
         {description: 'Novembro', number: '11'}, 
-        {description: 'Dezembr', number: '12'}
+        {description: 'Dezembro', number: '12'}
       ],
       // WonderPush: WonderPush,
       formVisible: false,
