@@ -131,18 +131,26 @@
         <ion-col size="12">
           <ion-grid>
             <ion-card>
-              <ion-card-title class="ion-text-center">Inseridos recentes</ion-card-title>
+
+
+              <ion-list-header>
+                <ion-label>Mês</ion-label>
+                <ion-select @ionChange="loadExpenses($event)" :value="monthSelected" ok-text="Mostrar" cancel-text="Cancelar">
+                    <ion-select-option v-for="m in months" :key="m.number" :value="m.number">{{m.description}}</ion-select-option>
+                </ion-select>
+              </ion-list-header>
+
               <ion-card-content align="center">
-                <ion-item>
-                  <ion-label class="head-list ion-text-left"
-                    >Descrição</ion-label
-                  >
-                  <ion-label class="head-list ion-text-right">Valor</ion-label>
-                </ion-item>
                 <ion-list v-for="e in user.expenses" :key="e.id">
                   <ion-item @click="editExpense(e)">
                     <ion-label class="ion-text-left">{{e.description}}</ion-label>
                     <ion-label class="ion-text-right">{{"R$ " + parseFloat(e.price).toFixed(2).replace(".", ",")}}<br><p class="label-italic">{{formatDate(e.createdAt)}}</p></ion-label>
+                  </ion-item>
+                </ion-list>
+
+                <ion-list v-if="user.expenses.length == 0">
+                  <ion-item>
+                    <ion-label class="ion-text-center label-italic" color="danger">Nenhum item encontrado</ion-label>
                   </ion-item>
                 </ion-list>
                 <ion-row>
@@ -164,7 +172,7 @@
 </template>
 
 <script>
-import { alertController, IonList } from "@ionic/vue";
+import { alertController, IonList, IonListHeader, IonSelect, IonSelectOption} from "@ionic/vue";
 import eventBus from '../eventBus'
 import { getDatabase, ref, set} from "firebase/database";
 import { getFirestore, doc, updateDoc, onSnapshot, arrayUnion, arrayRemove, addDoc, collection, setDoc, serverTimestamp, query, where, deleteDoc, Timestamp} from "firebase/firestore";
@@ -180,9 +188,24 @@ const month = String(new Date(milliseconds).getMonth()+1)
 /* eslint-disable */ 
 export default {
   name: "Tab1",
-  components:{ IonList },
+  components:{ IonList, IonListHeader, IonSelect, IonSelectOption},
   data: () => {
     return {
+      monthSelected: month,
+      months: [
+        {description: 'Janeiro', number: '1'}, 
+        {description: 'Fevereiro', number: '2'}, 
+        {description: 'Março', number: '3'}, 
+        {description: 'Abril', number: '4'}, 
+        {description: 'Maio', number: '5'}, 
+        {description: 'Junho', number: '6'}, 
+        {description: 'Julho', number: '7'}, 
+        {description: 'Agosto', number: '8'}, 
+        {description: 'Setembro', number: '9'}, 
+        {description: 'Outubro', number: '10'}, 
+        {description: 'Novembro', number: '11'}, 
+        {description: 'Dezembr', number: '12'}
+      ],
       // WonderPush: WonderPush,
       formVisible: false,
       expense:{
@@ -208,11 +231,10 @@ export default {
 
   async mounted() {
     await this.loadExpenses()
-
     eventBus().emitter.on("tabChanged", () => {
         this.loaded = false
         setTimeout(async()=>{
-          await this.loadExpenses()
+          this.loadExpenses()
         }, 3000)
     });
 
@@ -221,6 +243,9 @@ export default {
     });
   },
   methods: {
+    teste(e){
+      console.log(e)
+    },
     colorForBarExpenses(){
       const result = ((this.user.amountExpense * 100) / this.user.monthlyIncome)
       
@@ -280,45 +305,37 @@ export default {
       this.formVisible = !this.formVisible
     },
 
-    async loadExpenses(){
+    async loadExpenses(event){
       const uid = await this.getUid()
-      
+
       const userRef = doc(db, "users", uid);
-
-      const expRef = collection(userRef, year, month, "expenses");
-
-      const monthRef = doc(userRef, year, month);
-
-      onSnapshot(userRef, (userSnapshot) => {
-        this.user = userSnapshot.data()
-
-        onSnapshot(expRef, (expSnapshot) => {
-          this.user.expenses = []
-          expSnapshot.docs.forEach((doc)=>{
-            let e = doc.data()
-            e.id = doc.id
-            this.user.expenses.push(e)
-          })
-
-          this.sumExpenses()
-
-          onSnapshot(monthRef, (monthSnapshot) => {
-            this.user.monthlyIncome = monthSnapshot.data().monthlyIncome
-          })
-        })
+      onSnapshot(userRef, (expSnapshot) => {
+        this.user.emergencyReserveGoal = expSnapshot.data().emergencyReserveGoal
+        this.user.emergencyReserveReached = expSnapshot.data().emergencyReserveReached
       })
 
+      const monthToLoad = (event) ? event.detail.value : month
+      this.monthSelected = monthToLoad
 
-      // const q = query(collection(userRef, "expenses"));
-      // onSnapshot(q, (querySnapshot) => {
-      //   this.user.expenses = []
-      //   querySnapshot.forEach((doc)=>{
-      //     this.user.expenses.push(doc.data())
-      //   })
+      const monthRef = doc(userRef, year, monthToLoad);
+      onSnapshot(monthRef, (expSnapshot) => {
+        this.user.monthlyIncome = 0
+        if(expSnapshot.data()){
+          this.user.monthlyIncome = expSnapshot.data().monthlyIncome
+        }
+      })
 
-      //   this.sumExpenses()
-      // })
+      const expRef = collection(userRef, year, monthToLoad, "expenses");
+      onSnapshot(expRef, (expSnapshot) => {
+        this.user.expenses = []
+        expSnapshot.docs.forEach((doc)=>{
+          let e = doc.data()
+          e.id = doc.id
+          this.user.expenses.push(e)
+        })
 
+        this.sumExpenses()
+      })
       this.loaded = true
     },
 
@@ -388,14 +405,15 @@ export default {
         })
       
       await alert.present();
-
       const { data } = await alert.onDidDismiss();
       const uid = await this.getUid()
       const userRef = doc(db, "users", uid);
-      const monthRef = doc(userRef, year, month);
-      
-      await updateDoc(monthRef, {
-        monthlyIncome : parseFloat(data.values.monthlyincome)
+
+      const monthRef = doc(userRef, year, this.monthSelected);
+
+      await setDoc(monthRef, {
+        monthlyIncome : parseFloat(data.values.monthlyincome),
+        number: parseInt(this.monthSelected)
       })
     },
 
@@ -407,10 +425,8 @@ export default {
 
       const yearRef = collection(userRef, year)
 
-      await setDoc(doc(yearRef, month), {})
-
       // get the year reference
-      const monthRef = doc(yearRef, month);
+      const monthRef = doc(yearRef, this.monthSelected);
 
       // set a colection month
       const expRef = collection(monthRef, 'expenses')
@@ -456,7 +472,6 @@ export default {
               }
 
               if(update){
-                console.log(milliseconds)
                 await updateDoc(doc(expRef, obj.id), {description: values.description, price: parseFloat(values.price), updatedAt: milliseconds});
                 this.showToast('success', 'Atualizado com sucesso')
               }else{
@@ -590,6 +605,12 @@ export default {
   computed:{
     validaForm(){
       return this.expense.name === '' || this.expense.price === ''
+    }
+  },
+
+  watch:{
+    month(month){
+      console.log(month)
     }
   }
 };
