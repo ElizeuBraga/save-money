@@ -131,8 +131,6 @@
         <ion-col size="12">
           <ion-grid>
             <ion-card>
-
-
               <ion-list-header>
                 <ion-label>Próximo mês</ion-label>
                 <ion-select @ionChange="loadExpenses($event)" :value="monthSelected" ok-text="Mostrar" cancel-text="Cancelar">
@@ -247,8 +245,7 @@ export default {
       console.log(e)
     },
     colorForBarExpenses(){
-      const result = ((this.user.amountExpense * 100) / this.user.monthlyIncome)
-      
+      const result = ((this.user.amountExpense * 100) / this.user.monthlyIncome) 
       if(result < 33){
         return 'success'
       }else if(result > 66){
@@ -459,7 +456,6 @@ export default {
         ],
         buttons: [
           {
-            disabled: true,
             text: 'Salvar',
             cssClass: 'secondary',
             handler: async values => {
@@ -480,15 +476,39 @@ export default {
               }
 
               this.clearExpenseObj()
-
             },
           },
           {
             text: 'Excluir',
             cssClass: 'secondary',
             handler: blah => {
-              deleteDoc(doc(expenseRef, obj.id));
+              deleteDoc(doc(expRef, obj.id));
               this.clearExpenseObj()
+            },
+          },
+          {
+            text: 'Adicionar ao próximo mês',
+            cssClass: 'secondary',
+            handler: async values => {
+              let yearNext = year;
+              let monthNext = String(parseInt(this.monthSelected) + 1);
+              if(parseInt(this.monthSelected) === 12){
+                yearNext = String(parseInt(year) + 1)
+                monthNext = '1'
+              }
+
+              const yearRefNext = collection(userRef, yearNext);
+              // get the year reference
+              const monthRefNext = doc(yearRefNext, String(parseInt(monthNext)));
+
+              // set a colection month
+              const expRefNext = collection(monthRefNext, 'expenses')
+
+              await addDoc(expRefNext, {description: values.description, price: parseFloat(values.price), createdAt: milliseconds})
+              this.showToast('success', 'Adicionado ao próximo mês')
+              this.clearExpenseObj()
+
+              this.monthSelected = month
             },
           },
           {
