@@ -426,7 +426,7 @@ export default {
     },
 
     async saveNewExpense(expense){
-      let img = '../img/imgs/'+expense.description+'.png'
+      let img = '../img/imgs/'+expense.description.toLowerCase()+'.png'
   
       if(!await this.imageExists(img)){
         img = '../img/imgs/default.png'
@@ -478,7 +478,7 @@ export default {
     },
 
     async updateExpense(expense){
-      let img = '../img/imgs/'+expense.description+'.png'
+      let img = '../img/imgs/'+expense.description.toLowerCase()+'.png'
 
       if(!await this.imageExists(img)){
         img = '../img/imgs/default.png'
