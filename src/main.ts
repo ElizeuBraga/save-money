@@ -48,7 +48,8 @@ import './theme/custom.css';
 import './registerServiceWorker';
 
 import { initializeApp } from "firebase/app";
-import { getAuth, getIdToken} from "firebase/auth";
+import { getAuth } from "firebase/auth";
+import { doc, getFirestore, Timestamp} from "firebase/firestore";
 
 const firebaseConfig = {
     apiKey: process.env.VUE_APP_FIRE_API_KEY,
@@ -61,7 +62,8 @@ const firebaseConfig = {
     measurementId: process.env.VUE_APP_FIRE_MEASUREMENT_ID
 };
 
-// Initialize Firebase
+/* eslint-disable */ 
+
 initializeApp(firebaseConfig);
 
 const app = createApp(App).use(IonicVue).use(router)
@@ -88,9 +90,11 @@ app.mixin({
   },
   data:()=>{
     return{
-      actualize: false
+      actualize: false,
+      milliseconds: Timestamp.now().toMillis()
     }
   },
+
   methods:{
     async showToast(color: string, message: string) {
       const toast = await toastController.create({

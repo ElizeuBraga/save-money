@@ -47,7 +47,7 @@
                 ></ion-progress-bar>
 
                 <ion-col style="padding-bottom: 0;" class="ion-text-left">
-                  <ion-label @click="openModalUpdateMonthlyIncome()" class="label-italic">Salário:<b>{{formatMoney(user.monthlyIncome)}}</b></ion-label>
+                  <ion-label @click="alertUpdateMonthlyIncome()" class="label-italic">Salário:<b>{{formatMoney(user.monthlyIncome)}}</b></ion-label>
                 </ion-col>
                 <ion-col style="padding-bottom: 0;" class="ion-text-right">
                   <ion-label class="label-italic">Gasto:<b>{{formatMoney(user.amountExpense)}}</b></ion-label>
@@ -64,10 +64,10 @@
                 ></ion-progress-bar>
 
                 <ion-col style="padding-bottom: 0;" class="ion-text-left">
-                  <ion-label class="label-italic" @click="openModalUpdateEmergencyReserveGoal()">Meta:<b>{{formatMoney(user.emergencyReserveGoal)}}</b></ion-label>
+                  <ion-label class="label-italic" @click="alertUpdateEmergencyReserveGoal()">Meta:<b>{{formatMoney(user.emergencyReserveGoal)}}</b></ion-label>
                 </ion-col>
                 <ion-col style="padding-bottom: 0;" class="ion-text-right">
-                  <ion-label class="label-italic" @click="openModalUpdateEmergencyReserveReached()">Conquista:<b>{{formatMoney(user.emergencyReserveReached)}}</b></ion-label>
+                  <ion-label class="label-italic" @click="alertUpdateEmergencyReserveReached()">Conquista:<b>{{formatMoney(user.emergencyReserveReached)}}</b></ion-label>
                 </ion-col>
                 <ion-col class="label-italic ion-text-center" size="12" v-if="user.amountToConquist > 0">
                   {{formatMoney(user.amountToConquist)}} para conquistar o {{colorForBarEmergencyGoal() == 'danger' ? 'vermelho' : colorForBarEmergencyGoal() == 'yellow' ? 'Amarelo' : 'verde'}}
@@ -77,53 +77,6 @@
                 </ion-col>
               </ion-row>
             </ion-card-content>
-            
-            <!-- Form-->
-            <ion-card id="form" v-if="formVisible">
-              <ion-row>
-                <ion-col size="1"></ion-col>
-                <ion-col size="10">
-                  <ion-item>
-                    <ion-label position="floating">Descrição</ion-label>
-                    <ion-input v-model="user.expense.name"></ion-input>
-                  </ion-item>
-                </ion-col>
-                <ion-col size="1"></ion-col>
-                <ion-col size="1"></ion-col>
-                <ion-col size="10">
-                  <ion-item>
-                    <ion-label position="floating">Valor</ion-label>
-                    <ion-input v-model="user.expense.price"></ion-input>
-                  </ion-item>
-                </ion-col>
-                <ion-col size="1"></ion-col>
-                <ion-col size="1"></ion-col>
-                <ion-col size="10">
-                  <ion-item>
-                    <ion-label>Repetir mensalmete</ion-label>
-                    <ion-toggle v-model="user.expense.repeat" color="secondary"></ion-toggle><br>
-                  </ion-item>
-                </ion-col>
-                <ion-col size="1"></ion-col>
-                <ion-row v-if="!validaForm && !isUpdating">
-                  <ion-col>
-                    <ion-button expand="block" shape="round" @click="saveExpense()">Salvar</ion-button>
-                  </ion-col>
-                  <ion-col>
-                    <ion-button expand="block" shape="round" @click="showForm()" color="danger">Cancelar</ion-button>
-                  </ion-col>
-                </ion-row>
-                <ion-row v-if="!validaForm && isUpdating">
-                  <ion-col>
-                    <ion-button v-if="!validaForm && isUpdating" shape="round" class="label-italic" @click="updateExpense()">Atualizar</ion-button>
-                  </ion-col>
-                  <ion-col>
-                    <ion-button shape="round" @click="removeExpense(expense)" class="label-italic" color="danger">Remover</ion-button>
-                  </ion-col>
-                </ion-row>
-              </ion-row>
-            </ion-card>
-            <!-- Form-->
           </ion-card>
         </ion-grid>
 
@@ -140,7 +93,7 @@
 
               <ion-card-content align="center">
                 <ion-list v-for="e in user.expenses" :key="e.id">
-                  <ion-item @click="editExpense(e)">
+                  <ion-item @click="presentActionSheet(e)">
                     <ion-label class="ion-text-left">{{e.description}}</ion-label>
                     <ion-label class="ion-text-right">{{"R$ " + parseFloat(e.price).toFixed(2).replace(".", ",")}}<br><p class="label-italic">{{formatDate(e.createdAt)}}</p></ion-label>
                   </ion-item>
@@ -170,20 +123,16 @@
 </template>
 
 <script>
-import { alertController, IonList, IonListHeader, IonSelect, IonSelectOption} from "@ionic/vue";
+
+import { alertController, IonList, IonListHeader, IonSelect, IonSelectOption, actionSheetController} from "@ionic/vue";
 import eventBus from '../eventBus'
-import { getDatabase, ref, set} from "firebase/database";
-import { getFirestore, doc, updateDoc, onSnapshot, arrayUnion, arrayRemove, addDoc, collection, setDoc, serverTimestamp, query, where, deleteDoc, Timestamp} from "firebase/firestore";
-
-// import WonderPush from '@ionic-native/wonderpush';
-
-const db = getFirestore();
+import { getAuth } from "firebase/auth";
+import { getFirestore, doc, updateDoc, onSnapshot, addDoc, collection, setDoc, deleteDoc, Timestamp} from "firebase/firestore";
 
 const milliseconds = Timestamp.now().toMillis();
 const year = String(new Date(milliseconds).getFullYear())
 const month = String(new Date(milliseconds).getMonth()+2)
 
-/* eslint-disable */ 
 export default {
   name: "Tab1",
   components:{ IonList, IonListHeader, IonSelect, IonSelectOption},
@@ -204,17 +153,8 @@ export default {
         {description: 'Novembro', number: '11'}, 
         {description: 'Dezembro', number: '12'}
       ],
-      // WonderPush: WonderPush,
-      formVisible: false,
-      expense:{
-        name: '',
-        price: '',
-        repeat: true
-      },
 
       loaded: false,
-
-      isUpdating: false,
 
       user:{
         emergencyReserveGoal: 0,
@@ -223,7 +163,9 @@ export default {
         amountExpense: 0,
         expenses:[],
         amountToConquist: 0
-      }
+      },
+
+      userRef: doc(getFirestore(), "users", getAuth().currentUser.uid)
     };
   },
 
@@ -237,13 +179,10 @@ export default {
     });
 
     eventBus().emitter.on("openModalNewExpense", () => {
-        this.openModalNewExpense()
+      this.alertNewExpense()
     });
   },
   methods: {
-    teste(e){
-      console.log(e)
-    },
     colorForBarExpenses(){
       const result = ((this.user.amountExpense * 100) / this.user.monthlyIncome) 
       if(result < 33){
@@ -274,39 +213,15 @@ export default {
       }
     },
 
-    clearExpenseObj(){
-      this.expense = {
-        name: '',
-        price: '',
-        repeat: true
-      }
-    },
-
     sumExpenses(){
       this.user.amountExpense = 0
-
       this.user.expenses.forEach((e)=>{
         this.user.amountExpense += e.price
       })
     },
 
-    showForm(){
-      if(this.formVisible){
-        this.isUpdating = false
-        this.expense = {
-          name: '',
-          price: '',
-          repeat: false
-        }
-      }
-      this.formVisible = !this.formVisible
-    },
-
     async loadExpenses(event){
-      const uid = await this.getUid()
-
-      const userRef = doc(db, "users", uid);
-      onSnapshot(userRef, (expSnapshot) => {
+      onSnapshot(this.userRef, (expSnapshot) => {
         this.user.emergencyReserveGoal = expSnapshot.data().emergencyReserveGoal
         this.user.emergencyReserveReached = expSnapshot.data().emergencyReserveReached
       })
@@ -314,7 +229,7 @@ export default {
       const monthToLoad = (event) ? event.detail.value : month
       this.monthSelected = monthToLoad
 
-      const monthRef = doc(userRef, year, monthToLoad);
+      const monthRef = doc(this.userRef, year, monthToLoad);
       onSnapshot(monthRef, (expSnapshot) => {
         this.user.monthlyIncome = 0
         if(expSnapshot.data()){
@@ -322,11 +237,11 @@ export default {
         }
       })
 
-      const expRef = collection(userRef, year, monthToLoad, "expenses");
+      const expRef = collection(this.userRef, year, monthToLoad, "expenses");
       onSnapshot(expRef, (expSnapshot) => {
         this.user.expenses = []
         expSnapshot.docs.forEach((doc)=>{
-          let e = doc.data()
+          const e = doc.data()
           e.id = doc.id
           this.user.expenses.push(e)
         })
@@ -336,255 +251,116 @@ export default {
       this.loaded = true
     },
 
-    editExpense(e){
-      this.expense = e
-      this.openModalNewExpense(true, e)
-    },
-
-    removeExpense(expense){
-      const userId = '1634579233901' 
-      const db = getDatabase();
-      const id = expense.id
-      set(ref(db,`users/${userId}/expenses/${id}`), null);
-      this.showForm()
-    },
-
-    updateExpense(){
-      const userId = '1634579233901' 
-      const db = getDatabase();
-      const id = this.expense.id
-
-      this.expense.updatedAt = Date.now()
-      set(ref(db,`users/${userId}/expenses/${id}`), this.expense);
-      this.showForm()
-    },
-
-    async updateEmergencyReserveReached(emergencyReserveReached){
-      const uid = await this.getUid()
-      const userRef = doc(db, "users", uid);
-
-      await updateDoc(userRef, {
-        emergencyReserveReached : emergencyReserveReached
-      });
-    },
-
-    saveExpense(){
-      const userId = '1634579233901' 
-      const db = getDatabase();
-      const id = Date.now()
-
-      this.expense.id = id
-      this.expense.createdAt = Date.now()
-      this.expense.updatedAt = Date.now()
-      set(ref(db,`users/${userId}/expenses/${id}`), this.expense);
-      this.showForm()
-      this.expense = {
-        name: '',
-        price: '',
-        repeat: false
-      }
-    },
-
-    async openModalUpdateMonthlyIncome() {
+    async alertUpdateMonthlyIncome() {
         const alert = await alertController
         .create({
-          cssClass: 'my-custom-class',
           header: 'Alterar renda mensal',
           inputs: [
             {
-              name: 'monthlyincome',
-              id: 'monthlyincome',
+              name: 'price',
+              id: 'price',
               value: this.user.monthlyIncome,
               placeholder: 'Digite o novo valor',
             }
           ],
-          buttons: ['OK'],
+          buttons: [
+            {
+              text: 'Salvar',
+              handler:(values)=>{
+                this.updateMonthlyIncome(values.price)
+              }
+            },
+            {
+              text: 'Cancelar'
+            }
+          ],
         })
       
-      await alert.present();
-      const { data } = await alert.onDidDismiss();
-      const uid = await this.getUid()
-      const userRef = doc(db, "users", uid);
+      await alert.present()
+    },
 
-      const monthRef = doc(userRef, year, this.monthSelected);
-
-      await setDoc(monthRef, {
-        monthlyIncome : parseFloat(data.values.monthlyincome),
+    updateMonthlyIncome(price){
+      const yearRef = collection(this.userRef, year)
+      const monthRef = doc(yearRef, this.monthSelected);
+      setDoc(monthRef, {
+        monthlyIncome : parseFloat(price),
         number: parseInt(this.monthSelected)
       })
+
+      this.showToast('success', 'Salário mensal atualizado!')
     },
 
-    async openModalNewExpense(update = false, obj = false) {
-    
-      // gets user reference
-      const uid = await this.getUid()
-      const userRef = doc(db, "users", uid);
-
-      const yearRef = collection(userRef, year)
-
-      // get the year reference
-      const monthRef = doc(yearRef, this.monthSelected);
-
-      // set a colection month
-      const expRef = collection(monthRef, 'expenses')
-
-
-      if(obj){
-        this.expense.description = obj.description
-        this.expense.price = obj.price
-      }
-
-      const alert = await alertController
-      .create({
-        cssClass: 'my-custom-class',
-        header: 'Novo gasto',
-        inputs: [
-          {
-            name: 'description',
-            id: 'description',
-            type: 'text',
-            value: this.expense.description,
-            placeholder: 'Descrição do gasto',
-          },
-          {
-            name: 'price',
-            id: 'price',
-            type: 'text',
-            value: this.expense.price,
-            placeholder: 'Valor do gasto',
-          }
-        ],
-        buttons: [
-          {
-            text: 'Salvar',
-            cssClass: 'secondary',
-            handler: async values => {
-              if(values.description == '' || values.price == ''){
-                if(!update){
-                  this.openModalNewExpense(false, values)
-                }
-                this.showToast('danger', 'Todos os campos são obrigatórios')
-                return 
-              }
-
-              if(update){
-                await updateDoc(doc(expRef, obj.id), {description: values.description, price: parseFloat(values.price), updatedAt: milliseconds});
-                this.showToast('success', 'Atualizado com sucesso')
-              }else{
-                await addDoc(expRef, {description: values.description, price: parseFloat(values.price), createdAt: milliseconds})
-                this.showToast('success', 'Inserido com sucesso')
-              }
-
-              this.clearExpenseObj()
-            },
-          },
-          {
-            text: 'Excluir',
-            cssClass: 'secondary',
-            handler: blah => {
-              deleteDoc(doc(expRef, obj.id));
-              this.clearExpenseObj()
-            },
-          },
-          {
-            text: 'Adicionar ao próximo mês',
-            cssClass: 'secondary',
-            handler: async values => {
-              let yearNext = year;
-              let monthNext = String(parseInt(this.monthSelected) + 1);
-              if(parseInt(this.monthSelected) === 12){
-                yearNext = String(parseInt(year) + 1)
-                monthNext = '1'
-              }
-
-              const yearRefNext = collection(userRef, yearNext);
-              // get the year reference
-              const monthRefNext = doc(yearRefNext, String(parseInt(monthNext)));
-
-              // set a colection month
-              const expRefNext = collection(monthRefNext, 'expenses')
-
-              await addDoc(expRefNext, {description: values.description, price: parseFloat(values.price), createdAt: milliseconds})
-              this.showToast('success', 'Adicionado ao próximo mês')
-              this.clearExpenseObj()
-
-              this.monthSelected = month
-            },
-          },
-          {
-            text: 'Cancelar',
-            role: 'cancel',
-            cssClass: 'secondary',
-            handler: blah => {
-              this.clearExpenseObj()
-            },
-          },
-        ],
-      })
-      
-      await alert.present();
-
-      const inputDescription = document.getElementById("description")
-      const inputPrice = document.getElementById("price")
-
-      inputDescription.setAttribute("autocomplete", "off")
-      inputPrice.setAttribute("autocomplete", "off")
-    },
-
-    async openModalUpdateEmergencyReserveGoal() {
+    async alertUpdateEmergencyReserveGoal() {
         const alert = await alertController
         .create({
-          cssClass: 'my-custom-class',
           header: 'Alterar meta',
           inputs: [
             {
-              name: 'emergencyReserveGoal',
-              id: 'emergencyReserveGoal',
+              name: 'price',
+              id: 'price',
               value: this.user.emergencyReserveGoal,
               placeholder: 'Digite o novo valor',
             }
           ],
-          buttons: ['OK'],
+          buttons: [
+            {
+              text: 'Salvar',
+              handler:(values)=>{
+                this.updateEmergencyReserveGoal(values.price)
+              }
+            },
+            {
+              text: 'Cancelar'
+            }
+          ],
         })
       
-      await alert.present();
-
-      const { data } = await alert.onDidDismiss();
-
-      const uid = await this.getUid()
-      const userRef = doc(db, "users", uid);
-
-      await updateDoc(userRef, {
-        emergencyReserveGoal : parseFloat(data.values.emergencyReserveGoal)
-      })
+      await alert.present()
     },
 
-    async openModalUpdateEmergencyReserveReached() {
+    updateEmergencyReserveGoal(price){
+      updateDoc(this.userRef, {
+        emergencyReserveGoal : parseFloat(price)
+      })
+
+      this.showToast('success', 'Meta alterada!')
+    },
+
+    async alertUpdateEmergencyReserveReached() {
         const alert = await alertController
         .create({
-          cssClass: 'my-custom-class',
           header: 'Alterar conquista',
           inputs: [
             {
-              name: 'emergencyReserveReached',
-              id: 'emergencyReserveReached',
+              name: 'price',
+              id: 'price',
               value: this.user.emergencyReserveReached,
+              type: 'number',
               placeholder: 'Digite o novo valor',
             }
           ],
-          buttons: ['OK'],
+          buttons: [
+            {
+              text: 'Salvar',
+              handler: (values) => {
+                this.updateEmergencyReserveReached(values.price);
+              },
+            },
+            {
+              text: 'Cancelar'
+            },
+          ],
         })
       
       await alert.present();
+    },
 
-      const { data } = await alert.onDidDismiss();
-
-      const uid = await this.getUid()
-      const userRef = doc(db, "users", uid);
-
-      await updateDoc(userRef, {
-        emergencyReserveReached : parseFloat(data.values.emergencyReserveReached)
+    async updateEmergencyReserveReached(price){
+      await updateDoc(this.userRef, {
+        emergencyReserveReached : parseFloat(price)
       })
+
+      this.showToast('success', 'Conquista alterada com sucesso!')
     },
 
     getInformation(type, amount){
@@ -619,19 +395,131 @@ export default {
 
       const { role } = await alert.onDidDismiss();
       console.log("onDidDismiss resolved with role", role);
-    }
-  },
+    },
 
-  computed:{
-    validaForm(){
-      return this.expense.name === '' || this.expense.price === ''
-    }
-  },
+    async alertNewExpense(){
+      const alert = await alertController
+        .create({
+          cssClass: 'my-custom-class',
+          header: 'Novo item',
+          inputs: [
+            {
+              name: 'description',
+              id: 'description',
+              value: '',
+              placeholder: 'Digite uma descrição',
+            },
+            {
+              name: 'price',
+              id: 'price',
+              value: '',
+              placeholder: 'Digite o valor',
+            },
+          ],
+          buttons: [
+            {
+              text: 'Salvar',
+              handler: (values) => {
+                this.saveNewExpense(values);
+              },
+            },
+            {
+              text: 'Cancelar'
+            }
+          ],
+        });
+      return alert.present();
+    },
 
-  watch:{
-    month(month){
-      console.log(month)
-    }
+    saveNewExpense(expense){
+      const yearRef = collection(this.userRef, year)
+      const monthRef = doc(yearRef, this.monthSelected);
+      const expRef = collection(monthRef, 'expenses')
+      addDoc(expRef, {description: expense.description, price: parseFloat(expense.price), createdAt: this.milliseconds})
+      this.showToast('success', 'Novo item adicionado!')
+    },
+
+    async alertUpdateExpense(expense){
+      const alert = await alertController
+        .create({
+          cssClass: 'my-custom-class',
+          header: 'Editar item',
+          inputs: [
+            {
+              name: 'id',
+              id: 'id',
+              value: expense.id,
+              type: 'hidden'
+            },
+            {
+              name: 'description',
+              id: 'description',
+              value: expense.description,
+              placeholder: 'Digite uma descrição',
+            },
+            {
+              name: 'price',
+              id: 'price',
+              value: expense.price,
+              placeholder: 'Digite o valor',
+            },
+          ],
+          buttons: [
+            {
+              text: 'Salvar',
+              handler: (values) => {
+                this.updateExpense(values);
+              },
+            },
+            {
+              text: 'Cancelar'
+            }
+          ],
+        });
+      return alert.present();
+    },
+
+    updateExpense(expense){
+      const yearRef = collection(this.userRef, year)
+      const monthRef = doc(yearRef, this.monthSelected);
+      const expRef = collection(monthRef, 'expenses')
+      updateDoc(doc(expRef, expense.id), {description: expense.description, price: parseFloat(expense.price), createdAt: this.milliseconds})
+      this.showToast('success', 'Item editado com sucesso!')
+    },
+
+    deleteExpense(expense){
+      const yearRef = collection(this.userRef, year)
+      const monthRef = doc(yearRef, this.monthSelected);
+      const expRef = collection(monthRef, 'expenses')
+      deleteDoc(doc(expRef, expense.id));
+      this.showToast('success', 'Item excluído!')
+    },
+
+    async presentActionSheet(expense) {
+      const actionSheet = await actionSheetController
+        .create({
+          header: 'Opções',
+          cssClass: 'my-custom-class',
+          buttons: [
+            {
+              text: 'Editar',
+              handler: () => {
+                this.alertUpdateExpense(expense)
+              },
+            },
+            {
+              text: 'Excluir',
+              handler: () => {
+                this.deleteExpense(expense)
+              },
+            }
+          ],
+        });
+      await actionSheet.present();
+
+      const { role } = await actionSheet.onDidDismiss();
+      console.log('onDidDismiss resolved with role', role);
+    },
   }
 };
 </script>
@@ -687,5 +575,14 @@ ion-title{
 
 ion-content {
   --ion-background-color: #3880ff;
+}
+
+/* alerts */
+.btn-cancel-alert{
+  color: red!important;
+}
+
+.btn-save-alert{
+  color: green!important;
 }
 </style>
