@@ -96,7 +96,7 @@
               <ion-card-content align="center">
                 <ion-list v-for="e in user.expenses" :key="e.id">
                   <ion-item @click="presentActionSheet(e)">
-                    <ion-img style="height: 30px; margin-right: 5px" :src="e.img"></ion-img>
+                    <ion-img style="height: 30px; width: 30px; margin-right: 5px" :src="e.img"></ion-img>
                     <ion-label class="ion-text-left">{{e.description}}</ion-label>
                     <ion-label class="ion-text-right">{{"R$ " + parseFloat(e.price).toFixed(2).replace(".", ",")}}<br><p class="label-italic">{{formatDate(e.createdAt)}}</p></ion-label>
                   </ion-item>
