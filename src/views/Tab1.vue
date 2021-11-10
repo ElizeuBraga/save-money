@@ -85,8 +85,10 @@
           <ion-grid>
             <ion-card>
               <ion-list-header>
-                <ion-label>Próximo mês</ion-label>
-                <ion-select @ionChange="loadExpenses($event)" :value="monthSelected" ok-text="Mostrar" cancel-text="Cancelar">
+                <ion-select @ionChange="loadExpenses($event, 'year')" :value="year" ok-text="Mostrar" cancel-text="Cancelar">
+                    <ion-select-option v-for="y in years" :key="y" :value="y">{{y}}</ion-select-option>
+                </ion-select>
+                <ion-select @ionChange="loadExpenses($event, 'month')" :value="month" ok-text="Mostrar" cancel-text="Cancelar">
                     <ion-select-option v-for="m in months" :key="m.number" :value="m.number">{{m.description}}</ion-select-option>
                 </ion-select>
               </ion-list-header>
@@ -94,6 +96,7 @@
               <ion-card-content align="center">
                 <ion-list v-for="e in user.expenses" :key="e.id">
                   <ion-item @click="presentActionSheet(e)">
+                    <ion-img style="height: 30px; margin-right: 5px" :src="e.img"></ion-img>
                     <ion-label class="ion-text-left">{{e.description}}</ion-label>
                     <ion-label class="ion-text-right">{{"R$ " + parseFloat(e.price).toFixed(2).replace(".", ",")}}<br><p class="label-italic">{{formatDate(e.createdAt)}}</p></ion-label>
                   </ion-item>
@@ -130,7 +133,6 @@ import { getAuth } from "firebase/auth";
 import { getFirestore, doc, updateDoc, onSnapshot, addDoc, collection, setDoc, deleteDoc, Timestamp} from "firebase/firestore";
 
 const milliseconds = Timestamp.now().toMillis();
-const year = String(new Date(milliseconds).getFullYear())
 const month = String(new Date(milliseconds).getMonth()+2)
 
 export default {
@@ -154,6 +156,8 @@ export default {
         {description: 'Dezembro', number: '12'}
       ],
 
+      years: ["2021", "2022"],
+
       loaded: false,
 
       user:{
@@ -162,15 +166,27 @@ export default {
         monthlyIncome: 0,
         amountExpense: 0,
         expenses:[],
-        amountToConquist: 0
+        amountToConquist: 0,
+        years: []
       },
 
-      userRef: doc(getFirestore(), "users", getAuth().currentUser.uid)
-    };
+      milliseconds: Timestamp.now().toMillis(),
+      year: String(new Date(Timestamp.now().toMillis()).getFullYear()),
+      month: String(new Date(Timestamp.now().toMillis()).getMonth()+2),
+      
+      userRef: null,
+      yearRef: null,
+      monthRef: null,
+      expensesRef: null
+    }
   },
 
   async mounted() {
-    await this.loadExpenses()
+    this.mountReferences()
+
+    setTimeout(() => {
+      this.loadExpenses()
+    }, 200);
     eventBus().emitter.on("tabChanged", () => {
         this.loaded = false
         setTimeout(async()=>{
@@ -183,6 +199,13 @@ export default {
     });
   },
   methods: {
+    async mountReferences(){
+      this.userRef = doc(getFirestore(), "users", getAuth().currentUser.uid)
+      this.yearRef = collection(this.userRef, this.year)
+      this.monthRef = doc(this.userRef, this.year, this.month)
+      this.expensesRef = collection(this.monthRef, 'expenses')
+    },
+
     colorForBarExpenses(){
       const result = ((this.user.amountExpense * 100) / this.user.monthlyIncome) 
       if(result < 33){
@@ -220,25 +243,29 @@ export default {
       })
     },
 
-    async loadExpenses(event){
-      onSnapshot(this.userRef, (expSnapshot) => {
-        this.user.emergencyReserveGoal = expSnapshot.data().emergencyReserveGoal
-        this.user.emergencyReserveReached = expSnapshot.data().emergencyReserveReached
+    async loadExpenses(event, type = false){
+      onSnapshot(this.userRef, (userSnapshot) => {
+        this.user.emergencyReserveGoal = userSnapshot.data().emergencyReserveGoal
+        this.user.emergencyReserveReached = userSnapshot.data().emergencyReserveReached
+        this.user.years = userSnapshot.data().years
       })
 
-      const monthToLoad = (event) ? event.detail.value : month
-      this.monthSelected = monthToLoad
+      if(type === 'year'){
+        this.year = (event) ? event.detail.value : this.year
+      }else if(type === 'month'){
+        this.month = (event) ? event.detail.value : this.month
+      }
 
-      const monthRef = doc(this.userRef, year, monthToLoad);
-      onSnapshot(monthRef, (expSnapshot) => {
+      this.mountReferences()
+
+      onSnapshot(this.monthRef, (monthSnapshot) => {
         this.user.monthlyIncome = 0
-        if(expSnapshot.data()){
-          this.user.monthlyIncome = expSnapshot.data().monthlyIncome
+        if(monthSnapshot.data()){
+          this.user.monthlyIncome = monthSnapshot.data().monthlyIncome
         }
       })
 
-      const expRef = collection(this.userRef, year, monthToLoad, "expenses");
-      onSnapshot(expRef, (expSnapshot) => {
+      onSnapshot(this.expensesRef, (expSnapshot) => {
         this.user.expenses = []
         expSnapshot.docs.forEach((doc)=>{
           const e = doc.data()
@@ -281,9 +308,7 @@ export default {
     },
 
     updateMonthlyIncome(price){
-      const yearRef = collection(this.userRef, year)
-      const monthRef = doc(yearRef, this.monthSelected);
-      setDoc(monthRef, {
+      setDoc(this.monthRef, {
         monthlyIncome : parseFloat(price),
         number: parseInt(this.monthSelected)
       })
@@ -365,40 +390,6 @@ export default {
       this.showToast('success', 'Conquista alterada com sucesso!')
     },
 
-    getInformation(type, amount){
-        const date = new Date();
-        const today = date.getDate();
-        const daysInMonth = new Date(date.getFullYear(), date.getMonth(), 0).getDate();
-        const qtdDays = daysInMonth - today;
-      if(type == 'qtdDays'){
-        return parseInt(qtdDays);
-      }
-
-      if(type == 'qtdSpandInDay'){
-        return (amount / parseInt(qtdDays)).toFixed(2);
-      }
-    },
-
-    calcPercentage(value) {
-      if(value && value > 0){
-        return ((value * 100) / this.monthlyIncome);
-      }
-      return (0).toFixed(2);
-    },
-
-    async shhowAlertsInformation(message) {
-      const alert = await alertController.create({
-        cssClass: "my-custom-class",
-        header: "Atenção!",
-        message: message,
-        buttons: ["OK"],
-      });
-      await alert.present();
-
-      const { role } = await alert.onDidDismiss();
-      console.log("onDidDismiss resolved with role", role);
-    },
-
     async alertNewExpense(){
       const alert = await alertController
         .create({
@@ -416,7 +407,8 @@ export default {
               id: 'price',
               value: '',
               placeholder: 'Digite o valor',
-            },
+              type: 'number'
+            }
           ],
           buttons: [
             {
@@ -433,11 +425,14 @@ export default {
       return alert.present();
     },
 
-    saveNewExpense(expense){
-      const yearRef = collection(this.userRef, year)
-      const monthRef = doc(yearRef, this.monthSelected);
-      const expRef = collection(monthRef, 'expenses')
-      addDoc(expRef, {description: expense.description, price: parseFloat(expense.price), createdAt: this.milliseconds})
+    async saveNewExpense(expense){
+      let img = '../img/imgs/'+expense.description+'.png'
+  
+      if(!await this.imageExists(img)){
+        img = '../img/imgs/default.png'
+      }
+
+      addDoc(this.expensesRef, {description: expense.description, price: parseFloat(expense.price), img: img, createdAt: this.milliseconds})
       this.showToast('success', 'Novo item adicionado!')
     },
 
@@ -482,19 +477,32 @@ export default {
       return alert.present();
     },
 
-    updateExpense(expense){
-      const yearRef = collection(this.userRef, year)
-      const monthRef = doc(yearRef, this.monthSelected);
-      const expRef = collection(monthRef, 'expenses')
-      updateDoc(doc(expRef, expense.id), {description: expense.description, price: parseFloat(expense.price), createdAt: this.milliseconds})
+    async updateExpense(expense){
+      let img = '../img/imgs/'+expense.description+'.png'
+
+      if(!await this.imageExists(img)){
+        img = '../img/imgs/default.png'
+      }
+  
+      updateDoc(doc(this.expensesRef, expense.id), {description: expense.description, price: parseFloat(expense.price), img: img, createdAt: this.milliseconds})
+
       this.showToast('success', 'Item editado com sucesso!')
     },
 
+    async imageExists(imgUrl) {
+      if (!imgUrl) {
+          return false;
+      }
+      return new Promise(res => {
+          const image = new Image();
+          image.onload = () => res(true);
+          image.onerror = () => res(false);
+          image.src = imgUrl;
+      });
+    },
+
     deleteExpense(expense){
-      const yearRef = collection(this.userRef, year)
-      const monthRef = doc(yearRef, this.monthSelected);
-      const expRef = collection(monthRef, 'expenses')
-      deleteDoc(doc(expRef, expense.id));
+      deleteDoc(doc(this.expensesRef, expense.id));
       this.showToast('success', 'Item excluído!')
     },
 
@@ -519,9 +527,6 @@ export default {
           ],
         });
       await actionSheet.present();
-
-      const { role } = await actionSheet.onDidDismiss();
-      console.log('onDidDismiss resolved with role', role);
     },
   }
 };
