@@ -261,6 +261,7 @@ export default {
               id: 'price',
               value: this.user.monthlyIncome,
               placeholder: 'Digite o novo valor',
+              type: 'number'
             }
           ],
           buttons: [
@@ -300,6 +301,7 @@ export default {
               id: 'price',
               value: this.user.emergencyReserveGoal,
               placeholder: 'Digite o novo valor',
+              type: 'number'
             }
           ],
           buttons: [
@@ -335,8 +337,8 @@ export default {
               name: 'price',
               id: 'price',
               value: this.user.emergencyReserveReached,
-              type: 'number',
               placeholder: 'Digite o novo valor',
+              type: 'number'
             }
           ],
           buttons: [
@@ -462,6 +464,7 @@ export default {
               id: 'price',
               value: expense.price,
               placeholder: 'Digite o valor',
+              type: 'number'
             },
           ],
           buttons: [
