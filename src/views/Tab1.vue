@@ -47,10 +47,12 @@
                 ></ion-progress-bar>
 
                 <ion-col style="padding-bottom: 0;" class="ion-text-left">
-                  <ion-label @click="alertUpdateMonthlyIncome()" class="label-italic">Salário:<b>{{formatMoney(user.monthlyIncome)}}</b></ion-label>
+                  <!-- <ion-label @click="alertUpdateMonthlyIncome()" class="label-italic">Proventos:<b>{{formatMoney(user.monthlyIncome)}}</b></ion-label><br> -->
+                  <ion-label style="margin-right: 8px" @click="alertToReceiveFromThirdParties()" class="label-italic">Proventos:<b>{{formatMoney(returnTotalFromThirdParties)}}</b></ion-label>
+                  <a @click="alertListToReceiveFromThirdParties()">Listar</a>
                 </ion-col>
                 <ion-col style="padding-bottom: 0;" class="ion-text-right">
-                  <ion-label class="label-italic">Gasto:<b>{{formatMoney(user.amountExpense)}}</b></ion-label>
+                  <ion-label class="label-italic">Gastos:<b>{{formatMoney(user.amountExpense)}}</b></ion-label>
                 </ion-col>
               </ion-row>
 
@@ -130,7 +132,7 @@
 import { alertController, IonList, IonListHeader, IonSelect, IonSelectOption, actionSheetController} from "@ionic/vue";
 import eventBus from '../eventBus'
 import { getAuth } from "firebase/auth";
-import { getFirestore, doc, updateDoc, onSnapshot, addDoc, collection, setDoc, deleteDoc, Timestamp} from "firebase/firestore";
+import { getFirestore, doc, updateDoc, onSnapshot, addDoc, collection, setDoc, deleteDoc, Timestamp, arrayUnion} from "firebase/firestore";
 
 const milliseconds = Timestamp.now().toMillis();
 const month = String(new Date(milliseconds).getMonth()+2)
@@ -167,8 +169,9 @@ export default {
         amountExpense: 0,
         expenses:[],
         amountToConquist: 0,
-        years: []
       },
+
+      toReceiveFromThirdParties: [],
 
       milliseconds: Timestamp.now().toMillis(),
       year: String(new Date(Timestamp.now().toMillis()).getFullYear()),
@@ -247,7 +250,6 @@ export default {
       onSnapshot(this.userRef, (userSnapshot) => {
         this.user.emergencyReserveGoal = userSnapshot.data().emergencyReserveGoal
         this.user.emergencyReserveReached = userSnapshot.data().emergencyReserveReached
-        this.user.years = userSnapshot.data().years
       })
 
       if(type === 'year'){
@@ -262,6 +264,7 @@ export default {
         this.user.monthlyIncome = 0
         if(monthSnapshot.data()){
           this.user.monthlyIncome = monthSnapshot.data().monthlyIncome
+          this.toReceiveFromThirdParties = monthSnapshot.data().toReceiveFromThirdParties ? monthSnapshot.data().toReceiveFromThirdParties : []
         }
       })
 
@@ -276,6 +279,79 @@ export default {
         this.sumExpenses()
       })
       this.loaded = true
+    },
+
+    async alertListToReceiveFromThirdParties(){
+      this.toReceiveFromThirdParties.sort((a, b) => {
+          return  b.price - a.price;
+      })
+
+      let html = '<ul>';
+      this.toReceiveFromThirdParties.forEach((element)=>{
+        html +=`<li>${element.name} - ${this.formatMoney(element.price)}</li>`
+      })
+
+      html += '</ul>';
+
+      const alert = await alertController
+        .create({
+          header: 'Lista proventos',
+          message: html,
+          buttons: [
+            {
+              handler:(data)=>{
+                const teste = document.getElementById('name').value
+                console.log(teste)
+              },
+              text: 'Fechar'
+            }
+          ],
+        })
+      
+      await alert.present()
+    },
+
+    async alertToReceiveFromThirdParties(){
+      const alert = await alertController
+        .create({
+          header: 'Alterar renda mensal',
+          inputs: [
+            {
+              name: 'name',
+              id: 'name',
+              value: '',
+              placeholder: 'Nome do devedor',
+            },
+            {
+              name: 'price',
+              id: 'price',
+              value: '',
+              placeholder: 'Digite o valor',
+              type: 'number'
+            }
+          ],
+          buttons: [
+            {
+              text: 'Salvar',
+              handler:(values)=>{
+                this.newToReceiveFromThirdParties(values)
+              }
+            },
+            {
+              text: 'Cancelar'
+            }
+          ],
+        })
+      
+      await alert.present()
+    },
+
+    newToReceiveFromThirdParties(values){
+      updateDoc(this.monthRef, {
+        toReceiveFromThirdParties : arrayUnion({name: values.name, price: parseFloat(values.price)})
+      })
+
+      this.showToast('success', this.formatMoney(parseFloat(values.price)) + ' para ' + values.name + ' inserido')
     },
 
     async alertUpdateMonthlyIncome() {
@@ -527,6 +603,17 @@ export default {
           ],
         });
       await actionSheet.present();
+    },
+  },
+
+  computed:{
+    returnTotalFromThirdParties(){
+      let total = 0
+      this.toReceiveFromThirdParties.forEach(element => {
+        total += element.price
+      });
+
+      return total;
     },
   }
 };
