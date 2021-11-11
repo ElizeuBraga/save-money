@@ -473,16 +473,26 @@ export default {
           header: 'Novo item',
           inputs: [
             {
+              label: 'Descrição',
               name: 'description',
               id: 'description',
               value: '',
               placeholder: 'Digite uma descrição',
             },
             {
+              label: 'Valor',
               name: 'price',
               id: 'price',
               value: '',
               placeholder: 'Digite o valor',
+              type: 'number'
+            },
+            {
+              label: 'Repetir',
+              name: 'repeat',
+              id: 'repeat',
+              value: '',
+              placeholder: 'Repetir?',
               type: 'number'
             }
           ],
@@ -498,6 +508,15 @@ export default {
             }
           ],
         });
+
+      const description = document.getElementById('description')
+      const price = document.getElementById('price')
+      const repeat = document.getElementById('repeat')
+
+      description.setAttribute('autocomplete', 'off')
+      price.setAttribute('autocomplete', 'off')
+      repeat.setAttribute('autocomplete', 'off')
+      
       return alert.present();
     },
 
@@ -509,6 +528,20 @@ export default {
       }
 
       addDoc(this.expensesRef, {description: expense.description, price: parseFloat(expense.price), img: img, createdAt: this.milliseconds})
+
+      // if repeat
+      let repeat = parseInt(expense.repeat)
+      while (repeat > 1) {
+        if(parseInt(this.month) == 12){
+          this.year = String(parseInt(this.year) + 1)
+          this.month = "1"
+        }else{
+          this.month = String(parseInt(this.month) + 1)
+        }
+        await this.mountReferences();
+        addDoc(this.expensesRef, {description: expense.description, price: parseFloat(expense.price), img: img, createdAt: this.milliseconds})
+        repeat --
+      }
       this.showToast('success', 'Novo item adicionado!')
     },
 
