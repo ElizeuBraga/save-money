@@ -102,7 +102,7 @@
                     <ion-label class="ion-text-left">{{e.description}}</ion-label>
                     <ion-label class="ion-text-right">{{"R$ " + parseFloat(e.price).toFixed(2).replace(".", ",")}}<br>
                       <p class="label-italic">{{formatDate(e.createdAt)}}</p>
-                      <p class="label-italic">Vencimento: {{new Date(e.expiration).getDate() +'-'+ (new Date(e.expiration).getMonth()+1)}}</p>
+                      <p class="label-italic">Venc: {{formatDate(e.expiration, true)}}</p>
                     </ion-label>
                   </ion-item>
                 </ion-list>
@@ -302,7 +302,7 @@ export default {
           message: html,
           buttons: [
             {
-              handler:(data)=>{
+              handler:()=>{
                 const teste = document.getElementById('name').value
                 console.log(teste)
               },
@@ -598,6 +598,13 @@ export default {
               placeholder: 'Digite o valor',
               type: 'number'
             },
+            {
+              label: 'Data de vencimento',
+              name: 'expiration',
+              id: 'expiration',
+              value: this.formatDateYYYMMMDDD(expense.expiration),
+              type: 'date'
+            },
           ],
           buttons: [
             {
@@ -614,14 +621,29 @@ export default {
       return alert.present();
     },
 
+    formatDateYYYMMMDDD(date) {
+      const d = new Date(date)
+        let month = '' + (d.getMonth() + 1)
+        let day = '' + d.getDate()
+        const year = d.getFullYear()
+
+        if (month.length < 2) 
+            month = '0' + month;
+        if (day.length < 2) 
+            day = '0' + day;
+        
+        return [year, month, day].join('-');
+    },
+
     async updateExpense(expense){
       let img = '../img/imgs/'+expense.description.toLowerCase()+'.png'
 
       if(!await this.imageExists(img)){
         img = '../img/imgs/default.png'
       }
-  
-      updateDoc(doc(this.expensesRef, expense.id), {description: expense.description, price: parseFloat(expense.price), img: img, createdAt: this.milliseconds})
+
+      const expiration = new Date(expense.expiration).getTime()
+      updateDoc(doc(this.expensesRef, expense.id), {description: expense.description, price: parseFloat(expense.price), img: img, expiration: expiration, createdAt: this.milliseconds})
 
       this.showToast('success', 'Item editado com sucesso!')
     },

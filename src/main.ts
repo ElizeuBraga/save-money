@@ -114,7 +114,7 @@ app.mixin({
       }
     },
 
-    formatDate(date: any){
+    formatDate(date: any, expiration = false){
       const day = new Date(date).getDate();
       if(!date || isNaN(day)){
         return '-'
@@ -122,12 +122,15 @@ app.mixin({
       
       let dateFormated = "dia " + day;
       const today = new Date().getDate();
-      if(today == day){
-        dateFormated = "Hoje";
+      if(!expiration){
+        if(today == day){
+          dateFormated = "Hoje";
+        }
+        if((today-1) == day){
+          dateFormated = "Ontem";
+        }
       }
-      if((today-1) == day){
-        dateFormated = "Ontem";
-      }
+
       return dateFormated;
     },
 
