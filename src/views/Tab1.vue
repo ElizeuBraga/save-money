@@ -100,7 +100,10 @@
                   <ion-item @click="presentActionSheet(e)">
                     <ion-img style="height: 30px; width: 30px; margin-right: 5px" :src="e.img"></ion-img>
                     <ion-label class="ion-text-left">{{e.description}}</ion-label>
-                    <ion-label class="ion-text-right">{{"R$ " + parseFloat(e.price).toFixed(2).replace(".", ",")}}<br><p class="label-italic">{{formatDate(e.createdAt)}}</p></ion-label>
+                    <ion-label class="ion-text-right">{{"R$ " + parseFloat(e.price).toFixed(2).replace(".", ",")}}<br>
+                      <p class="label-italic">{{formatDate(e.createdAt)}}</p>
+                      <p class="label-italic">Vencimento: {{new Date(e.expiration).getDate() +'-'+ (new Date(e.expiration).getMonth()+1)}}</p>
+                    </ion-label>
                   </ion-item>
                 </ion-list>
 
@@ -488,12 +491,20 @@ export default {
               type: 'number'
             },
             {
+              label: 'Data de vencimento',
+              name: 'expiration',
+              id: 'expiration',
+              value: this.year + '-' + this.month +'-10',
+              type: 'date'
+            },
+            {
               label: 'Repetir',
               name: 'repeat',
               id: 'repeat',
               value: '',
               placeholder: 'Repetir?',
-              type: 'number'
+              type: 'number',
+              max: 60
             }
           ],
           buttons: [
@@ -516,7 +527,7 @@ export default {
       description.setAttribute('autocomplete', 'off')
       price.setAttribute('autocomplete', 'off')
       repeat.setAttribute('autocomplete', 'off')
-      
+
       return alert.present();
     },
 
@@ -527,21 +538,38 @@ export default {
         img = '../img/imgs/default.png'
       }
 
-      addDoc(this.expensesRef, {description: expense.description, price: parseFloat(expense.price), img: img, createdAt: this.milliseconds})
+      // var year  = new Date(e.date).getFullYear();
+      // var month = new Date(e.date).getMonth();
+      // var day   = new Date(e.date).getDate();
+      // var date  = new Date(year + 1, month, day);
+
+
 
       // if repeat
       let repeat = parseInt(expense.repeat)
-      while (repeat > 1) {
-        if(parseInt(this.month) == 12){
-          this.year = String(parseInt(this.year) + 1)
-          this.month = "1"
-        }else{
-          this.month = String(parseInt(this.month) + 1)
+      alert(repeat)
+      let expiration = ''
+
+      expiration = new Date(expense.expiration).getTime()
+      addDoc(this.expensesRef, {description: expense.description, price: parseFloat(expense.price), img: img, expiration: expiration, createdAt: this.milliseconds})
+
+      if(repeat > 0){
+        while (repeat > 0) {
+          if(parseInt(this.month) == 12){
+            this.year = String(parseInt(this.year) + 1)
+            this.month = "1"
+          }else{
+            this.month = String(parseInt(this.month) + 1)
+          }
+          await this.mountReferences();
+
+          expiration = this.year + '-' + this.month + '-10'
+          expiration = new Date(expiration).getTime()
+          addDoc(this.expensesRef, {description: expense.description, price: parseFloat(expense.price), img: img, expiration: expiration, createdAt: this.milliseconds})
+          repeat --
         }
-        await this.mountReferences();
-        addDoc(this.expensesRef, {description: expense.description, price: parseFloat(expense.price), img: img, createdAt: this.milliseconds})
-        repeat --
       }
+
       this.showToast('success', 'Novo item adicionado!')
     },
 
