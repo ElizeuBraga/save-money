@@ -280,6 +280,10 @@ export default {
         })
 
         this.sumExpenses()
+
+        this.user.expenses.sort((a, b) => {
+          return  b.price - a.price;
+        })
       })
       this.loaded = true
     },
