@@ -148,7 +148,7 @@ export default {
   data: () => {
     return {
       monthSelected: month,
-      months: months(),
+      months: getMonths(),
 
       years: ["2021", "2022"],
 

@@ -17,7 +17,7 @@ export function addZero(num: number){
     return (num < 10) ? ('0' + num) : String(num)
 }
 
-export function months(index: number){
+export function getMonths(index: number){
     const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
     if(index){
         return months[index]
