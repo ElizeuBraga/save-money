@@ -20,6 +20,12 @@
           </ion-label>
         </ion-item>
         <ion-item>
+          <ion-icon color="primary" :icon="peopleOutline" />
+          <ion-label style="margin-left:5px">
+            <ion-router-link color="black" href="/toReceiveFromThirdParties">Pessoas que me devem</ion-router-link>
+          </ion-label>
+        </ion-item>
+        <ion-item>
           <ion-icon color="danger" :icon="arrowForwardOutline" />
           <ion-label style="margin-left:5px">
           <ion-router-link color="danger" href="/">Sair</ion-router-link>

@@ -47,9 +47,13 @@
                 ></ion-progress-bar>
 
                 <ion-col style="padding-bottom: 0;" class="ion-text-left">
-                  <!-- <ion-label @click="alertUpdateMonthlyIncome()" class="label-italic">Proventos:<b>{{formatMoney(user.monthlyIncome)}}</b></ion-label><br> -->
-                  <ion-label style="margin-right: 8px" @click="alertToReceiveFromThirdParties()" class="label-italic">Proventos:<b>{{formatMoney(returnTotalFromThirdParties)}}</b></ion-label>
-                  <a @click="alertListToReceiveFromThirdParties()">Listar</a>
+                  <!-- <ion-label @click="alertUpdateMonthlyIncome()" class="label-italic">Proventos:<b>{{formatMoney(user.monthlyIncome)}}</b></ion-label><br>
+                  <a @click="alertListToReceiveFromThirdParties()">Listar</a> -->
+                  <ion-label style="margin-right: 8px" class="label-italic">
+                    <ion-router-link href="/tabs/toReceiveFromThirdParties">
+                      Proventos:<b>{{formatMoney(user.monthlyIncome)}}</b>
+                    </ion-router-link>
+                  </ion-label>
                 </ion-col>
                 <ion-col style="padding-bottom: 0;" class="ion-text-right">
                   <ion-label class="label-italic">Gastos:<b>{{formatMoney(user.amountExpense)}}</b></ion-label>
@@ -86,14 +90,11 @@
         <ion-col size="12">
           <ion-grid>
             <ion-card>
-              <ion-list-header>
-                <ion-select @ionChange="loadExpenses($event, 'year')" :value="year" ok-text="Mostrar" cancel-text="Cancelar">
-                    <ion-select-option v-for="y in years" :key="y" :value="y">{{y}}</ion-select-option>
-                </ion-select>
-                <ion-select @ionChange="loadExpenses($event, 'month')" :value="month" ok-text="Mostrar" cancel-text="Cancelar">
-                    <ion-select-option v-for="m in months" :key="m.number" :value="m.number">{{m.description}}</ion-select-option>
-                </ion-select>
-              </ion-list-header>
+                <ion-slides @ionSlideDidChange="slideChanged($event)">
+                  <ion-slide v-for="m in months" :key="m">
+                    <span>{{m}}</span>
+                  </ion-slide>
+                </ion-slides>
 
               <ion-card-content align="center">
                 <ion-list v-for="e in user.expenses" :key="e.id">
@@ -131,35 +132,23 @@
 </template>
 
 <script>
-
-import { alertController, IonList, IonListHeader, IonSelect, IonSelectOption, actionSheetController} from "@ionic/vue";
+/* eslint-disable */
+import { alertController, IonList, IonListHeader, IonSelect, IonSelectOption, actionSheetController, IonSlides, IonSlide} from "@ionic/vue";
 import eventBus from '../eventBus'
 import { getAuth } from "firebase/auth";
 import { getFirestore, doc, updateDoc, onSnapshot, addDoc, collection, setDoc, deleteDoc, Timestamp, arrayUnion} from "firebase/firestore";
+import {addZero, months} from '../Helper'
 
 const milliseconds = Timestamp.now().toMillis();
 const month = String(new Date(milliseconds).getMonth()+2)
 
 export default {
   name: "Tab1",
-  components:{ IonList, IonListHeader, IonSelect, IonSelectOption},
+  components:{ IonList, IonListHeader, IonSelect, IonSelectOption, IonSlides, IonSlide},
   data: () => {
     return {
       monthSelected: month,
-      months: [
-        {description: 'Janeiro', number: '1'}, 
-        {description: 'Fevereiro', number: '2'}, 
-        {description: 'Março', number: '3'}, 
-        {description: 'Abril', number: '4'}, 
-        {description: 'Maio', number: '5'}, 
-        {description: 'Junho', number: '6'}, 
-        {description: 'Julho', number: '7'}, 
-        {description: 'Agosto', number: '8'}, 
-        {description: 'Setembro', number: '9'}, 
-        {description: 'Outubro', number: '10'}, 
-        {description: 'Novembro', number: '11'}, 
-        {description: 'Dezembro', number: '12'}
-      ],
+      months: months(),
 
       years: ["2021", "2022"],
 
@@ -175,6 +164,7 @@ export default {
       },
 
       toReceiveFromThirdParties: [],
+      totalToReceiveFromThirdParties: 0,
 
       milliseconds: Timestamp.now().toMillis(),
       year: String(new Date(Timestamp.now().toMillis()).getFullYear()),
@@ -192,6 +182,7 @@ export default {
 
     setTimeout(() => {
       this.loadExpenses()
+      this.loadData(this.month)
     }, 200);
     eventBus().emitter.on("tabChanged", () => {
         this.loaded = false
@@ -203,12 +194,25 @@ export default {
     eventBus().emitter.on("openModalNewExpense", () => {
       this.alertNewExpense()
     });
+
+    eventBus().emitter.on("totalToReceive", (total) => {
+      this.totalToReceiveFromThirdParties = total
+
+      console.log(total)
+    });
   },
   methods: {
+    slideChanged(e){
+      e.target.getActiveIndex().then(i => {
+        this.month = i + 1
+        this.loadExpenses()
+      });
+    },
+
     async mountReferences(){
       this.userRef = doc(getFirestore(), "users", getAuth().currentUser.uid)
       this.yearRef = collection(this.userRef, this.year)
-      this.monthRef = doc(this.userRef, this.year, this.month)
+      this.monthRef = doc(this.userRef, this.year, addZero(this.month))
       this.expensesRef = collection(this.monthRef, 'expenses')
     },
 
@@ -262,14 +266,6 @@ export default {
       }
 
       this.mountReferences()
-
-      onSnapshot(this.monthRef, (monthSnapshot) => {
-        this.user.monthlyIncome = 0
-        if(monthSnapshot.data()){
-          this.user.monthlyIncome = monthSnapshot.data().monthlyIncome
-          this.toReceiveFromThirdParties = monthSnapshot.data().toReceiveFromThirdParties ? monthSnapshot.data().toReceiveFromThirdParties : []
-        }
-      })
 
       onSnapshot(this.expensesRef, (expSnapshot) => {
         this.user.expenses = []
@@ -690,6 +686,16 @@ export default {
           ],
         });
       await actionSheet.present();
+    },
+
+    async loadData(month){
+      const toReceiveRef = collection(this.userRef, this.year, addZero(month), 'toReceiveFromThirdParties')
+      onSnapshot(toReceiveRef, (toReceiveSnapshot) => {
+        toReceiveSnapshot.docs.forEach((doc)=>{
+          const e = doc.data()
+          this.user.monthlyIncome += parseFloat(e.price)
+        })
+      })
     },
   },
 

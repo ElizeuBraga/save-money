@@ -54,7 +54,11 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: 'user',
         component: () => import('@/views/User.vue')
-      }
+      },
+      {
+        path: 'toReceiveFromThirdParties',
+        component: () => import('@/views/toReceiveFromThirdParties.vue')
+      },
     ]
   }
 ]
