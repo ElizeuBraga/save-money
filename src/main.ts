@@ -22,6 +22,7 @@ import {
   IonProgressBar,
   IonCardContent,
   toastController,
+  IonRouterOutlet
 } from '@ionic/vue';
 
 /* Core CSS required for Ionic components to work properly */
@@ -49,7 +50,7 @@ import './registerServiceWorker';
 
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { doc, getFirestore, Timestamp} from "firebase/firestore";
+import { Timestamp } from "firebase/firestore";
 
 const firebaseConfig = {
     apiKey: process.env.VUE_APP_FIRE_API_KEY,
@@ -66,7 +67,9 @@ const firebaseConfig = {
 
 initializeApp(firebaseConfig);
 
-const app = createApp(App).use(IonicVue).use(router)
+const app = createApp(App)
+app.use(IonicVue)
+app.use(router)
 
 app.mixin({
   components:{
@@ -87,6 +90,7 @@ app.mixin({
     IonCardHeader,
     IonProgressBar,
     IonCardContent,
+    IonRouterOutlet
   },
   data:()=>{
     return{

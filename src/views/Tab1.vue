@@ -7,14 +7,12 @@
           <ion-col>
             <ion-title>Home</ion-title>
           </ion-col>
-          <ion-col
-            size="6"
-          >
-          <ion-title class="ion-text-right" style="color:#2dd36f" v-if="(user.monthlyIncome - user.amountExpense) > 0">
-            {{formatMoney(user.monthlyIncome - user.amountExpense)}}
+          <ion-col size="6">
+          <ion-title class="ion-text-right" style="color:#2dd36f" v-if="(monthlyIncome - amountExpense) > 0">
+            {{formatMoney(monthlyIncome - amountExpense)}}
           </ion-title>
           <ion-title class="ion-text-right" style="color:#eb445a" v-else>
-            {{formatMoney(user.monthlyIncome - user.amountExpense)}}
+            {{formatMoney(monthlyIncome - amountExpense)}}
           </ion-title>
           </ion-col>
         </ion-row>
@@ -24,14 +22,8 @@
 
 
     <ion-content :fullscreen="true">
-      <ion-header collapse="condense">
-        <ion-toolbar>
-          <ion-title size="large">Home</ion-title>
-        </ion-toolbar>
-      </ion-header>
-
       <ion-row>
-        <!--Resume card-->
+      <!--Resume card-->
         <ion-grid>
           <ion-card>
             <ion-progress-bar v-if="!loaded" type="indeterminate"></ion-progress-bar>
@@ -42,21 +34,19 @@
               <ion-row>
                 <ion-progress-bar
                   :color="colorForBarExpenses()"
-                  :value="((user.amountExpense * 100)/ user.monthlyIncome)/100"
+                  :value="((amountExpense * 100)/ monthlyIncome)/100"
                   class="ion-progress-bar-infopercentage"
                 ></ion-progress-bar>
 
                 <ion-col style="padding-bottom: 0;" class="ion-text-left">
-                  <!-- <ion-label @click="alertUpdateMonthlyIncome()" class="label-italic">Proventos:<b>{{formatMoney(user.monthlyIncome)}}</b></ion-label><br>
-                  <a @click="alertListToReceiveFromThirdParties()">Listar</a> -->
                   <ion-label style="margin-right: 8px" class="label-italic">
                     <ion-router-link href="/tabs/toReceiveFromThirdParties">
-                      Proventos:<b>{{formatMoney(user.monthlyIncome)}}</b>
+                      Proventos:<b>{{formatMoney(monthlyIncome)}}</b>
                     </ion-router-link>
                   </ion-label>
                 </ion-col>
                 <ion-col style="padding-bottom: 0;" class="ion-text-right">
-                  <ion-label class="label-italic">Gastos:<b>{{formatMoney(user.amountExpense)}}</b></ion-label>
+                  <ion-label class="label-italic">Gastos:<b>{{formatMoney(amountExpense)}}</b></ion-label>
                 </ion-col>
               </ion-row>
 
@@ -65,28 +55,28 @@
               <ion-row>
                 <ion-progress-bar
                   :color="colorForBarEmergencyGoal()"
-                  :value="((user.emergencyReserveReached * 100) / user.emergencyReserveGoal)/100"
+                  :value="((emergencyReserveReached * 100) / emergencyReserveGoal)/100"
                   class="ion-progress-bar-infopercentage"
                 ></ion-progress-bar>
 
                 <ion-col style="padding-bottom: 0;" class="ion-text-left">
-                  <ion-label class="label-italic" @click="alertUpdateEmergencyReserveGoal()">Meta:<b>{{formatMoney(user.emergencyReserveGoal)}}</b></ion-label>
+                  <ion-label class="label-italic" @click="alertUpdateEmergencyReserveGoal()">Meta:<b>{{formatMoney(emergencyReserveGoal)}}</b></ion-label>
                 </ion-col>
                 <ion-col style="padding-bottom: 0;" class="ion-text-right">
-                  <ion-label class="label-italic" @click="alertUpdateEmergencyReserveReached()">Conquista:<b>{{formatMoney(user.emergencyReserveReached)}}</b></ion-label>
+                  <ion-label class="label-italic" @click="alertUpdateEmergencyReserveReached()">Conquista:<b>{{formatMoney(emergencyReserveReached)}}</b></ion-label>
                 </ion-col>
-                <ion-col class="label-italic ion-text-center" size="12" v-if="user.amountToConquist > 0">
-                  {{formatMoney(user.amountToConquist)}} para conquistar o {{colorForBarEmergencyGoal() == 'danger' ? 'vermelho' : colorForBarEmergencyGoal() == 'yellow' ? 'Amarelo' : 'verde'}}
+                <ion-col class="label-italic ion-text-center" size="12" v-if="amountToConquist > 0">
+                  {{formatMoney(amountToConquist)}} para conquistar o {{colorForBarEmergencyGoal() == 'danger' ? 'vermelho' : colorForBarEmergencyGoal() == 'yellow' ? 'Amarelo' : 'verde'}}
                 </ion-col>
                 <ion-col class="label-italic ion-text-center" size="12" v-else>
-                  Parabéns pela conquista {{user.name}}!
+                  Parabéns pela conquista {{name}}!
                 </ion-col>
               </ion-row>
             </ion-card-content>
           </ion-card>
         </ion-grid>
-
         <!--Resume card-->
+
         <ion-col size="12">
           <ion-grid>
             <ion-card>
@@ -97,7 +87,7 @@
                 </ion-slides>
 
               <ion-card-content align="center">
-                <ion-list v-for="e in user.expenses" :key="e.id">
+                <ion-list v-for="e in expenses" :key="e.id">
                   <ion-item @click="presentActionSheet(e)">
                     <ion-img style="height: 30px; width: 30px; margin-right: 5px" :src="e.img"></ion-img>
                     <ion-label class="ion-text-left">{{e.description}}</ion-label>
@@ -108,7 +98,7 @@
                   </ion-item>
                 </ion-list>
 
-                <ion-list v-if="user.expenses.length == 0">
+                <ion-list v-if="expenses.length == 0">
                   <ion-item>
                     <ion-label class="ion-text-center label-italic" color="danger">Nenhum item encontrado</ion-label>
                   </ion-item>
@@ -118,7 +108,7 @@
                     <b><ion-label>Total</ion-label></b>
                   </ion-col>
                   <ion-col class="ion-text-right">
-                    <b><ion-label>{{formatMoney(user.amountExpense)}}</ion-label></b>
+                    <b><ion-label>{{formatMoney(amountExpense)}}</ion-label></b>
                   </ion-col>
                 </ion-row>
               </ion-card-content>
@@ -132,39 +122,26 @@
 </template>
 
 <script>
-/* eslint-disable */
-import { alertController, IonList, IonListHeader, IonSelect, IonSelectOption, actionSheetController, IonSlides, IonSlide} from "@ionic/vue";
+
 import eventBus from '../eventBus'
 import { getAuth } from "firebase/auth";
-import { getFirestore, doc, updateDoc, onSnapshot, addDoc, collection, setDoc, deleteDoc, Timestamp, arrayUnion} from "firebase/firestore";
-import {addZero, months} from '../Helper'
-
-const milliseconds = Timestamp.now().toMillis();
-const month = String(new Date(milliseconds).getMonth()+2)
+import { addZero, getMonths } from '../Helper'
+import { getFirestore, doc, updateDoc, onSnapshot, addDoc, collection, deleteDoc, Timestamp, arrayUnion } from "firebase/firestore";
+import { alertController, IonList, actionSheetController, IonSlides, IonSlide, IonItemDivider, IonImg} from "@ionic/vue";
 
 export default {
-  name: "Tab1",
-  components:{ IonList, IonListHeader, IonSelect, IonSelectOption, IonSlides, IonSlide},
+  components:{ IonList, IonSlides, IonSlide, IonItemDivider, IonImg},
   data: () => {
     return {
-      monthSelected: month,
+      name: '',
       months: getMonths(),
-
-      years: ["2021", "2022"],
-
       loaded: false,
-
-      user:{
-        emergencyReserveGoal: 0,
-        emergencyReserveReached: 0,
-        monthlyIncome: 0,
-        amountExpense: 0,
-        expenses:[],
-        amountToConquist: 0,
-      },
-
+      emergencyReserveGoal: 0,
+      emergencyReserveReached: 0,
+      amountExpense: 0,
+      monthlyIncome: 0,
+      expenses: [],
       toReceiveFromThirdParties: [],
-      totalToReceiveFromThirdParties: 0,
 
       milliseconds: Timestamp.now().toMillis(),
       year: String(new Date(Timestamp.now().toMillis()).getFullYear()),
@@ -194,12 +171,6 @@ export default {
     eventBus().emitter.on("openModalNewExpense", () => {
       this.alertNewExpense()
     });
-
-    eventBus().emitter.on("totalToReceive", (total) => {
-      this.totalToReceiveFromThirdParties = total
-
-      console.log(total)
-    });
   },
   methods: {
     slideChanged(e){
@@ -217,7 +188,7 @@ export default {
     },
 
     colorForBarExpenses(){
-      const result = ((this.user.amountExpense * 100) / this.user.monthlyIncome) 
+      const result = ((this.amountExpense * 100) / this.monthlyIncome) 
       if(result < 33){
         return 'success'
       }else if(result > 66){
@@ -228,35 +199,35 @@ export default {
     },
 
     colorForBarEmergencyGoal(){
-      const result = ((this.user.emergencyReserveReached * 100) / this.user.emergencyReserveGoal)
-      const amountForColor = this.user.emergencyReserveGoal / 3;
+      const result = ((this.emergencyReserveReached * 100) / this.emergencyReserveGoal)
+      const amountForColor = this.emergencyReserveGoal / 3;
 
       if(result < 33.333){
-        const amountToConquistRed = amountForColor - this.user.emergencyReserveReached
-        this.user.amountToConquist = amountToConquistRed
+        const amountToConquistRed = amountForColor - this.emergencyReserveReached
+        this.amountToConquist = amountToConquistRed
         return 'danger'
       }else if(result > 66.666){
-        const amountToConquistRed = (amountForColor * 3) - this.user.emergencyReserveReached
-        this.user.amountToConquist = amountToConquistRed
+        const amountToConquistRed = (amountForColor * 3) - this.emergencyReserveReached
+        this.amountToConquist = amountToConquistRed
         return 'success' 
       }else{
-        const amountToConquistRed = (amountForColor * 2) - this.user.emergencyReserveReached
-        this.user.amountToConquist = amountToConquistRed
+        const amountToConquistRed = (amountForColor * 2) - this.emergencyReserveReached
+        this.amountToConquist = amountToConquistRed
         return 'warning'
       }
     },
 
     sumExpenses(){
-      this.user.amountExpense = 0
-      this.user.expenses.forEach((e)=>{
-        this.user.amountExpense += e.price
+      this.amountExpense = 0
+      this.expenses.forEach((e)=>{
+        this.amountExpense += e.price
       })
     },
 
     async loadExpenses(event, type = false){
       onSnapshot(this.userRef, (userSnapshot) => {
-        this.user.emergencyReserveGoal = userSnapshot.data().emergencyReserveGoal
-        this.user.emergencyReserveReached = userSnapshot.data().emergencyReserveReached
+        this.emergencyReserveGoal = userSnapshot.data().emergencyReserveGoal
+        this.emergencyReserveReached = userSnapshot.data().emergencyReserveReached
       })
 
       if(type === 'year'){
@@ -268,16 +239,16 @@ export default {
       this.mountReferences()
 
       onSnapshot(this.expensesRef, (expSnapshot) => {
-        this.user.expenses = []
+        this.expenses = []
         expSnapshot.docs.forEach((doc)=>{
           const e = doc.data()
           e.id = doc.id
-          this.user.expenses.push(e)
+          this.expenses.push(e)
         })
 
         this.sumExpenses()
 
-        this.user.expenses.sort((a, b) => {
+        this.expenses.sort((a, b) => {
           return  b.price - a.price;
         })
       })
@@ -357,44 +328,6 @@ export default {
       this.showToast('success', this.formatMoney(parseFloat(values.price)) + ' para ' + values.name + ' inserido')
     },
 
-    async alertUpdateMonthlyIncome() {
-        const alert = await alertController
-        .create({
-          header: 'Alterar renda mensal',
-          inputs: [
-            {
-              name: 'price',
-              id: 'price',
-              value: this.user.monthlyIncome,
-              placeholder: 'Digite o novo valor',
-              type: 'number'
-            }
-          ],
-          buttons: [
-            {
-              text: 'Salvar',
-              handler:(values)=>{
-                this.updateMonthlyIncome(values.price)
-              }
-            },
-            {
-              text: 'Cancelar'
-            }
-          ],
-        })
-      
-      await alert.present()
-    },
-
-    updateMonthlyIncome(price){
-      setDoc(this.monthRef, {
-        monthlyIncome : parseFloat(price),
-        number: parseInt(this.monthSelected)
-      })
-
-      this.showToast('success', 'Salário mensal atualizado!')
-    },
-
     async alertUpdateEmergencyReserveGoal() {
         const alert = await alertController
         .create({
@@ -403,7 +336,7 @@ export default {
             {
               name: 'price',
               id: 'price',
-              value: this.user.emergencyReserveGoal,
+              value: this.emergencyReserveGoal,
               placeholder: 'Digite o novo valor',
               type: 'number'
             }
@@ -440,7 +373,7 @@ export default {
             {
               name: 'price',
               id: 'price',
-              value: this.user.emergencyReserveReached,
+              value: this.emergencyReserveReached,
               placeholder: 'Digite o novo valor',
               type: 'number'
             }
@@ -537,13 +470,6 @@ export default {
       if(!await this.imageExists(img)){
         img = '../img/imgs/default.png'
       }
-
-      // var year  = new Date(e.date).getFullYear();
-      // var month = new Date(e.date).getMonth();
-      // var day   = new Date(e.date).getDate();
-      // var date  = new Date(year + 1, month, day);
-
-
 
       // if repeat
       let repeat = parseInt(expense.repeat)
@@ -693,7 +619,7 @@ export default {
       onSnapshot(toReceiveRef, (toReceiveSnapshot) => {
         toReceiveSnapshot.docs.forEach((doc)=>{
           const e = doc.data()
-          this.user.monthlyIncome += parseFloat(e.price)
+          this.monthlyIncome += parseFloat(e.price)
         })
       })
     },
