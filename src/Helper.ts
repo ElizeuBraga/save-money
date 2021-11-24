@@ -1,5 +1,5 @@
-import { getFirestore, doc, updateDoc, onSnapshot, addDoc, collection, setDoc, deleteDoc, Timestamp, arrayUnion} from "firebase/firestore"
 import { getAuth } from "firebase/auth"
+import { Timestamp, doc, getFirestore, collection} from "firebase/firestore"
 
 export function dates(date: string){
     const day = new Date(date).getDate() + 1
@@ -24,4 +24,31 @@ export function getMonths(index: number){
     }else{
         return months
     }
+}
+
+export function getNextMonthInt(){
+    return  new Date(Timestamp.now().toMillis()).getMonth()+2
+}
+
+export function getActualYear(){
+    return  String(new Date(Timestamp.now().toMillis()).getFullYear())
+}
+
+export function userRef(){
+    return  doc(getFirestore(), "users", getAuth().currentUser!.uid)
+}
+
+export function yearRef(yearArg: any = null){
+    const year = (yearArg) ? addZero(yearArg) : getActualYear() 
+    return  collection(userRef(), year)
+}
+
+export function monthRef(monthArg: any = null, yearArg: any = null){
+    const month = (monthArg) ? addZero(monthArg) : addZero(getNextMonthInt()) 
+    const year = (yearArg) ? yearArg : getActualYear()
+    return  doc(userRef(), String(year), month)
+}
+
+export function expRef(month: any, year: any){
+    return  collection(monthRef(month, year), 'expenses')
 }

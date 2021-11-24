@@ -124,7 +124,7 @@ import {
 } from "@ionic/vue";
 import { getFirestore, doc, addDoc, collection, Timestamp, onSnapshot} from "firebase/firestore";
 import { getAuth } from "firebase/auth";
-import { dates, addZero, months } from "../Helper";
+import { dates, addZero, getMonths } from "../Helper";
 import eventBus from '../eventBus'
 
 export default {
@@ -148,7 +148,7 @@ export default {
       receiveFromThirtyParties:[{name: 'Elizeu'}],
 
       initMonth: '', 
-      months: months(),
+      months: getMonths(),
 
       milliseconds: Timestamp.now().toMillis(),
       year: String(new Date(Timestamp.now().toMillis()).getFullYear()),

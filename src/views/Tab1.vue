@@ -80,9 +80,9 @@
         <ion-col size="12">
           <ion-grid>
             <ion-card>
-                <ion-slides @ionSlideDidChange="slideChanged($event)">
+                <ion-slides :options="slideOpts" @ionSlideDidChange="slideChanged($event)">
                   <ion-slide v-for="m in months" :key="m">
-                    <span>{{m}}</span>
+                    <span style="background: #3880ff; color: white; border-radius: 20px; padding: 0px 6px 0px 6px">{{m}}</span>
                   </ion-slide>
                 </ion-slides>
 
@@ -124,15 +124,18 @@
 <script>
 
 import eventBus from '../eventBus'
-import { getAuth } from "firebase/auth";
-import { addZero, getMonths } from '../Helper'
-import { getFirestore, doc, updateDoc, onSnapshot, addDoc, collection, deleteDoc, Timestamp, arrayUnion } from "firebase/firestore";
+import { addZero, getMonths, getNextMonthInt, userRef, yearRef, monthRef, expRef, getActualYear} from '../Helper'
+import { doc, updateDoc, onSnapshot, addDoc, collection, deleteDoc, Timestamp, arrayUnion } from "firebase/firestore";
 import { alertController, IonList, actionSheetController, IonSlides, IonSlide, IonItemDivider, IonImg} from "@ionic/vue";
 
 export default {
   components:{ IonList, IonSlides, IonSlide, IonItemDivider, IonImg},
   data: () => {
     return {
+      slideOpts:{
+        initialSlide: getNextMonthInt(),
+        speed: 400
+      },
       name: '',
       months: getMonths(),
       loaded: false,
@@ -145,7 +148,7 @@ export default {
 
       milliseconds: Timestamp.now().toMillis(),
       year: String(new Date(Timestamp.now().toMillis()).getFullYear()),
-      month: String(new Date(Timestamp.now().toMillis()).getMonth()+2),
+      month: getNextMonthInt(),
       
       userRef: null,
       yearRef: null,
@@ -158,8 +161,9 @@ export default {
     this.mountReferences()
 
     setTimeout(() => {
+      this.loadUserData()
       this.loadExpenses()
-      this.loadData(this.month)
+      this.loadData(getNextMonthInt())
     }, 200);
     eventBus().emitter.on("tabChanged", () => {
         this.loaded = false
@@ -175,16 +179,16 @@ export default {
   methods: {
     slideChanged(e){
       e.target.getActiveIndex().then(i => {
-        this.month = i + 1
-        this.loadExpenses()
+        this.loadExpenses(i + 1)
+        this.loadData(i + 1)
       });
     },
 
     async mountReferences(){
-      this.userRef = doc(getFirestore(), "users", getAuth().currentUser.uid)
-      this.yearRef = collection(this.userRef, this.year)
-      this.monthRef = doc(this.userRef, this.year, addZero(this.month))
-      this.expensesRef = collection(this.monthRef, 'expenses')
+      this.userRef = userRef()
+      this.yearRef = yearRef()
+      this.monthRef = monthRef()
+      this.expensesRef = expRef()
     },
 
     colorForBarExpenses(){
@@ -224,21 +228,16 @@ export default {
       })
     },
 
-    async loadExpenses(event, type = false){
-      onSnapshot(this.userRef, (userSnapshot) => {
+    async loadUserData(){
+      onSnapshot(userRef(), (userSnapshot) => {
         this.emergencyReserveGoal = userSnapshot.data().emergencyReserveGoal
         this.emergencyReserveReached = userSnapshot.data().emergencyReserveReached
       })
+    },
 
-      if(type === 'year'){
-        this.year = (event) ? event.detail.value : this.year
-      }else if(type === 'month'){
-        this.month = (event) ? event.detail.value : this.month
-      }
-
+    async loadExpenses(month){
       this.mountReferences()
-
-      onSnapshot(this.expensesRef, (expSnapshot) => {
+      onSnapshot(expRef(month), (expSnapshot) => {
         this.expenses = []
         expSnapshot.docs.forEach((doc)=>{
           const e = doc.data()
@@ -427,7 +426,7 @@ export default {
               label: 'Data de vencimento',
               name: 'expiration',
               id: 'expiration',
-              value: this.year + '-' + this.month +'-10',
+              value: getActualYear() + '-' + getNextMonthInt() +'-11',
               type: 'date'
             },
             {
@@ -473,25 +472,27 @@ export default {
 
       // if repeat
       let repeat = parseInt(expense.repeat)
-      alert(repeat)
+
       let expiration = ''
 
-      expiration = new Date(expense.expiration).getTime()
-      addDoc(this.expensesRef, {description: expense.description, price: parseFloat(expense.price), img: img, expiration: expiration, createdAt: this.milliseconds})
+      const day = new Date(expense.expiration).getUTCDate()
+      let month = new Date(expense.expiration).getMonth() + 1
+      let year = new Date(expense.expiration).getFullYear()
+
+      expiration = new Date(`${year}-${month}-${day}`).getTime()
+      addDoc(expRef(month, year), {description: expense.description, price: parseFloat(expense.price), img: img, expiration: expiration, createdAt: this.milliseconds})
 
       if(repeat > 0){
         while (repeat > 0) {
-          if(parseInt(this.month) == 12){
-            this.year = String(parseInt(this.year) + 1)
-            this.month = "1"
+          if(parseInt(month) == 12){
+            year = String(parseInt(year) + 1)
+            month = 1
           }else{
-            this.month = String(parseInt(this.month) + 1)
+            month = String(parseInt(month) + 1)
           }
-          await this.mountReferences();
-
-          expiration = this.year + '-' + this.month + '-10'
-          expiration = new Date(expiration).getTime()
-          addDoc(this.expensesRef, {description: expense.description, price: parseFloat(expense.price), img: img, expiration: expiration, createdAt: this.milliseconds})
+          
+          expiration = new Date(`${year}-${month}-${day}`).getTime()
+          addDoc(expRef(month), {description: expense.description, price: parseFloat(expense.price), img: img, expiration: expiration, createdAt: this.milliseconds})
           repeat --
         }
       }
@@ -615,6 +616,7 @@ export default {
     },
 
     async loadData(month){
+      this.monthlyIncome = 0
       const toReceiveRef = collection(this.userRef, this.year, addZero(month), 'toReceiveFromThirdParties')
       onSnapshot(toReceiveRef, (toReceiveSnapshot) => {
         toReceiveSnapshot.docs.forEach((doc)=>{
