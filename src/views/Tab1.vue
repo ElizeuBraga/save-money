@@ -569,8 +569,13 @@ export default {
         img = '../img/imgs/default.png'
       }
 
-      const expiration = new Date(expense.expiration).getTime()
-      updateDoc(doc(this.expensesRef, expense.id), {description: expense.description, price: parseFloat(expense.price), img: img, expiration: expiration, createdAt: this.milliseconds})
+      const day = new Date(expense.expiration).getUTCDate()
+      const month = new Date(expense.expiration).getMonth() + 1
+      const year = new Date(expense.expiration).getFullYear()
+
+      const expiration = new Date(`${year}-${month}-${day}`).getTime()
+
+      updateDoc(doc(expRef(month, year), expense.id), {description: expense.description, price: parseFloat(expense.price), img: img, expiration: expiration, createdAt: this.milliseconds})
 
       this.showToast('success', 'Item editado com sucesso!')
     },
