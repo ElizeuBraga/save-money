@@ -7,13 +7,8 @@
           <ion-col>
             <ion-title>Home</ion-title>
           </ion-col>
-          <ion-col size="6">
-          <ion-title class="ion-text-right" style="color:#2dd36f" v-if="(monthlyIncome - amountExpense) > 0">
-            {{formatMoney(monthlyIncome - amountExpense)}}
-          </ion-title>
-          <ion-title class="ion-text-right" style="color:#eb445a" v-else>
-            {{formatMoney(monthlyIncome - amountExpense)}}
-          </ion-title>
+          <ion-col size="6" class="ion-text-right">
+            <ion-label class="wallet" :color="((monthlyIncome - amountExpense) > 0) ? 'success' : 'danger'">{{formatMoney(monthlyIncome - amountExpense)}}</ion-label>
           </ion-col>
         </ion-row>
       </ion-toolbar>
@@ -31,26 +26,24 @@
               Resumo
             </ion-card-title>
             <ion-card-content>
-              <ion-row>
+              <ion-row style="margin-bottom: 12px">
                 <ion-progress-bar
                   :color="colorForBarExpenses()"
                   :value="((amountExpense * 100)/ monthlyIncome)/100"
                   class="ion-progress-bar-infopercentage"
                 ></ion-progress-bar>
 
-                <ion-col style="padding-bottom: 0;" class="ion-text-left">
-                  <ion-label style="margin-right: 8px" class="label-italic">
+                <ion-col class="ion-no-padding ion-text-left">
+                  <ion-label class="label-italic">
                     <ion-router-link href="/tabs/toReceiveFromThirdParties">
                       Proventos:<b>{{formatMoney(monthlyIncome)}}</b>
                     </ion-router-link>
                   </ion-label>
                 </ion-col>
-                <ion-col style="padding-bottom: 0;" class="ion-text-right">
+                <ion-col class="ion-no-padding ion-text-right">
                   <ion-label class="label-italic">Gastos:<b>{{formatMoney(amountExpense)}}</b></ion-label>
                 </ion-col>
               </ion-row>
-
-              <ion-item-divider style="margin-bottom: 20px"></ion-item-divider>
 
               <ion-row>
                 <ion-progress-bar
@@ -59,10 +52,10 @@
                   class="ion-progress-bar-infopercentage"
                 ></ion-progress-bar>
 
-                <ion-col style="padding-bottom: 0;" class="ion-text-left">
+                <ion-col class="ion-no-padding ion-text-left">
                   <ion-label class="label-italic" @click="alertUpdateEmergencyReserveGoal()">Meta:<b>{{formatMoney(emergencyReserveGoal)}}</b></ion-label>
                 </ion-col>
-                <ion-col style="padding-bottom: 0;" class="ion-text-right">
+                <ion-col class="ion-no-padding ion-text-right">
                   <ion-label class="label-italic" @click="alertUpdateEmergencyReserveReached()">Conquista:<b>{{formatMoney(emergencyReserveReached)}}</b></ion-label>
                 </ion-col>
                 <ion-col class="label-italic ion-text-center" size="12" v-if="amountToConquist > 0">
@@ -126,10 +119,10 @@
 import eventBus from '../eventBus'
 import { addZero, getMonths, getNextMonthInt, userRef, yearRef, monthRef, expRef, getActualYear} from '../Helper'
 import { doc, updateDoc, onSnapshot, addDoc, collection, deleteDoc, Timestamp, arrayUnion } from "firebase/firestore";
-import { alertController, IonList, actionSheetController, IonSlides, IonSlide, IonItemDivider, IonImg} from "@ionic/vue";
+import { alertController, IonList, actionSheetController, IonSlides, IonSlide, IonImg} from "@ionic/vue";
 
 export default {
-  components:{ IonList, IonSlides, IonSlide, IonItemDivider, IonImg},
+  components:{ IonList, IonSlides, IonSlide, IonImg},
   data: () => {
     return {
       slideOpts:{
@@ -686,18 +679,6 @@ ion-content {
   }
 }
 
-.ion-color-primary{
-  --ion-color-base: white!important
-}
-
-ion-title{
-  color: #3880ff;
-}
-
-ion-content {
-  --ion-background-color: #3880ff;
-}
-
 /* alerts */
 .btn-cancel-alert{
   color: red!important;
@@ -705,5 +686,13 @@ ion-content {
 
 .btn-save-alert{
   color: green!important;
+}
+
+.wallet{
+  background: white;
+  border-radius: 15px;
+  padding: 3px 6px 3px 6px;
+  font-size: 20px!important;
+  font-weight: bold;
 }
 </style>
