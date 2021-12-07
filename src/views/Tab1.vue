@@ -567,7 +567,7 @@ export default {
 
       const expiration = new Date(`${year}-${month}-${day}`).getTime()
 
-      updateDoc(doc(expRef(month, year), expense.id), {description: expense.description, price: parseFloat(expense.price), img: img, expiration: expiration, createdAt: this.milliseconds})
+      updateDoc(doc(expRef(year, month), expense.id), {description: expense.description, price: parseFloat(expense.price), img: img, expiration: expiration, createdAt: this.milliseconds})
 
       this.showToast('success', 'Item editado com sucesso!')
     },
