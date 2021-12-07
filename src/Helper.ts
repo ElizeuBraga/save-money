@@ -50,10 +50,10 @@ export function yearRef(year: any = null){
     return  collection(userRef(), String(year))
 }
 
-export function monthRef(month: any = null, year: any = null){
-    return  doc(userRef(), String(year), String(month))
+export function monthRef(year: any = null, month: any = null){
+    return  doc(userRef(), String(year), addZero(month))
 }
 
-export function expRef(month: any, year: any){
-    return  collection(monthRef(month, year), 'expenses')
+export function expRef(year: any, month: any){
+    return  collection(monthRef(year, month), 'expenses')
 }
