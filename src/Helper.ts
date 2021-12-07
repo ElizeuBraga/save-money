@@ -27,26 +27,31 @@ export function getMonths(index: number){
 }
 
 export function getNextMonthInt(){
-    return  new Date(Timestamp.now().toMillis()).getMonth()+2
+    const month = new Date(Timestamp.now().toMillis()).getMonth() + 1
+    if(month === 12){
+        return 1
+    }
+    return month
+}
+
+export function getNextMonthIndex(){
+    return getNextMonthInt() - 1
 }
 
 export function getActualYear(){
-    return  String(new Date(Timestamp.now().toMillis()).getFullYear())
+    return  new Date(Timestamp.now().toMillis()).getFullYear()
 }
 
 export function userRef(){
     return  doc(getFirestore(), "users", getAuth().currentUser!.uid)
 }
 
-export function yearRef(yearArg: any = null){
-    const year = (yearArg) ? addZero(yearArg) : getActualYear() 
-    return  collection(userRef(), year)
+export function yearRef(year: any = null){
+    return  collection(userRef(), String(year))
 }
 
-export function monthRef(monthArg: any = null, yearArg: any = null){
-    const month = (monthArg) ? addZero(monthArg) : addZero(getNextMonthInt()) 
-    const year = (yearArg) ? yearArg : getActualYear()
-    return  doc(userRef(), String(year), month)
+export function monthRef(month: any = null, year: any = null){
+    return  doc(userRef(), String(year), String(month))
 }
 
 export function expRef(month: any, year: any){

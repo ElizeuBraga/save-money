@@ -35,9 +35,7 @@
 
                 <ion-col class="ion-no-padding ion-text-left">
                   <ion-label class="label-italic">
-                    <ion-router-link href="/tabs/toReceiveFromThirdParties">
                       Proventos:<b>{{formatMoney(monthlyIncome)}}</b>
-                    </ion-router-link>
                   </ion-label>
                 </ion-col>
                 <ion-col class="ion-no-padding ion-text-right">
@@ -84,10 +82,7 @@
                   <ion-item @click="presentActionSheet(e)">
                     <ion-img style="height: 30px; width: 30px; margin-right: 5px" :src="e.img"></ion-img>
                     <ion-label class="ion-text-left">{{e.description}}</ion-label>
-                    <ion-label class="ion-text-right">{{"R$ " + parseFloat(e.price).toFixed(2).replace(".", ",")}}<br>
-                      <p class="label-italic">{{formatDate(e.createdAt)}}</p>
-                      <p class="label-italic">Venc: {{formatDate(e.expiration, true)}}</p>
-                    </ion-label>
+                    <ion-label class="ion-text-right">{{"R$ " + parseFloat(e.price).toFixed(2).replace(".", ",")}}</ion-label>
                   </ion-item>
                 </ion-list>
 
@@ -117,7 +112,7 @@
 <script>
 
 import eventBus from '../eventBus'
-import { addZero, getMonths, getNextMonthInt, userRef, yearRef, monthRef, expRef, getActualYear} from '../Helper'
+import { addZero, getMonths, getNextMonthInt, getNextMonthIndex, userRef, yearRef, monthRef, expRef, getActualYear} from '../Helper'
 import { doc, updateDoc, onSnapshot, addDoc, collection, deleteDoc, Timestamp, arrayUnion } from "firebase/firestore";
 import { alertController, IonList, actionSheetController, IonSlides, IonSlide, IonImg} from "@ionic/vue";
 
@@ -126,7 +121,7 @@ export default {
   data: () => {
     return {
       slideOpts:{
-        initialSlide: getNextMonthInt(),
+        initialSlide: getNextMonthIndex(),
         speed: 400
       },
       name: '',
@@ -140,8 +135,6 @@ export default {
       toReceiveFromThirdParties: [],
 
       milliseconds: Timestamp.now().toMillis(),
-      year: String(new Date(Timestamp.now().toMillis()).getFullYear()),
-      month: getNextMonthInt(),
       
       userRef: null,
       yearRef: null,
@@ -153,15 +146,18 @@ export default {
   async mounted() {
     this.mountReferences()
 
-    setTimeout(() => {
-      this.loadUserData()
-      this.loadExpenses()
-      this.loadData(getNextMonthInt())
-    }, 200);
+    const month = getNextMonthInt();
+    let year = getActualYear()
+
+    if(month === 1){
+      year = getActualYear() + 1
+    }
+
+    this.loadExpenses(month, year)
     eventBus().emitter.on("tabChanged", () => {
         this.loaded = false
         setTimeout(async()=>{
-          this.loadExpenses()
+          this.loadExpenses(month, year)
         }, 3000)
     });
 
@@ -172,8 +168,16 @@ export default {
   methods: {
     slideChanged(e){
       e.target.getActiveIndex().then(i => {
-        this.loadExpenses(i + 1)
-        this.loadData(i + 1)
+        const month = i+1;
+        let year = getActualYear()
+
+        if(month === 1){
+          year = getActualYear() + 1
+        }
+
+        console.log(year)
+        this.loadExpenses(month, year)
+        this.loadData(month, year)
       });
     },
 
@@ -228,9 +232,9 @@ export default {
       })
     },
 
-    async loadExpenses(month){
+    async loadExpenses(month, year){
       this.mountReferences()
-      onSnapshot(expRef(month), (expSnapshot) => {
+      onSnapshot(expRef(month, year), (expSnapshot) => {
         this.expenses = []
         expSnapshot.docs.forEach((doc)=>{
           const e = doc.data()
@@ -419,7 +423,7 @@ export default {
               label: 'Data de vencimento',
               name: 'expiration',
               id: 'expiration',
-              value: getActualYear() + '-' + getNextMonthInt() +'-11',
+              value: getActualYear() + '-' + addZero(getNextMonthInt()) +'-10',
               type: 'date'
             },
             {
@@ -613,9 +617,9 @@ export default {
       await actionSheet.present();
     },
 
-    async loadData(month){
+    async loadData(month, year){
       this.monthlyIncome = 0
-      const toReceiveRef = collection(this.userRef, this.year, addZero(month), 'toReceiveFromThirdParties')
+      const toReceiveRef = collection(monthRef(month, year), 'toReceiveFromThirdParties')
       onSnapshot(toReceiveRef, (toReceiveSnapshot) => {
         toReceiveSnapshot.docs.forEach((doc)=>{
           const e = doc.data()
