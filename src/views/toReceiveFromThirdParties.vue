@@ -124,7 +124,7 @@ import {
 } from "@ionic/vue";
 import { getFirestore, doc, addDoc, collection, Timestamp, onSnapshot} from "firebase/firestore";
 import { getAuth } from "firebase/auth";
-import { dates, addZero, getMonths } from "../Helper";
+import { dates, addZero, getMonths, monthRef, getActualYear, getNextMonthInt} from "../Helper";
 import eventBus from '../eventBus'
 
 export default {
@@ -161,20 +161,33 @@ export default {
     };
   },
   async mounted() {
-    await this.loadData(this.month)
+    const month = getNextMonthInt();
+    let year = getActualYear()
+
+    if(month === 1){
+      year = getActualYear() + 1
+    }
+
+    await this.loadData(year, month)
   },
   methods: {
     slideChanged(e){
       e.target.getActiveIndex().then(i => {
-        this.loadData(i + 1)
+        const month = i+1;
+        let year = getActualYear()
+
+        if(getNextMonthInt() === 1){
+          year = getActualYear() + 1
+        }
+
+        this.loadData(year, month)
       });
     },
 
-    async loadData(month){
+    async loadData(year, month){
       let total = 0;
-      const toReceiveRef = collection(this.userRef, this.year, addZero(month), 'toReceiveFromThirdParties')
+      const toReceiveRef = collection(monthRef(year, month), 'toReceiveFromThirdParties')
       onSnapshot(toReceiveRef, (expSnapshot) => {
-        console.log(expSnapshot)
         this.receiveFromThirtyParties = []
         expSnapshot.docs.forEach((doc)=>{
           const e = doc.data()

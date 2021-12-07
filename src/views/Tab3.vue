@@ -22,7 +22,7 @@
         <ion-item>
           <ion-icon color="primary" :icon="peopleOutline" />
           <ion-label style="margin-left:5px">
-            <ion-router-link color="black" href="/toReceiveFromThirdParties">Pessoas que me devem</ion-router-link>
+            <ion-router-link color="black" href="/tabs/toReceiveFromThirdParties">Pessoas que me devem</ion-router-link>
           </ion-label>
         </ion-item>
         <ion-item>
