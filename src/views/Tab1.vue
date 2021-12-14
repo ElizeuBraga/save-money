@@ -1,5 +1,5 @@
 <template>
-  <ion-page id="ionPage">
+  <ion-page>
     <!-- Header -->
     <ion-header>
       <ion-toolbar color="primary">
@@ -8,7 +8,7 @@
             <ion-title>Home</ion-title>
           </ion-col>
           <ion-col size="6" class="ion-text-right">
-            <ion-label class="wallet" :color="((monthlyIncome - amountExpense) > 0) ? 'success' : 'danger'">{{formatMoney(monthlyIncome - amountExpense)}}</ion-label>
+            <ion-label class="wallet" :color="((totalToreceive - amountExpense) > 0) ? 'success' : 'danger'">{{formatMoney(totalToreceive - amountExpense)}}</ion-label>
           </ion-col>
         </ion-row>
       </ion-toolbar>
@@ -29,13 +29,13 @@
               <ion-row style="margin-bottom: 12px">
                 <ion-progress-bar
                   :color="colorForBarExpenses()"
-                  :value="((amountExpense * 100)/ monthlyIncome)/100"
+                  :value="((amountExpense * 100)/totalToreceive)/100"
                   class="ion-progress-bar-infopercentage"
                 ></ion-progress-bar>
 
                 <ion-col class="ion-no-padding ion-text-left">
                   <ion-label class="label-italic">
-                      Proventos:<b>{{formatMoney(monthlyIncome)}}</b>
+                      Proventos:<b>{{formatMoney(totalToreceive)}}</b>
                   </ion-label>
                 </ion-col>
                 <ion-col class="ion-no-padding ion-text-right">
@@ -46,21 +46,16 @@
               <ion-row>
                 <ion-progress-bar
                   :color="colorForBarEmergencyGoal()"
-                  :value="((emergencyReserveReached * 100) / emergencyReserveGoal)/100"
+                  :value="calcBarEmergencyGoal"
                   class="ion-progress-bar-infopercentage"
                 ></ion-progress-bar>
 
                 <ion-col class="ion-no-padding ion-text-left">
-                  <ion-label class="label-italic" @click="alertUpdateEmergencyReserveGoal()">Meta:<b>{{formatMoney(emergencyReserveGoal)}}</b></ion-label>
+                  <ion-label class="label-italic" @click="alertUpdateEmergencyReserveGoal()">Meta:<b>{{formatMoney(emergencyReserveGoal)}}</b></ion-label><br>
+                  <ion-label class="label-italic" @click="alertUpdateEmergencyReserveReached()">Faltam:<b>{{formatMoney(emergencyGoalMissing)}}</b></ion-label>
                 </ion-col>
                 <ion-col class="ion-no-padding ion-text-right">
-                  <ion-label class="label-italic" @click="alertUpdateEmergencyReserveReached()">Conquista:<b>{{formatMoney(emergencyReserveReached)}}</b></ion-label>
-                </ion-col>
-                <ion-col class="label-italic ion-text-center" size="12" v-if="amountToConquist > 0">
-                  {{formatMoney(amountToConquist)}} para conquistar o {{colorForBarEmergencyGoal() == 'danger' ? 'vermelho' : colorForBarEmergencyGoal() == 'yellow' ? 'Amarelo' : 'verde'}}
-                </ion-col>
-                <ion-col class="label-italic ion-text-center" size="12" v-else>
-                  Parabéns pela conquista {{name}}!
+                  <ion-label class="label-italic" @click="alertUpdateEmergencyReserveReached()">Conquista:<b>{{formatMoney(emergencyReserveReached)}}</b></ion-label><br>
                 </ion-col>
               </ion-row>
             </ion-card-content>
@@ -112,8 +107,8 @@
 <script>
 
 import eventBus from '../eventBus'
-import { addZero, getMonths, getNextMonthInt, getNextMonthIndex, userRef, monthRef, expRef, getActualYear} from '../Helper'
-import { doc, updateDoc, onSnapshot, addDoc, collection, deleteDoc, Timestamp, arrayUnion } from "firebase/firestore";
+import { addZero, getMonths, getNextMonthInt, getNextMonthIndex, userRef, expRef, getActualYear, toReceiveRef, formatInputReal, formatInputRealV3} from '../Helper'
+import { doc, updateDoc, onSnapshot, addDoc, deleteDoc, Timestamp, arrayUnion } from "firebase/firestore";
 import { alertController, IonList, actionSheetController, IonSlides, IonSlide, IonImg} from "@ionic/vue";
 
 export default {
@@ -129,42 +124,76 @@ export default {
       loaded: false,
       emergencyReserveGoal: 0,
       emergencyReserveReached: 0,
-      amountExpense: 0,
-      monthlyIncome: 0,
       expenses: [],
-      toReceiveFromThirdParties: [],
+      toReceives:[],
 
       milliseconds: Timestamp.now().toMillis(),
       
       userRef: null,
       monthRef: null,
-      expensesRef: null
+      expensesRef: null,
+
+      allData: null
     }
   },
 
   async mounted() {
-    this.mountReferences()
+    this.loadAllData()
 
-    const month = getNextMonthInt();
-    let year = getActualYear()
-
-    if(month === 1){
-      year = getActualYear() + 1
-    }
-
-    this.loadExpenses(year, month)
-    eventBus().emitter.on("tabChanged", () => {
-        this.loaded = false
-        setTimeout(async()=>{
-          this.loadExpenses(year, month)
-        }, 3000)
-    });
+    setTimeout(() => {
+      if(this.emergencyReserveGoal === 0){
+        this.alertUpdateEmergencyReserveGoal()
+      }
+    }, 2000);
 
     eventBus().emitter.on("openModalNewExpense", () => {
       this.alertNewExpense()
     });
   },
   methods: {
+    loadAllData(year = null, month = null){
+      if(!year && !month){
+        month = getNextMonthInt();
+        year = getActualYear()
+  
+        if(month === 1){
+          year = getActualYear() + 1
+        }
+      }
+
+      // load user data
+      onSnapshot(userRef(), (userSnapshot) => {
+        this.emergencyReserveReached = userSnapshot.data().emergencyReserveReached
+        this.emergencyReserveGoal = userSnapshot.data().emergencyReserveGoal
+      })
+
+      // load expenses data
+      onSnapshot(expRef(year, month), (expSnapshot) => {
+        this.expenses = []
+        expSnapshot.docs.forEach((doc)=>{
+          const e = doc.data()
+          e.id = doc.id
+          this.expenses.push(e)
+        })
+
+        this.expenses.sort((a, b) => {
+          return  b.price - a.price;
+        })
+      })
+
+      // load toReceiveData
+      onSnapshot(toReceiveRef(year, month), (toReceiveSnapShot) => {
+        this.toReceives = []
+        toReceiveSnapShot.docs.forEach((doc)=>{
+          const e = doc.data()
+          e.id = doc.id
+          this.toReceives.push(e)
+        })
+      })
+
+      this.loaded = true
+    },
+
     slideChanged(e){
       e.target.getActiveIndex().then(i => {
         const month = i+1;
@@ -174,19 +203,12 @@ export default {
           year = getActualYear() + 1
         }
 
-        this.loadExpenses(year, month)
-        this.loadData(year, month)
+        this.loadAllData(year, month)
       });
     },
 
-    async mountReferences(){
-      this.userRef = userRef()
-      this.monthRef = monthRef()
-      this.expensesRef = expRef()
-    },
-
     colorForBarExpenses(){
-      const result = ((this.amountExpense * 100) / this.monthlyIncome) 
+      const result = ((this.amountExpense * 100) / this.totalToreceive) 
       if(result < 33){
         return 'success'
       }else if(result > 66){
@@ -197,55 +219,22 @@ export default {
     },
 
     colorForBarEmergencyGoal(){
-      const result = ((this.emergencyReserveReached * 100) / this.emergencyReserveGoal)
-      const amountForColor = this.emergencyReserveGoal / 3;
-
-      if(result < 33.333){
-        const amountToConquistRed = amountForColor - this.emergencyReserveReached
-        this.amountToConquist = amountToConquistRed
+      if(this.emergencyReserveReached === 0 && this.emergencyReserveGoal === 0){
         return 'danger'
-      }else if(result > 66.666){
-        const amountToConquistRed = (amountForColor * 3) - this.emergencyReserveReached
-        this.amountToConquist = amountToConquistRed
-        return 'success' 
+      }else if(this.emergencyReserveGoal === 0 && this.emergencyReserveReached > 0){
+        return 'success'
+      }else if(this.emergencyReserveReached === 0 && this.emergencyReserveGoal > 0){
+        return 'danger'
       }else{
-        const amountToConquistRed = (amountForColor * 2) - this.emergencyReserveReached
-        this.amountToConquist = amountToConquistRed
-        return 'warning'
+        const result = ((this.emergencyReserveReached * 100) / this.emergencyReserveGoal)
+        if(result > 66.6){
+          return 'success'
+        }else if(result < 33.33){
+          return 'danger' 
+        }else{
+          return 'warning'
+        }
       }
-    },
-
-    sumExpenses(){
-      this.amountExpense = 0
-      this.expenses.forEach((e)=>{
-        this.amountExpense += e.price
-      })
-    },
-
-    async loadUserData(){
-      onSnapshot(userRef(), (userSnapshot) => {
-        this.emergencyReserveGoal = userSnapshot.data().emergencyReserveGoal
-        this.emergencyReserveReached = userSnapshot.data().emergencyReserveReached
-      })
-    },
-
-    async loadExpenses(year, month){
-      this.mountReferences()
-      onSnapshot(expRef(year, month), (expSnapshot) => {
-        this.expenses = []
-        expSnapshot.docs.forEach((doc)=>{
-          const e = doc.data()
-          e.id = doc.id
-          this.expenses.push(e)
-        })
-
-        this.sumExpenses()
-
-        this.expenses.sort((a, b) => {
-          return  b.price - a.price;
-        })
-      })
-      this.loaded = true
     },
 
     async alertListToReceiveFromThirdParties(){
@@ -325,20 +314,23 @@ export default {
         const alert = await alertController
         .create({
           header: 'Alterar meta',
+          message: this.emergencyReserveGoal === 0 ? 'Informe uma meta para reserva de emergência' : 'Altere suma meta',
           inputs: [
             {
               name: 'price',
               id: 'price',
-              value: this.emergencyReserveGoal,
+              value: formatInputRealV3(this.emergencyReserveGoal),
               placeholder: 'Digite o novo valor',
-              type: 'number'
+              type: 'number',
+              step:".01"
             }
           ],
           buttons: [
             {
               text: 'Salvar',
               handler:(values)=>{
-                this.updateEmergencyReserveGoal(values.price)
+                console.log(values.price)
+                this.updateEmergencyReserveGoal(formatInputReal(values.price))
               }
             },
             {
@@ -346,12 +338,18 @@ export default {
             }
           ],
         })
-      
+
       await alert.present()
+      const price = document.getElementById('price')
+      price.focus()
+      price.addEventListener("keyup", function() {
+        console.log(price.value)
+        price.value = formatInputReal(price.value)
+      });
     },
 
     updateEmergencyReserveGoal(price){
-      updateDoc(this.userRef, {
+      updateDoc(userRef(), {
         emergencyReserveGoal : parseFloat(price)
       })
 
@@ -366,7 +364,7 @@ export default {
             {
               name: 'price',
               id: 'price',
-              value: this.emergencyReserveReached,
+              value: formatInputRealV3(this.emergencyReserveReached),
               placeholder: 'Digite o novo valor',
               type: 'number'
             }
@@ -375,7 +373,7 @@ export default {
             {
               text: 'Salvar',
               handler: (values) => {
-                this.updateEmergencyReserveReached(values.price);
+                this.updateEmergencyReserveReached(formatInputReal(values.price));
               },
             },
             {
@@ -385,10 +383,17 @@ export default {
         })
       
       await alert.present();
+
+      const price = document.getElementById('price')
+      price.focus()
+      price.addEventListener("keyup", function() {
+        console.log(price.value)
+        price.value = formatInputReal(price.value)
+      });
     },
 
     async updateEmergencyReserveReached(price){
-      await updateDoc(this.userRef, {
+      await updateDoc(userRef(), {
         emergencyReserveReached : parseFloat(price)
       })
 
@@ -610,21 +615,14 @@ export default {
           ],
         });
       await actionSheet.present();
-    },
-
-    async loadData(year, month){
-      this.monthlyIncome = 0
-      const toReceiveRef = collection(monthRef(year, month), 'toReceiveFromThirdParties')
-      onSnapshot(toReceiveRef, (toReceiveSnapshot) => {
-        toReceiveSnapshot.docs.forEach((doc)=>{
-          const e = doc.data()
-          this.monthlyIncome += parseFloat(e.price)
-        })
-      })
-    },
+    }
   },
 
   computed:{
+    emergencyGoalMissing(){
+      return this.emergencyReserveGoal > this.emergencyReserveReached ? this.emergencyReserveGoal - this.emergencyReserveReached : 0
+    },
+
     returnTotalFromThirdParties(){
       let total = 0
       this.toReceiveFromThirdParties.forEach(element => {
@@ -633,6 +631,33 @@ export default {
 
       return total;
     },
+
+    amountExpense(){
+      let total = 0
+      this.expenses.forEach((e)=>{
+        total += e.price
+      })
+
+      return total;
+    },
+
+    totalToreceive(){
+      let total = 0
+      this.toReceives.forEach((e)=>{
+        total += e.price
+      })
+
+      return total;
+    },
+
+    calcBarEmergencyGoal(){
+      if(this.emergencyReserveReached === 0 && this.emergencyReserveGoal === 0){
+        return 0
+      }
+
+      const result = ((this.emergencyReserveReached * 100) / this.emergencyReserveGoal)/100
+      return result
+    }
   }
 };
 </script>

@@ -57,3 +57,22 @@ export function monthRef(year: any = null, month: any = null){
 export function expRef(year: any, month: any){
     return  collection(monthRef(year, month), 'expenses')
 }
+
+export function toReceiveRef(year: any, month: any){
+    return  collection(monthRef(year, month), 'toReceiveFromThirdParties')
+}
+
+export function formatInputReal(value: any){
+    return (parseInt(String(value).replace('.', '')) / 100).toFixed(2);
+}
+
+export function formatInputRealV2(value: any){
+    console.log(value)
+    const result = (parseInt(String(value).replace('.', '')) / 100).toFixed(2);
+    console.log(result)
+    return result 
+}
+
+export function formatInputRealV3(value: any){
+    return parseFloat(value).toFixed(2);
+}
