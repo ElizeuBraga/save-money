@@ -1,52 +1,380 @@
 <template>
   <ion-page>
+    <!-- Header -->
     <ion-header>
       <ion-toolbar color="primary">
-        <ion-title>Menu</ion-title>
+        <tollbar-component :total="(getTotalToReceive - expenseTotal)" title="Entradas"/>
       </ion-toolbar>
     </ion-header>
+    <!-- Header -->
+
     <ion-content :fullscreen="true">
-      <ion-header collapse="condense">
-        <ion-toolbar>
-          <ion-title size="large">Menu</ion-title>
-        </ion-toolbar>
-      </ion-header>
-      
-      <ion-list>
-        <ion-item>
-          <ion-icon color="primary" :icon="peopleOutline" />
-          <ion-label style="margin-left:5px">
-            <ion-router-link color="black" href="/tabs/user">Alterar dados</ion-router-link>
-          </ion-label>
-        </ion-item>
-        <ion-item>
-          <ion-icon color="primary" :icon="peopleOutline" />
-          <ion-label style="margin-left:5px">
-            <ion-router-link color="black" href="/tabs/toReceiveFromThirdParties">Pessoas que me devem</ion-router-link>
-          </ion-label>
-        </ion-item>
-        <ion-item>
-          <ion-icon color="danger" :icon="arrowForwardOutline" />
-          <ion-label style="margin-left:5px">
-          <ion-router-link color="danger" href="/">Sair</ion-router-link>
-          </ion-label>
-        </ion-item>
-      </ion-list>
+      <ion-row>
+        <ion-col size="12">
+          <ion-grid>
+            <ion-card>
+              <ion-button @click="alertNewToReceive()">Novo</ion-button>
+              <ion-slides :options="slideOpts" @ionSlideDidChange="slideChanged($event)">
+                <ion-slide v-for="m in months" :key="m">
+                  <span style="background: #3880ff; color: white; border-radius: 20px; padding: 0px 6px 0px 6px">{{m}}</span>
+                </ion-slide>
+              </ion-slides>
+
+              <ion-card-content align="center">
+                <ion-list v-for="e in toReceives" :key="e.id">
+                  <ion-item @click="presentActionSheet(e)">
+                    <!-- <ion-img style="height: 30px; width: 30px; margin-right: 5px" :src="e.img"></ion-img> -->
+                    <ion-label class="ion-text-left">{{e.name}}</ion-label>
+                    <ion-label class="ion-text-right">{{"R$ " + parseFloat(e.price).toFixed(2).replace(".", ",")}}</ion-label>
+                  </ion-item>
+                </ion-list>
+
+                <ion-list v-if="toReceives.length == 0">
+                  <ion-item>
+                    <ion-label class="ion-text-center label-italic" color="danger">Nenhum item encontrado</ion-label>
+                  </ion-item>
+                </ion-list>
+              </ion-card-content>
+              <!-- List of Text Items -->
+            </ion-card>
+          </ion-grid>
+        </ion-col>
+      </ion-row>
+      <footer-info :total="formatMoney(getTotalToReceive)"/>
     </ion-content>
   </ion-page>
 </template>
 
-<script lang="ts">
-import { IonPage,IonHeader,IonToolbar,IonTitle,IonContent,IonLabel,IonItem, IonList, IonIcon} from '@ionic/vue';
-import { peopleOutline, arrowForwardOutline} from 'ionicons/icons';
+<script>
+import { addZero, getMonths, getNextMonthInt, getNextMonthIndex, expRef, getActualYear, toReceiveRef} from '../Helper'
+import { onSnapshot, addDoc, Timestamp } from "firebase/firestore";
+import { alertController, IonList, actionSheetController, IonSlides, IonSlide} from "@ionic/vue";
+import FooterInfo from '../components/FooterInfo.vue'
+import TollbarComponent from '../components/TollbarComponent.vue'
 
-export default  {
-  name: 'Tab3',
-  components: {IonPage,IonHeader,IonToolbar,IonTitle,IonContent,IonLabel,IonItem, IonList, IonIcon},
-  setup(){
-    return{
-      peopleOutline, arrowForwardOutline
+export default {
+  components:{ IonList, IonSlides, IonSlide, TollbarComponent},
+  data: () => {
+    return {
+      slideOpts:{
+        initialSlide: getNextMonthIndex(),
+        speed: 400
+      },
+      name: '',
+      months: getMonths(),
+      loaded: false,
+      expenses: [],
+      toReceives:[],
+
+      milliseconds: Timestamp.now().toMillis(),
+      
+      userRef: null,
+      monthRef: null,
+      expensesRef: null,
+
+      allData: null
     }
+  },
+
+  async mounted() {
+    this.loadAllData()
+  },
+  methods: {
+    loadAllData(year = null, month = null){
+      if(!year && !month){
+        month = getNextMonthInt();
+        year = getActualYear()
+  
+        if(month === 1){
+          year = getActualYear() + 1
+        }
+      }
+
+      // load expenses data
+      onSnapshot(expRef(year, month), (expSnapshot) => {
+        this.expenses = []
+        expSnapshot.docs.forEach((doc)=>{
+          const e = doc.data()
+          e.id = doc.id
+          this.expenses.push(e)
+        })
+
+        this.expenses.sort((a, b) => {
+          return  b.price - a.price;
+        })
+      })
+
+      // load toReceiveData
+      onSnapshot(toReceiveRef(year, month), (toReceiveSnapShot) => {
+        this.toReceives = []
+        toReceiveSnapShot.docs.forEach((doc)=>{
+          const e = doc.data()
+          e.id = doc.id
+          this.toReceives.push(e)
+        })
+      })
+
+      this.loaded = true
+    },
+
+    slideChanged(e){
+      e.target.getActiveIndex().then(i => {
+        const month = i+1;
+        let year = getActualYear()
+
+        if(getNextMonthInt() === 1){
+          year = getActualYear() + 1
+        }
+
+        this.loadAllData(year, month)
+      });
+    },
+
+    async alertNewToReceive(){
+      const alert = await alertController
+        .create({
+          cssClass: 'my-custom-class',
+          header: 'Novo item',
+          inputs: [
+            {
+              label: 'Nome',
+              name: 'name',
+              id: 'name',
+              value: '',
+              placeholder: 'Digite o nome',
+            },
+            {
+              label: 'Valor',
+              name: 'price',
+              id: 'price',
+              value: '',
+              placeholder: 'Digite o valor',
+              type: 'number'
+            },
+            {
+              label: 'Data de vencimento',
+              name: 'expiration',
+              id: 'expiration',
+              value: getActualYear() + '-' + addZero(getNextMonthInt()) +'-10',
+              type: 'date'
+            },
+            {
+              label: 'Repetir',
+              name: 'repeat',
+              id: 'repeat',
+              value: '',
+              placeholder: 'Repetir?',
+              type: 'number',
+              max: 60
+            }
+          ],
+          buttons: [
+            {
+              text: 'Salvar',
+              handler: (values) => {
+                this.saveNewToReceive(values);
+              },
+            },
+            {
+              text: 'Cancelar'
+            }
+          ],
+        });
+
+      const description = document.getElementById('name')
+      const price = document.getElementById('price')
+      const repeat = document.getElementById('repeat')
+
+      description.setAttribute('autocomplete', 'off')
+      price.setAttribute('autocomplete', 'off')
+      repeat.setAttribute('autocomplete', 'off')
+
+      return alert.present();
+    },
+
+    async saveNewExpense(expense){
+      let img = '../img/imgs/'+expense.description.toLowerCase()+'.png'
+  
+      if(!await this.imageExists(img)){
+        img = '../img/imgs/default.png'
+      }
+
+      // if repeat
+      let repeat = parseInt(expense.repeat)
+
+    
+      const day = new Date(expense.expiration).getUTCDate()
+      let month = new Date(expense.expiration).getMonth() + 1
+      let year = new Date(expense.expiration).getFullYear()
+
+      let expiration = new Date(`${year}-${addZero(month)}-${day}`).getTime()
+      addDoc(expRef(year, month), {description: expense.description, price: parseFloat(expense.price), img: img, expiration: expiration, createdAt: this.milliseconds})
+
+      
+      while (repeat > 1) {
+        if(parseInt(month) == 12){
+          year = String(parseInt(year) + 1)
+          month = 1
+        }else{
+          month = String(parseInt(month) + 1)
+        }
+        
+        expiration = new Date(`${year}-${addZero(month)}-${day}`).getTime()
+        addDoc(expRef(year, month), {description: expense.description, price: parseFloat(expense.price), img: img, expiration: expiration, createdAt: this.milliseconds})
+        repeat --
+      }
+
+      this.showToast('success', 'Novo item adicionado!')
+    },
+
+    async saveNewToReceive(expense){
+      let img = '../img/imgs/'+expense.name.toLowerCase()+'.png'
+  
+      if(!await this.imageExists(img)){
+        img = '../img/imgs/default.png'
+      }
+
+      // if repeat
+      let repeat = parseInt(expense.repeat)
+
+    
+      const day = new Date(expense.expiration).getUTCDate()
+      let month = new Date(expense.expiration).getMonth() + 1
+      let year = new Date(expense.expiration).getFullYear()
+
+      let expiration = new Date(`${year}-${addZero(month)}-${day}`).getTime()
+      addDoc(toReceiveRef(year, month), {name: expense.name, price: parseFloat(expense.price), img: img, expiration: expiration, createdAt: this.milliseconds})
+
+      
+      while (repeat > 1) {
+        if(parseInt(month) == 12){
+          year = String(parseInt(year) + 1)
+          month = 1
+        }else{
+          month = String(parseInt(month) + 1)
+        }
+        
+        expiration = new Date(`${year}-${addZero(month)}-${day}`).getTime()
+        addDoc(toReceiveRef(year, month), {name: expense.name, price: parseFloat(expense.price), img: img, expiration: expiration, createdAt: this.milliseconds})
+        repeat --
+      }
+
+      this.showToast('success', 'Novo item adicionado!')
+    },
+
+    async imageExists(imgUrl) {
+      if (!imgUrl) {
+          return false;
+      }
+      return new Promise(res => {
+          const image = new Image();
+          image.onload = () => res(true);
+          image.onerror = () => res(false);
+          image.src = imgUrl;
+      });
+    },
+
+    async presentActionSheet(expense) {
+      const actionSheet = await actionSheetController
+        .create({
+          header: 'Opções',
+          cssClass: 'my-custom-class',
+          buttons: [
+            {
+              text: 'Editar',
+              handler: () => {
+                this.alertUpdateExpense(expense)
+              },
+            },
+            {
+              text: 'Excluir',
+              handler: () => {
+                this.deleteExpense(expense)
+              },
+            }
+          ],
+        });
+      await actionSheet.present();
+    }
+  },
+
+  computed:{
+    getTotalToReceive(){
+      let total = 0
+      this.toReceives.forEach((e)=>{
+        total += e.price
+      })
+
+      return total;
+    },
+
+    expenseTotal(){
+      let total = 0
+      this.expenses.forEach((e)=>{
+        total += e.price
+      })
+
+      return total;
+    },
+  }
+};
+</script>
+<style scoped>
+.ion-progress-bar-infopercentage {
+  height: 30px !important;
+  /* margin: 5px !important; */
+  border-radius: 15px !important;
+}
+
+ion-col{
+  --padding-bottom: 0px
+}
+
+.progress-buffer-bar {
+  margin: 5px !important;
+}
+
+ion-card {
+  padding: 20px;
+  --ion-background-color: white;
+  border-radius: 9px;
+  padding-bottom: 40px;
+}
+
+.head-list {
+  font-family: "HeadTableFont" !important;
+}
+
+ion-content {
+  --ion-background-color: #e9eff0;
+}
+
+@media screen and (min-width: 800px) {
+  ion-card {
+    width: 40%;
+  }
+
+  ion-grid{
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
   }
 }
-</script>
+
+/* alerts */
+.btn-cancel-alert{
+  color: red!important;
+}
+
+.btn-save-alert{
+  color: green!important;
+}
+
+.wallet{
+  background: white;
+  border-radius: 15px;
+  padding: 3px 6px 3px 6px;
+  font-size: 20px!important;
+  font-weight: bold;
+}
+</style>

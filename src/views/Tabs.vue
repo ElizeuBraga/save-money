@@ -7,12 +7,17 @@
           <ion-label>Home</ion-label>
         </ion-tab-button>
           
-        <ion-tab-button tab="tab2" @click="openModalNewExpense()">
-          <ion-icon :icon="add" />
-          <ion-label>Dados</ion-label>
+        <ion-tab-button tab="tab2" href="/tabs/tab2">
+          <ion-icon color="red" :icon="arrowUp" />
+          <ion-label>Saídas</ion-label>
         </ion-tab-button>
         
         <ion-tab-button tab="tab3" href="/tabs/tab3">
+          <ion-icon color="green" :icon="arrowDown" />
+          <ion-label>Entradas</ion-label>
+        </ion-tab-button>
+
+        <ion-tab-button tab="tab4" href="/tabs/tab4">
           <ion-icon :icon="menu" />
           <ion-label>Menu</ion-label>
         </ion-tab-button>
@@ -23,7 +28,7 @@
 
 <script lang="ts">
 import { IonTabBar, IonTabButton, IonTabs, IonLabel, IonIcon, IonPage } from '@ionic/vue';
-import { trendingUp, add, menu } from 'ionicons/icons';
+import { trendingUp, add, menu, arrowUp, arrowDown} from 'ionicons/icons';
 import eventBus from '../eventBus'
 
 export default {
@@ -33,7 +38,9 @@ export default {
     return {
       trendingUp,
       add,
-      menu
+      menu,
+      arrowDown,
+      arrowUp
     }
   },
 
