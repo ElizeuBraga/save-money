@@ -59,7 +59,7 @@ export function expRef(year: any, month: any){
 }
 
 export function toReceiveRef(year: any, month: any){
-    return  collection(monthRef(year, addZero(month)), 'toReceiveFromThirdParties')
+    return  collection(monthRef(year, month), 'toReceiveFromThirdParties')
 }
 
 export function formatInputReal(value: any){
