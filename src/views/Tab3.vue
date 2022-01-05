@@ -9,7 +9,8 @@
     <!-- Header -->
 
     <ion-content :fullscreen="true">
-      <ion-row>
+      <ion-spinner color="primary" style="margin-top: 50%; margin-left: 50%" v-if="!loaded" name="crescent"></ion-spinner>
+      <ion-row v-else>
         <ion-col size="12">
           <ion-grid>
             <ion-card>
@@ -128,7 +129,9 @@ export default {
         })
       })
 
-      this.loaded = true
+      setTimeout(() => {
+        this.loaded = true
+      }, 2000);
     },
 
     slideChanged(e){

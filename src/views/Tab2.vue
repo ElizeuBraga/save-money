@@ -8,9 +8,9 @@
     </ion-header>
     <!-- Header -->
 
-
     <ion-content :fullscreen="true">
-      <ion-row>
+      <ion-spinner color="primary" style="margin-top: 50%; margin-left: 50%" v-if="!loaded" name="crescent"></ion-spinner>
+      <ion-row v-else>
         <ion-col size="12">
           <ion-grid>
             <ion-card>
@@ -49,12 +49,12 @@
 <script>
 import { addZero, getMonths, getNextMonthInt, getNextMonthIndex, expRef, getActualYear, toReceiveRef, userRef} from '../Helper'
 import { doc, updateDoc, onSnapshot, addDoc, deleteDoc, Timestamp, arrayUnion} from "firebase/firestore";
-import { alertController, IonList, actionSheetController, IonSlides, IonSlide, IonImg} from "@ionic/vue";
+import { alertController, IonList, actionSheetController, IonSlides, IonSlide, IonImg, IonSpinner} from "@ionic/vue";
 import FooterInfo from '../components/FooterInfo.vue'
 import TollbarComponent from '../components/TollbarComponent.vue'
 
 export default {
-  components:{ IonList, IonSlides, IonSlide, IonImg, FooterInfo, TollbarComponent},
+  components:{ IonList, IonSlides, IonSlide, IonImg, FooterInfo, TollbarComponent, IonSpinner},
   data: () => {
     return {
       slideOpts:{
@@ -131,7 +131,9 @@ export default {
         })
       })
 
-      this.loaded = true
+      setTimeout(()=>{
+        this.loaded = true
+      }, 2000)
     },
 
     slideChanged(e){

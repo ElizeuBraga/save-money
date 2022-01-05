@@ -10,7 +10,8 @@
 
 
     <ion-content :fullscreen="true">
-      <ion-row>
+      <ion-spinner color="primary" style="margin-top: 50%; margin-left: 50%" v-if="!loaded" name="crescent"></ion-spinner>
+      <ion-row v-else>
       <!--Resume card-->
         <ion-grid>
           <ion-card>
@@ -142,7 +143,9 @@ export default {
         this.sendDataToComponents(this.toReceives)
       })
 
-      this.loaded = true
+      setTimeout(() => {
+        this.loaded = true
+      }, 2000);
     },
     
     sendDataToComponents(data){
