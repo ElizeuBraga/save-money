@@ -15,7 +15,7 @@
           <ion-grid>
             <ion-card>
               <ion-button @click="alertNewExpense()">Novo</ion-button>
-              <ion-slides v-if="slideDatesExp.length > 0" :options="slideOpts" @ionSlideDidChange="slideChanged($event)">
+              <ion-slides ref="slides" v-if="slideDatesExp.length > 0" :options="slideOpts" @ionSlideDidChange="slideChanged($event)">
                 <ion-slide v-for="p in slideDatesExp" :key="p">
                   <span style="background: #3880ff; color: white; border-radius: 20px; padding: 0px 6px 0px 6px">{{getMonthName(p.month)}}/{{p.year}}</span>
                 </ion-slide>
@@ -81,6 +81,9 @@ export default {
 
   async mounted(){
     this.loadAllData()
+
+    this.$refs.slides.$el.slideTo(1);
+    console.log(this.slideDatesExp.findIndex({year: '2022', month: '01'}))
   },
 
   methods: {

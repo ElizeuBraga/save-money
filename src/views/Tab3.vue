@@ -47,7 +47,7 @@
 </template>
 
 <script>
-import { addZero, getMonths, getNextMonthInt, getNextMonthIndex, expRef, getActualYear, toReceiveRef, userRef} from '../Helper'
+import { addZero, getMonths, getNextMonthInt, getNextMonthIndex, expRef, getActualYear, toReceiveRef, userRef, dates} from '../Helper'
 import { onSnapshot, addDoc, Timestamp, updateDoc, arrayUnion} from "firebase/firestore";
 import { alertController, IonList, actionSheetController, IonSlides, IonSlide} from "@ionic/vue";
 // import FooterInfo from '../components/FooterInfo.vue'
@@ -131,6 +131,11 @@ export default {
 
       setTimeout(() => {
         this.loaded = true
+
+        const date = dates(Date.now())
+        const index = this.slideDatesToRe.findIndex(x => (x.month === date.month && x.year === date.year));
+
+        this.slideOpts.initialSlide = index
       }, 2000);
     },
 
