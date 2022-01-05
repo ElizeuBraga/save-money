@@ -15,8 +15,8 @@
           <ion-grid>
             <ion-card>
               <ion-button @click="alertNewExpense()">Novo</ion-button>
-              <ion-slides :options="slideOpts" @ionSlideDidChange="slideChanged($event)">
-                <ion-slide v-for="p in pathsExpense" :key="p">
+              <ion-slides v-if="slideDatesExp.length > 0" :options="slideOpts" @ionSlideDidChange="slideChanged($event)">
+                <ion-slide v-for="p in slideDatesExp" :key="p">
                   <span style="background: #3880ff; color: white; border-radius: 20px; padding: 0px 6px 0px 6px">{{getMonthName(p.month)}}/{{p.year}}</span>
                 </ion-slide>
               </ion-slides>
@@ -48,7 +48,7 @@
 
 <script>
 import { addZero, getMonths, getNextMonthInt, getNextMonthIndex, expRef, getActualYear, toReceiveRef, userRef} from '../Helper'
-import { doc, updateDoc, onSnapshot, addDoc, deleteDoc, Timestamp } from "firebase/firestore";
+import { doc, updateDoc, onSnapshot, addDoc, deleteDoc, Timestamp, arrayUnion} from "firebase/firestore";
 import { alertController, IonList, actionSheetController, IonSlides, IonSlide, IonImg} from "@ionic/vue";
 import FooterInfo from '../components/FooterInfo.vue'
 import TollbarComponent from '../components/TollbarComponent.vue'
@@ -67,22 +67,7 @@ export default {
       emergencyReserveReached: 0,
       expenses: [],
       toReceives:[],
-      pathsExpense: [
-        {year: '2021', month: '11'},
-        {year: '2021', month: '12'},
-        {year: '2022', month: '01'},
-        {year: '2022', month: '02'},
-        {year: '2022', month: '03'},
-        {year: '2022', month: '04'},
-        {year: '2022', month: '05'},
-        {year: '2022', month: '06'},
-        {year: '2022', month: '07'},
-        {year: '2022', month: '08'},
-        {year: '2022', month: '09'},
-        {year: '2022', month: '10'},
-        {year: '2022', month: '11'},
-        {year: '2022', month: '12'},
-      ],
+      slideDatesExp: [],
 
       milliseconds: Timestamp.now().toMillis(),
       
@@ -105,7 +90,9 @@ export default {
     },
 
     loadAllData(year = null, month = null){
+      let teste = false;
       if(!year && !month){
+        teste = true;
         month = getNextMonthInt();
         year = getActualYear()
   
@@ -115,7 +102,9 @@ export default {
       }
 
       onSnapshot(userRef(), (userSnapshot) => {
-        // this.pathsExpense = userSnapshot.data().pathExpenses
+        if(teste){
+          this.slideDatesExp = userSnapshot.data().slideDatesExp
+        }
       })
 
       // load expenses data
@@ -147,7 +136,7 @@ export default {
 
     slideChanged(e){
       e.target.getActiveIndex().then(i => {
-        const obj = this.pathsExpense[i]
+        const obj = this.slideDatesExp[i]
         this.loadAllData(obj.year, parseInt(obj.month))
       });
     },
@@ -231,7 +220,9 @@ export default {
 
       let expiration = new Date(`${year}-${addZero(month)}-${day}`).getTime()
       addDoc(expRef(year, month), {description: expense.description, price: parseFloat(expense.price), img: img, expiration: expiration, createdAt: this.milliseconds})
-
+      await updateDoc(userRef(), {
+        slideDatesExp: arrayUnion({year: String(year), month: addZero(month)})
+      })
       
       while (repeat > 1) {
         if(parseInt(month) == 12){
@@ -242,7 +233,11 @@ export default {
         }
         
         expiration = new Date(`${year}-${addZero(month)}-${day}`).getTime()
+        
         addDoc(expRef(year, month), {description: expense.description, price: parseFloat(expense.price), img: img, expiration: expiration, createdAt: this.milliseconds})
+        await updateDoc(userRef(), {
+          slideDatesExp: arrayUnion({year: String(year), month: addZero(month)})
+        })
         repeat --
       }
 
@@ -342,7 +337,10 @@ export default {
     },
 
     deleteExpense(expense){
-      deleteDoc(doc(this.expensesRef, expense.id));
+      // const day = new Date(expense.expiration).getUTCDate()
+      const month = new Date(expense.expiration).getMonth() + 1
+      const year = new Date(expense.expiration).getFullYear()
+      deleteDoc(doc(expRef(year, month), expense.id));
       this.showToast('success', 'Item excluído!')
     },
 

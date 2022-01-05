@@ -14,9 +14,9 @@
           <ion-grid>
             <ion-card>
               <ion-button @click="alertNewToReceive()">Novo</ion-button>
-              <ion-slides :options="slideOpts" @ionSlideDidChange="slideChanged($event)">
-                <ion-slide v-for="m in months" :key="m">
-                  <span style="background: #3880ff; color: white; border-radius: 20px; padding: 0px 6px 0px 6px">{{m}}</span>
+              <ion-slides v-if="slideDatesToRe.length > 0" :options="slideOpts" @ionSlideDidChange="slideChanged($event)">
+                <ion-slide v-for="m in slideDatesToRe" :key="m">
+                  <span style="background: #3880ff; color: white; border-radius: 20px; padding: 0px 6px 0px 6px">{{getMonthName(m.month)}}/{{m.year}}</span>
                 </ion-slide>
               </ion-slides>
 
@@ -46,10 +46,10 @@
 </template>
 
 <script>
-import { addZero, getMonths, getNextMonthInt, getNextMonthIndex, expRef, getActualYear, toReceiveRef} from '../Helper'
-import { onSnapshot, addDoc, Timestamp } from "firebase/firestore";
+import { addZero, getMonths, getNextMonthInt, getNextMonthIndex, expRef, getActualYear, toReceiveRef, userRef} from '../Helper'
+import { onSnapshot, addDoc, Timestamp, updateDoc, arrayUnion} from "firebase/firestore";
 import { alertController, IonList, actionSheetController, IonSlides, IonSlide} from "@ionic/vue";
-import FooterInfo from '../components/FooterInfo.vue'
+// import FooterInfo from '../components/FooterInfo.vue'
 import TollbarComponent from '../components/TollbarComponent.vue'
 
 export default {
@@ -65,6 +65,7 @@ export default {
       loaded: false,
       expenses: [],
       toReceives:[],
+      slideDatesToRe: [],
 
       milliseconds: Timestamp.now().toMillis(),
       
@@ -80,8 +81,15 @@ export default {
     this.loadAllData()
   },
   methods: {
+    getMonthName(month){
+      const monthIndex = parseInt(month) - 1
+      return getMonths(monthIndex)
+    },
+
     loadAllData(year = null, month = null){
+      let teste = false
       if(!year && !month){
+        teste = true
         month = getNextMonthInt();
         year = getActualYear()
   
@@ -89,6 +97,12 @@ export default {
           year = getActualYear() + 1
         }
       }
+
+      onSnapshot(userRef(), (userSnapshot) => {
+        if(teste){
+          this.slideDatesToRe = userSnapshot.data().slideDatesToRe
+        }
+      })
 
       // load expenses data
       onSnapshot(expRef(year, month), (expSnapshot) => {
@@ -119,14 +133,8 @@ export default {
 
     slideChanged(e){
       e.target.getActiveIndex().then(i => {
-        const month = i+1;
-        let year = getActualYear()
-
-        if(getNextMonthInt() === 1){
-          year = getActualYear() + 1
-        }
-
-        this.loadAllData(year, month)
+        const obj = this.slideDatesToRe[i]
+        this.loadAllData(obj.year, parseInt(obj.month))
       });
     },
 
@@ -210,7 +218,10 @@ export default {
       let expiration = new Date(`${year}-${addZero(month)}-${day}`).getTime()
       addDoc(expRef(year, month), {description: expense.description, price: parseFloat(expense.price), img: img, expiration: expiration, createdAt: this.milliseconds})
 
-      
+      await updateDoc(userRef(), {
+        slideDatesToRe: arrayUnion({year: String(year), month: addZero(month)})
+      })
+
       while (repeat > 1) {
         if(parseInt(month) == 12){
           year = String(parseInt(year) + 1)
@@ -221,6 +232,11 @@ export default {
         
         expiration = new Date(`${year}-${addZero(month)}-${day}`).getTime()
         addDoc(expRef(year, month), {description: expense.description, price: parseFloat(expense.price), img: img, expiration: expiration, createdAt: this.milliseconds})
+        
+        await updateDoc(userRef(), {
+          slideDatesToRe: arrayUnion({year: String(year), month: addZero(month)})
+        })
+
         repeat --
       }
 
@@ -245,7 +261,10 @@ export default {
       let expiration = new Date(`${year}-${addZero(month)}-${day}`).getTime()
       addDoc(toReceiveRef(year, month), {name: expense.name, price: parseFloat(expense.price), img: img, expiration: expiration, createdAt: this.milliseconds})
 
-      
+      await updateDoc(userRef(), {
+        slideDatesToRe: arrayUnion({year: String(year), month: addZero(month)})
+      })
+
       while (repeat > 1) {
         if(parseInt(month) == 12){
           year = String(parseInt(year) + 1)
@@ -256,6 +275,10 @@ export default {
         
         expiration = new Date(`${year}-${addZero(month)}-${day}`).getTime()
         addDoc(toReceiveRef(year, month), {name: expense.name, price: parseFloat(expense.price), img: img, expiration: expiration, createdAt: this.milliseconds})
+
+        await updateDoc(userRef(), {
+          slideDatesToRe: arrayUnion({year: String(year), month: addZero(month)})
+        })
         repeat --
       }
 
