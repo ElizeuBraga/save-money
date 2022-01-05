@@ -16,8 +16,8 @@
             <ion-card>
               <ion-button @click="alertNewExpense()">Novo</ion-button>
               <ion-slides :options="slideOpts" @ionSlideDidChange="slideChanged($event)">
-                <ion-slide v-for="m in months" :key="m">
-                  <span style="background: #3880ff; color: white; border-radius: 20px; padding: 0px 6px 0px 6px">{{m}}</span>
+                <ion-slide v-for="p in pathsExpense" :key="p">
+                  <span style="background: #3880ff; color: white; border-radius: 20px; padding: 0px 6px 0px 6px">{{getMonthName(p.month)}}/{{p.year}}</span>
                 </ion-slide>
               </ion-slides>
 
@@ -47,7 +47,7 @@
 </template>
 
 <script>
-import { addZero, getMonths, getNextMonthInt, getNextMonthIndex, expRef, getActualYear, toReceiveRef} from '../Helper'
+import { addZero, getMonths, getNextMonthInt, getNextMonthIndex, expRef, getActualYear, toReceiveRef, userRef} from '../Helper'
 import { doc, updateDoc, onSnapshot, addDoc, deleteDoc, Timestamp } from "firebase/firestore";
 import { alertController, IonList, actionSheetController, IonSlides, IonSlide, IonImg} from "@ionic/vue";
 import FooterInfo from '../components/FooterInfo.vue'
@@ -67,6 +67,22 @@ export default {
       emergencyReserveReached: 0,
       expenses: [],
       toReceives:[],
+      pathsExpense: [
+        {year: '2021', month: '11'},
+        {year: '2021', month: '12'},
+        {year: '2022', month: '01'},
+        {year: '2022', month: '02'},
+        {year: '2022', month: '03'},
+        {year: '2022', month: '04'},
+        {year: '2022', month: '05'},
+        {year: '2022', month: '06'},
+        {year: '2022', month: '07'},
+        {year: '2022', month: '08'},
+        {year: '2022', month: '09'},
+        {year: '2022', month: '10'},
+        {year: '2022', month: '11'},
+        {year: '2022', month: '12'},
+      ],
 
       milliseconds: Timestamp.now().toMillis(),
       
@@ -78,19 +94,29 @@ export default {
     }
   },
 
-  async mounted() {
+  async mounted(){
     this.loadAllData()
   },
+
   methods: {
+    getMonthName(month){
+      const monthIndex = parseInt(month) - 1
+      return getMonths(monthIndex)
+    },
+
     loadAllData(year = null, month = null){
       if(!year && !month){
         month = getNextMonthInt();
         year = getActualYear()
   
-        if(month === 1){
+        if(month === 12){
           year = getActualYear() + 1
         }
       }
+
+      onSnapshot(userRef(), (userSnapshot) => {
+        // this.pathsExpense = userSnapshot.data().pathExpenses
+      })
 
       // load expenses data
       onSnapshot(expRef(year, month), (expSnapshot) => {
@@ -121,14 +147,8 @@ export default {
 
     slideChanged(e){
       e.target.getActiveIndex().then(i => {
-        const month = i+1;
-        let year = getActualYear()
-
-        if(getNextMonthInt() === 1){
-          year = getActualYear() + 1
-        }
-
-        this.loadAllData(year, month)
+        const obj = this.pathsExpense[i]
+        this.loadAllData(obj.year, parseInt(obj.month))
       });
     },
 

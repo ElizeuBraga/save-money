@@ -19,7 +19,7 @@ export function addZero(num: number){
 
 export function getMonths(index: number){
     const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
-    if(index){
+    if(index || index === 0){
         return months[index]
     }else{
         return months
@@ -59,7 +59,7 @@ export function expRef(year: any, month: any){
 }
 
 export function toReceiveRef(year: any, month: any){
-    return  collection(monthRef(year, month), 'toReceiveFromThirdParties')
+    return  collection(monthRef(year, addZero(month)), 'toReceiveFromThirdParties')
 }
 
 export function formatInputReal(value: any){
