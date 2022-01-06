@@ -104,7 +104,7 @@ export default {
         month = getNextMonthInt();
         year = getActualYear()
   
-        if(month === 1){
+        if(month === 12){
           year = getActualYear() + 1
         }
       }
