@@ -3,22 +3,22 @@
     <ion-tabs>
       <ion-tab-bar slot="bottom">
         <ion-tab-button @click="tabChanged()" tab="tab1" href="/tabs/tab1">
-          <ion-icon :icon="trendingUp" />
+          <ion-icon color="primary" :icon="trendingUp" />
           <ion-label>Home</ion-label>
         </ion-tab-button>
           
         <ion-tab-button tab="tab2" href="/tabs/tab2">
-          <ion-icon color="red" :icon="arrowUp" />
+          <ion-icon color="danger" :icon="arrowUp" />
           <ion-label>Saídas</ion-label>
         </ion-tab-button>
         
         <ion-tab-button tab="tab3" href="/tabs/tab3">
-          <ion-icon color="green" :icon="arrowDown" />
+          <ion-icon color="success" :icon="arrowDown" />
           <ion-label>Entradas</ion-label>
         </ion-tab-button>
 
         <ion-tab-button tab="tab4" href="/tabs/tab4">
-          <ion-icon :icon="menu" />
+          <ion-icon color="primary" :icon="menu" />
           <ion-label>Menu</ion-label>
         </ion-tab-button>
       </ion-tab-bar>
