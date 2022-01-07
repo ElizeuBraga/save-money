@@ -23,7 +23,7 @@
 
               <ion-card-content align="center">
                 <ion-list v-for="e in expenses" :key="e.id" style="max-height: 400px; overflow-y: scroll;">
-                  <ion-item :style="e.scratch ? 'text-decoration: line-through' : '' " @click="presentActionSheet(e)">
+                  <ion-item :style="e.scratch ? 'text-decoration: line-through; opacity: 0.5;' : '' " @click="presentActionSheet(e)">
                     <ion-img style="height: 30px; width: 30px; margin-right: 5px" :src="e.img"></ion-img>
                     <ion-label class="ion-text-left">{{e.description}}</ion-label>
                     <ion-label class="ion-text-right">{{"R$ " + parseFloat(e.price).toFixed(2).replace(".", ",")}}</ion-label>
