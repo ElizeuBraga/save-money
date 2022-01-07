@@ -397,10 +397,11 @@ export default {
 
   computed:{
     allStratched(){
-      if(this.expenses.findIndex(x => (!x.scratch)) > 0){
+      if(this.expenses.findIndex(x => (!x.scratch)) > -1){
         return false
+      }else{
+        return true
       }
-      return true
     },
 
     amountExpense(){
