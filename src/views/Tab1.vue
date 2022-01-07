@@ -15,9 +15,8 @@
       <!--Resume card-->
         <ion-grid>
           <ion-card>
-            <ion-progress-bar v-if="!loaded" type="indeterminate"></ion-progress-bar>
             <ion-card-title class="ion-text-center">
-              Resumo
+              Gastos este mês
             </ion-card-title>
             <ion-card-content>
               <ion-row style="margin-bottom: 12px">
@@ -35,8 +34,19 @@
                 <ion-col class="ion-no-padding ion-text-right">
                   <ion-label class="label-italic">Gastos:<b>{{formatMoney(amountExpense)}}</b></ion-label>
                 </ion-col>
+                <ion-col size="12" class="ion-text-center">
+                  <ion-label class="label-italic">Podemos gastar: <b>{{formatMoney((totalToreceive - amountExpense))}}</b></ion-label>
+                </ion-col>
               </ion-row>
+            </ion-card-content>
+          </ion-card>
 
+
+          <ion-card>
+            <ion-card-title class="ion-text-center">
+              Reserva de emergência
+            </ion-card-title>
+            <ion-card-content>
               <ion-row>
                 <ion-progress-bar
                   :color="colorForBarEmergencyGoal()"
@@ -46,10 +56,12 @@
 
                 <ion-col class="ion-no-padding ion-text-left">
                   <ion-label class="label-italic" @click="alertUpdateEmergencyReserveGoal()">Meta:<b>{{formatMoney(emergencyReserveGoal)}}</b></ion-label><br>
-                  <ion-label class="label-italic" @click="alertUpdateEmergencyReserveReached()">Faltam:<b>{{formatMoney(emergencyGoalMissing)}}</b></ion-label>
                 </ion-col>
                 <ion-col class="ion-no-padding ion-text-right">
                   <ion-label class="label-italic" @click="alertUpdateEmergencyReserveReached()">Conquista:<b>{{formatMoney(emergencyReserveReached)}}</b></ion-label><br>
+                </ion-col>
+                <ion-col size="12" class="ion-text-center">
+                  <ion-label class="label-italic" @click="alertUpdateEmergencyReserveReached()">Faltam:<b>{{formatMoney(emergencyGoalMissing)}}</b></ion-label>
                 </ion-col>
               </ion-row>
             </ion-card-content>
