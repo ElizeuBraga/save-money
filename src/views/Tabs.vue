@@ -8,7 +8,7 @@
         </ion-tab-button>
           
         <ion-tab-button tab="tab2" href="/tabs/tab2">
-          <ion-icon color="danger" :icon="arrowUp" />
+          <ion-icon color="danger" :icon="arrowUp"/>
           <ion-label>Saídas</ion-label>
         </ion-tab-button>
         

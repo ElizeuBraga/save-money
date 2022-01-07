@@ -23,7 +23,7 @@
 
               <ion-card-content align="center">
                 <ion-list v-for="e in expenses" :key="e.id" style="max-height: 400px; overflow-y: scroll;">
-                  <ion-item @click="presentActionSheet(e)">
+                  <ion-item :style="e.scratch ? 'text-decoration: line-through' : '' " @click="presentActionSheet(e)">
                     <ion-img style="height: 30px; width: 30px; margin-right: 5px" :src="e.img"></ion-img>
                     <ion-label class="ion-text-left">{{e.description}}</ion-label>
                     <ion-label class="ion-text-right">{{"R$ " + parseFloat(e.price).toFixed(2).replace(".", ",")}}</ion-label>
@@ -137,7 +137,12 @@ export default {
         const date = dates(Date.now())
         const index = this.slideDatesExp.findIndex(x => (x.month === date.month && x.year === date.year));
 
-        this.slideOpts.initialSlide = index
+        if(this.allStratched){
+          this.slideOpts.initialSlide = index + 1
+        }else{
+          this.slideOpts.initialSlide = index
+        }
+
       }, 2000)
     },
 
@@ -351,6 +356,14 @@ export default {
       this.showToast('success', 'Item excluído!')
     },
 
+    scratchEspense(expense){
+      // const day = new Date(expense.expiration).getUTCDate()
+      const month = new Date(expense.expiration).getMonth() + 1
+      const year = new Date(expense.expiration).getFullYear()
+      updateDoc(doc(expRef(year, month), expense.id), {scratch: expense.scratch ? false : true});
+      this.showToast('success', 'Item riscado!')
+    },
+
     async presentActionSheet(expense) {
       const actionSheet = await actionSheetController
         .create({
@@ -368,6 +381,13 @@ export default {
               handler: () => {
                 this.deleteExpense(expense)
               },
+            },
+            {
+              cssClass: 'ion-color-danger',
+              text: expense.scratch ? 'Remover risco' : 'Riscar',
+              handler: () => {
+                this.scratchEspense(expense)
+              },
             }
           ],
         });
@@ -376,6 +396,13 @@ export default {
   },
 
   computed:{
+    allStratched(){
+      if(this.expenses.findIndex(x => (!x.scratch)) === 1){
+        return false
+      }
+      return true
+    },
+
     amountExpense(){
       let total = 0
       this.expenses.forEach((e)=>{
