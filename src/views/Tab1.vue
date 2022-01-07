@@ -3,7 +3,7 @@
     <!-- Header -->
     <ion-header>
       <ion-toolbar color="primary">
-        <tollbar-component :total="(totalToreceive - amountExpense)" title="Home"/>
+        <tollbar-component :total="inWallet" title="Home"/>
       </ion-toolbar>
     </ion-header>
     <!-- Header -->
@@ -34,9 +34,14 @@
                 <ion-col class="ion-no-padding ion-text-right">
                   <ion-label class="label-italic">Gastos:<b>{{formatMoney(amountExpense)}}</b></ion-label>
                 </ion-col>
-                <ion-col size="12" class="ion-text-center">
-                  <ion-label class="label-italic">Podemos gastar: <b>{{formatMoney((totalToreceive - amountExpense))}}</b></ion-label>
-                </ion-col>
+                  <ion-col size="12" class="ion-text-center" v-if="inWallet > 0">
+                    <span style="font-size: 30px">&#128512;</span><br>
+                    <ion-label color="success" class="label-italic">Podemos gastar: <b>{{formatMoney(inWallet)}}</b></ion-label>
+                  </ion-col>
+                  <ion-col size="12" class="ion-text-center" v-else>
+                    <span style="font-size: 30px">&#128542;</span><br>
+                    <ion-label color="danger" class="label-italic">Estamos devendo: <b>{{formatMoney(inWallet)}}</b></ion-label>
+                  </ion-col>
               </ion-row>
             </ion-card-content>
           </ion-card>
@@ -359,6 +364,10 @@ export default {
       })
 
       return total;
+    },
+
+    inWallet(){
+      return this.totalToreceive - this.amountExpense;
     },
 
     calcBarEmergencyGoal(){
