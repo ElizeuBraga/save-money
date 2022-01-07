@@ -397,7 +397,7 @@ export default {
 
   computed:{
     allStratched(){
-      if(this.expenses.findIndex(x => (!x.scratch)) === 1){
+      if(this.expenses.findIndex(x => (!x.scratch)) > 0){
         return false
       }
       return true
