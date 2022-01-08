@@ -23,7 +23,7 @@
 
               <ion-card-content align="center">
                 <ion-list v-for="e in toReceives" :key="e.id">
-                  <ion-item @click="presentActionSheet(e)">
+                  <ion-item :style="e.scratch ? 'text-decoration: line-through; opacity: 0.5;' : '' " @click="presentActionSheet(e)">
                     <!-- <ion-img style="height: 30px; width: 30px; margin-right: 5px" :src="e.img"></ion-img> -->
                     <ion-label class="ion-text-left">{{e.name}}</ion-label>
                     <ion-label class="ion-text-right">{{"R$ " + parseFloat(e.price).toFixed(2).replace(".", ",")}}</ion-label>
@@ -113,10 +113,6 @@ export default {
           e.id = doc.id
           this.expenses.push(e)
         })
-
-        this.expenses.sort((a, b) => {
-          return  b.price - a.price;
-        })
       })
 
       // load toReceiveData
@@ -126,6 +122,14 @@ export default {
           const e = doc.data()
           e.id = doc.id
           this.toReceives.push(e)
+        })
+
+        this.toReceives.sort((a, b) => {
+          return  b.price - a.price;
+        })
+
+        this.toReceives.sort((a, b) => {
+          return  a.scratch - b.scratch;
         })
       })
 
@@ -277,13 +281,12 @@ export default {
       // if repeat
       let repeat = parseInt(expense.repeat)
 
-    
-      const day = new Date(expense.expiration).getUTCDate()
+      console.log(expense.expiration)
+
       let month = new Date(expense.expiration).getMonth() + 1
       let year = new Date(expense.expiration).getFullYear()
 
-      let expiration = new Date(`${year}-${addZero(month)}-${day}`).getTime()
-      addDoc(toReceiveRef(year, month), {name: expense.name, price: parseFloat(expense.price), img: img, expiration: expiration, createdAt: this.milliseconds})
+      addDoc(toReceiveRef(year, month), {name: expense.name, price: parseFloat(expense.price), img: img, expiration: expense.expiration, scratch: false})
 
       await updateDoc(userRef(), {
         slideDatesToRe: arrayUnion({year: String(year), month: addZero(month)})
@@ -297,8 +300,8 @@ export default {
           month = String(parseInt(month) + 1)
         }
         
-        expiration = new Date(`${year}-${addZero(month)}-${day}`).getTime()
-        addDoc(toReceiveRef(year, month), {name: expense.name, price: parseFloat(expense.price), img: img, expiration: expiration, createdAt: this.milliseconds})
+
+        addDoc(toReceiveRef(year, month), {name: expense.name, price: parseFloat(expense.price), img: img, expiration: expense.expiration, createdAt: this.milliseconds})
 
         await updateDoc(userRef(), {
           slideDatesToRe: arrayUnion({year: String(year), month: addZero(month)})
@@ -309,12 +312,18 @@ export default {
       this.showToast('success', 'Novo item adicionado!')
     },
 
-    updateToReceive(item){
-      const day = new Date(item.expiration).getUTCDate()
+    scratchItem(item){
+      // const day = new Date(expense.expiration).getUTCDate()
       const month = new Date(item.expiration).getMonth() + 1
       const year = new Date(item.expiration).getFullYear()
+      
+      updateDoc(doc(toReceiveRef(year, month), item.id), {scratch: item.scratch ? false : true});
+      this.showToast('success', 'Item riscado!')
+    },
 
-      const expiration = new Date(`${year}-${month}-${day}`).getTime()
+    updateToReceive(item){
+      const month = new Date(item.expiration).getMonth() + 1
+      const year = new Date(item.expiration).getFullYear()
 
       updateDoc(doc(toReceiveRef(year, month), item.id), {name: item.name, price: parseFloat(item.price)})
 
@@ -333,7 +342,7 @@ export default {
       });
     },
 
-    async presentActionSheet(expense) {
+    async presentActionSheet(item) {
       const actionSheet = await actionSheetController
         .create({
           header: 'Opções',
@@ -343,13 +352,20 @@ export default {
               text: 'Editar',
               handler: () => {
                 // this.alertUpdateExpense(expense)
-                this.alertNewToReceive(expense)
+                this.alertNewToReceive(item)
               },
             },
             {
               text: 'Excluir',
               handler: () => {
-                this.deleteItem(expense)
+                this.deleteItem(item)
+              },
+            },
+            {
+              cssClass: 'ion-color-danger',
+              text: item.scratch ? 'Remover risco' : 'Riscar',
+              handler: () => {
+                this.scratchItem(item)
               },
             }
           ],
