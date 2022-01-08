@@ -48,7 +48,7 @@
 
 <script>
 import { addZero, getMonths, getNextMonthInt, getNextMonthIndex, expRef, getActualYear, toReceiveRef, userRef, dates} from '../Helper'
-import { onSnapshot, addDoc, Timestamp, updateDoc, arrayUnion} from "firebase/firestore";
+import { onSnapshot, addDoc, Timestamp, updateDoc, arrayUnion, deleteDoc, doc} from "firebase/firestore";
 import { alertController, IonList, actionSheetController, IonSlides, IonSlide} from "@ionic/vue";
 // import FooterInfo from '../components/FooterInfo.vue'
 import TollbarComponent from '../components/TollbarComponent.vue'
@@ -67,13 +67,13 @@ export default {
       expenses: [],
       toReceives:[],
       slideDatesToRe: [],
+      actualSlide: null,
 
       milliseconds: Timestamp.now().toMillis(),
       
       userRef: null,
       monthRef: null,
       expensesRef: null,
-
       allData: null
     }
   },
@@ -142,11 +142,19 @@ export default {
     slideChanged(e){
       e.target.getActiveIndex().then(i => {
         const obj = this.slideDatesToRe[i]
+        this.actualSlide = obj;
         this.loadAllData(obj.year, parseInt(obj.month))
       });
     },
 
-    async alertNewToReceive(){
+    async alertNewToReceive(item){
+      console.log(this.actualSlide)
+      let expiration = this.actualSlide.year +'-'+this.actualSlide.month+'-'+'10'
+      if(item){
+        const date = dates(item.expiration);
+        expiration = date.year + '-' + date.month + '-' + date.day
+      }
+
       const alert = await alertController
         .create({
           cssClass: 'my-custom-class',
@@ -156,14 +164,14 @@ export default {
               label: 'Nome',
               name: 'name',
               id: 'name',
-              value: '',
+              value: item ? item.name : '',
               placeholder: 'Digite o nome',
             },
             {
               label: 'Valor',
               name: 'price',
               id: 'price',
-              value: '',
+              value: item ? item.price : '',
               placeholder: 'Digite o valor',
               type: 'number'
             },
@@ -171,8 +179,9 @@ export default {
               label: 'Data de vencimento',
               name: 'expiration',
               id: 'expiration',
-              value: getActualYear() + '-' + addZero(getNextMonthInt()) +'-10',
-              type: 'date'
+              value: expiration,
+              type: 'date',
+              disabled: item ? true : false
             },
             {
               label: 'Repetir',
@@ -181,14 +190,21 @@ export default {
               value: '',
               placeholder: 'Repetir?',
               type: 'number',
-              max: 60
+              max: 60,
+              disabled: item ? true : false
             }
           ],
           buttons: [
             {
               text: 'Salvar',
               handler: (values) => {
-                this.saveNewToReceive(values);
+                if(item){
+                  item.name = values.name
+                  item.price = values.price
+                  this.updateToReceive(item);
+                }else{
+                  this.saveNewToReceive(values);
+                }
               },
             },
             {
@@ -293,6 +309,18 @@ export default {
       this.showToast('success', 'Novo item adicionado!')
     },
 
+    updateToReceive(item){
+      const day = new Date(item.expiration).getUTCDate()
+      const month = new Date(item.expiration).getMonth() + 1
+      const year = new Date(item.expiration).getFullYear()
+
+      const expiration = new Date(`${year}-${month}-${day}`).getTime()
+
+      updateDoc(doc(toReceiveRef(year, month), item.id), {price: item.price})
+
+      this.showToast('success', 'Item editado com sucesso!')
+    },
+
     async imageExists(imgUrl) {
       if (!imgUrl) {
           return false;
@@ -314,19 +342,28 @@ export default {
             {
               text: 'Editar',
               handler: () => {
-                this.alertUpdateExpense(expense)
+                // this.alertUpdateExpense(expense)
+                this.alertNewToReceive(expense)
               },
             },
             {
               text: 'Excluir',
               handler: () => {
-                this.deleteExpense(expense)
+                this.deleteItem(expense)
               },
             }
           ],
         });
       await actionSheet.present();
-    }
+    },
+
+    deleteItem(item){
+      // const day = new Date(expense.expiration).getUTCDate()
+      const month = new Date(item.expiration).getMonth() + 1
+      const year = new Date(item.expiration).getFullYear()
+      deleteDoc(doc(toReceiveRef(year, month), item.id));
+      this.showToast('success', 'Item excluído!')
+    },
   },
 
   computed:{
