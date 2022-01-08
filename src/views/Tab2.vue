@@ -80,6 +80,7 @@ export default {
       expenses: [],
       toReceives:[],
       slideDatesExp: [],
+      actualSlide: null,
 
       milliseconds: Timestamp.now().toMillis(),
       
@@ -181,11 +182,22 @@ export default {
     slideChanged(e){
       e.target.getActiveIndex().then(i => {
         const obj = this.slideDatesExp[i]
+        this.actualSlide = obj;
         this.loadAllData(obj.year, parseInt(obj.month))
       });
     },
 
-    async alertNewExpense(){
+    async alertNewExpense(item){
+      const date = dates(Date.now())
+      let expiration = date.year +'-'+date.month+'-'+'10'
+      if(this.actualSlide){
+        expiration = this.actualSlide.year +'-'+this.actualSlide.month+'-'+'10'
+      }
+      
+      if(item){
+        const date = dates(item.expiration);
+        expiration = date.year + '-' + date.month + '-' + date.day
+      }
       const alert = await alertController
         .create({
           cssClass: 'my-custom-class',
@@ -210,7 +222,7 @@ export default {
               label: 'Data de vencimento',
               name: 'expiration',
               id: 'expiration',
-              value: getActualYear() + '-' + addZero(getNextMonthInt()) +'-10',
+              value: expiration,
               type: 'date'
             },
             {

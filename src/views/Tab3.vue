@@ -169,7 +169,6 @@ export default {
     },
 
     async alertNewToReceive(item){
-      console.log(this.actualSlide)
       let expiration = this.actualSlide.year +'-'+this.actualSlide.month+'-'+'10'
       if(item){
         const date = dates(item.expiration);
