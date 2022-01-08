@@ -119,6 +119,10 @@ export default {
         this.expenses.sort((a, b) => {
           return  b.price - a.price;
         })
+
+        this.expenses.sort((a, b) => {
+          return  a.scratch - b.scratch;
+        })
       })
 
       // load toReceiveData
