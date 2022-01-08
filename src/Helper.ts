@@ -34,6 +34,11 @@ export function getNextMonthInt(){
     return month
 }
 
+export function getActualMonthInt(){
+    const month = new Date(Timestamp.now().toMillis()).getMonth() + 1
+    return month;
+}
+
 export function getNextMonthIndex(){
     return getNextMonthInt() - 1
 }

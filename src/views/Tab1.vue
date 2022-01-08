@@ -3,7 +3,7 @@
     <!-- Header -->
     <ion-header>
       <ion-toolbar color="primary">
-        <tollbar-component :total="inWallet" title="Home"/>
+        <tollbar-component :total="inWallet" :title="(getMonthName(monthToShow))"/>
       </ion-toolbar>
     </ion-header>
     <!-- Header -->
@@ -81,7 +81,7 @@
 <script>
 
 import eventBus from '../eventBus'
-import {getMonths, getNextMonthInt, getNextMonthIndex, userRef, expRef, getActualYear, toReceiveRef, formatInputReal, formatInputRealV3} from '../Helper'
+import {getMonths, getActualMonthInt, getNextMonthIndex, userRef, expRef, getActualYear, toReceiveRef, formatInputReal, formatInputRealV3} from '../Helper'
 import {updateDoc, onSnapshot, Timestamp, arrayUnion } from "firebase/firestore";
 import { alertController} from "@ionic/vue";
 import TollbarComponent from '../components/TollbarComponent.vue'
@@ -90,6 +90,7 @@ export default {
   components:{TollbarComponent},
   data: () => {
     return {
+      monthToShow: getActualMonthInt(),
       slideOpts:{
         initialSlide: getNextMonthIndex(),
         speed: 400
@@ -108,7 +109,8 @@ export default {
       monthRef: null,
       expensesRef: null,
 
-      allData: null
+      allData: null,
+      count: 0
     }
   },
 
@@ -116,13 +118,19 @@ export default {
     this.loadAllData()
   },
   methods: {
+    getMonthName(month){
+      const monthIndex = parseInt(month) - 1
+      return getMonths(monthIndex)
+    },
+
     loadAllData(year = null, month = null){
       if(!year && !month){
-        month = getNextMonthInt();
+        month = getActualMonthInt();
         year = getActualYear()
-  
+        
         if(month === 12){
-          year = getActualYear() + 1
+          month = 1
+          year = year + 1
         }
       }
 
@@ -145,7 +153,20 @@ export default {
           return  b.price - a.price;
         })
 
-        this.sendDataToComponents(this.expenses)
+        if(this.allStratched){
+          month = month + 1
+          if(month === 12){
+            month = 1
+            year = year + 1
+          }
+
+          if(this.count === 0){
+            this.loadAllData(year, month)
+            this.count += 1
+
+            this.monthToShow = month
+          }
+        }
       })
 
       // load toReceiveData
@@ -377,6 +398,14 @@ export default {
 
       const result = ((this.emergencyReserveReached * 100) / this.emergencyReserveGoal)/100
       return result
+    },
+
+    allStratched(){
+      if(this.expenses.findIndex(x => (!x.scratch)) > -1){
+        return false
+      }else{
+        return true
+      }
     }
   }
 };
