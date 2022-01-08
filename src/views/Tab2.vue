@@ -41,7 +41,6 @@
           </ion-grid>
         </ion-col>
       </ion-row>
-      <footer-info :total="formatMoney(amountExpense)"/>
     </ion-content>
   </ion-page>
 </template>
@@ -50,11 +49,10 @@
 import { addZero, getMonths, getNextMonthInt, getNextMonthIndex, expRef, getActualYear, toReceiveRef, userRef, dates} from '../Helper'
 import { doc, updateDoc, onSnapshot, addDoc, deleteDoc, Timestamp, arrayUnion} from "firebase/firestore";
 import { alertController, IonList, actionSheetController, IonSlides, IonSlide, IonImg, IonSpinner} from "@ionic/vue";
-import FooterInfo from '../components/FooterInfo.vue'
 import TollbarComponent from '../components/TollbarComponent.vue'
 
 export default {
-  components:{ IonList, IonSlides, IonSlide, IonImg, FooterInfo, TollbarComponent, IonSpinner},
+  components:{ IonList, IonSlides, IonSlide, IonImg, TollbarComponent, IonSpinner},
   data: () => {
     return {
       slideOpts:{

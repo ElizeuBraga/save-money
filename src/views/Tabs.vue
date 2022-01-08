@@ -17,7 +17,7 @@
           <ion-label>Entradas</ion-label>
         </ion-tab-button>
 
-        <ion-tab-button tab="tab4" href="/tabs/tab4">
+        <ion-tab-button disabled tab="tab4" href="/tabs/tab4">
           <ion-icon color="primary" :icon="menu" />
           <ion-label>Menu</ion-label>
         </ion-tab-button>
