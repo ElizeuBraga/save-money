@@ -134,8 +134,6 @@ export default {
       })
 
       setTimeout(()=>{
-        this.loaded = true
-
         const date = dates(Date.now())
         const index = this.slideDatesExp.findIndex(x => (x.month === date.month && x.year === date.year));
 
@@ -145,6 +143,15 @@ export default {
           this.slideOpts.initialSlide = index
         }
 
+        this.expenses.sort((a, b) => {
+          return  b.price - a.price;
+        })
+
+        this.expenses.sort((a, b) => {
+          return  a.scratch - b.scratch;
+        })
+
+        this.loaded = true
       }, 2000)
     },
 
