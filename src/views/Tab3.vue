@@ -14,34 +14,41 @@
         <ion-col size="12">
           <ion-grid>
             <ion-card>
-              <ion-button @click="alertNewToReceive()">Novo</ion-button>
-              <ion-slides v-if="slideDatesToRe.length > 0" :options="slideOpts" @ionSlideDidChange="slideChanged($event)">
-                <ion-slide v-for="m in slideDatesToRe" :key="m">
-                  <span style="background: #3880ff; color: white; border-radius: 20px; padding: 0px 6px 0px 6px">{{getMonthName(m.month)}}/{{m.year}}</span>
-                </ion-slide>
-              </ion-slides>
-
               <ion-card-content align="center">
-                <ion-list v-for="e in toReceives" :key="e.id">
-                  <ion-item :style="e.scratch ? 'text-decoration: line-through; opacity: 0.5;' : '' " @click="presentActionSheet(e)">
-                    <!-- <ion-img style="height: 30px; width: 30px; margin-right: 5px" :src="e.img"></ion-img> -->
-                    <ion-label class="ion-text-left">{{e.name}}</ion-label>
-                    <ion-label class="ion-text-right">{{"R$ " + parseFloat(e.price).toFixed(2).replace(".", ",")}}</ion-label>
-                  </ion-item>
-                </ion-list>
+                <ion-slides @ionSlidePrevEnd="ionSlideNextEnded()" @ionSlideNextEnd="ionSlideNextEnded()" @ionSlideWillChange="ionSlideNextStarted()" v-if="slideDatesToRe.length > 0" :options="slideOpts" @ionSlideDidChange="slideChanged($event)">
+                  <ion-slide v-for="m in slideDatesToRe" :key="m">
+                    <ion-row>
+                      <ion-col>
+                        <span style="background: #3880ff; color: white; border-radius: 20px; padding: 0px 6px 0px 6px">{{getMonthName(m.month)}}/{{m.year}}</span>
+                      </ion-col>
+                      <ion-col size="12">
+                        <ion-spinner color="primary" v-if="slidind" name="crescent"></ion-spinner>
+                        <ion-list v-for="e in toReceives" :key="e.id">
+                          <ion-item :style="e.scratch ? 'text-decoration: line-through; opacity: 0.5;' : '' " @click="presentActionSheet(e)">
+                            <!-- <ion-img style="height: 30px; width: 30px; margin-right: 5px" :src="e.img"></ion-img> -->
+                            <ion-label class="ion-text-left">{{e.name}}</ion-label>
+                            <ion-label class="ion-text-right">{{"R$ " + parseFloat(e.price).toFixed(2).replace(".", ",")}}</ion-label>
+                          </ion-item>
+                        </ion-list>
 
-                <ion-list v-if="toReceives.length == 0">
-                  <ion-item>
-                    <ion-label class="ion-text-center label-italic" color="danger">Nenhum item encontrado</ion-label>
-                  </ion-item>
-                </ion-list>
+                        <ion-list v-if="toReceives.length == 0">
+                          <ion-item>
+                            <ion-label class="ion-text-center label-italic" color="danger">Nenhum item encontrado</ion-label>
+                          </ion-item>
+                        </ion-list>
+                      </ion-col>
+                    </ion-row>
+                  </ion-slide>
+                </ion-slides>
               </ion-card-content>
-              <!-- List of Text Items -->
             </ion-card>
           </ion-grid>
         </ion-col>
       </ion-row>
-      <footer-info :total="formatMoney(getTotalToReceive)"/>
+
+      <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+        <ion-fab-button @click="alertNewToReceive()" style="font-size: 30px">+</ion-fab-button>
+      </ion-fab>
     </ion-content>
   </ion-page>
 </template>
@@ -49,18 +56,19 @@
 <script>
 import { addZero, getMonths, getNextMonthInt, getNextMonthIndex, expRef, getActualYear, toReceiveRef, userRef, dates} from '../Helper'
 import { onSnapshot, addDoc, Timestamp, updateDoc, arrayUnion, deleteDoc, doc} from "firebase/firestore";
-import { alertController, IonList, actionSheetController, IonSlides, IonSlide} from "@ionic/vue";
+import { alertController, IonList, actionSheetController, IonSlides, IonSlide, IonFab, IonFabButton} from "@ionic/vue";
 // import FooterInfo from '../components/FooterInfo.vue'
 import TollbarComponent from '../components/TollbarComponent.vue'
 
 export default {
-  components:{ IonList, IonSlides, IonSlide, TollbarComponent},
+  components:{ IonList, IonSlides, IonSlide, TollbarComponent, IonFab, IonFabButton},
   data: () => {
     return {
       slideOpts:{
         initialSlide: getNextMonthIndex(),
         speed: 400
       },
+      slidind: false,
       name: '',
       months: getMonths(),
       loaded: false,
@@ -82,6 +90,15 @@ export default {
     this.loadAllData()
   },
   methods: {
+    ionSlideNextStarted(){
+      this.slidind = true
+      this.toReceives = []
+    },
+
+    ionSlideNextEnded(){
+      this.slidind = false
+    },
+
     getMonthName(month){
       const monthIndex = parseInt(month) - 1
       return getMonths(monthIndex)

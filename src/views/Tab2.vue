@@ -14,26 +14,34 @@
         <ion-col size="12">
           <ion-grid>
             <ion-card>
-              <ion-slides ref="slides" v-if="slideDatesExp.length > 0" :options="slideOpts" @ionSlideDidChange="slideChanged($event)">
-                <ion-slide v-for="p in slideDatesExp" :key="p">
-                  <span style="background: #3880ff; color: white; border-radius: 20px; padding: 0px 6px 0px 6px">{{getMonthName(p.month)}}/{{p.year}}</span>
-                </ion-slide>
-              </ion-slides>
 
               <ion-card-content align="center">
-                <ion-list v-for="e in expenses" :key="e.id" style="max-height: 400px; overflow-y: scroll;">
-                  <ion-item :style="e.scratch ? 'text-decoration: line-through; opacity: 0.5;' : '' " @click="presentActionSheet(e)">
-                    <ion-img style="height: 30px; width: 30px; margin-right: 5px" :src="e.img"></ion-img>
-                    <ion-label class="ion-text-left">{{e.description}}</ion-label>
-                    <ion-label class="ion-text-right">{{"R$ " + parseFloat(e.price).toFixed(2).replace(".", ",")}}</ion-label>
-                  </ion-item>
-                </ion-list>
-
-                <ion-list v-if="expenses.length == 0">
-                  <ion-item>
-                    <ion-label class="ion-text-center label-italic" color="danger">Nenhum item encontrado</ion-label>
-                  </ion-item>
-                </ion-list>
+                <ion-slides ref="slides" @ionSlidePrevEnd="ionSlideNextEnded()" @ionSlideNextEnd="ionSlideNextEnded()" @ionSlideWillChange="ionSlideNextStarted()" v-if="slideDatesExp.length > 0" :options="slideOpts" @ionSlideDidChange="slideChanged($event)">
+                  <ion-slide v-for="p in slideDatesExp" :key="p">
+                    <ion-row>
+                      <ion-col>
+                        <span style="background: #3880ff; color: white; border-radius: 20px; padding: 0px 6px 0px 6px">{{getMonthName(p.month)}}/{{p.year}}</span>
+                      </ion-col>
+                      <ion-col size="12" style="min-height: 67vh">
+                        <ion-spinner color="primary" v-if="slidind" name="crescent"></ion-spinner>
+                        <div v-else>
+                          <ion-list v-for="e in expenses" :key="e.id" style="max-height: 400px; overflow-y: scroll;">
+                            <ion-item :style="e.scratch ? 'text-decoration: line-through; opacity: 0.5;' : '' " @click="presentActionSheet(e)">
+                              <ion-img style="height: 30px; width: 30px; margin-right: 5px" :src="e.img"></ion-img>
+                              <ion-label class="ion-text-left">{{e.description}}</ion-label>
+                              <ion-label class="ion-text-right">{{"R$ " + parseFloat(e.price).toFixed(2).replace(".", ",")}}</ion-label>
+                            </ion-item>
+                          </ion-list>
+                          <ion-list v-if="!slidind && expenses.length == 0">
+                            <ion-item>
+                              <ion-label class="ion-text-center label-italic" color="danger">Nenhum item encontrado</ion-label>
+                            </ion-item>
+                          </ion-list>
+                        </div>
+                      </ion-col>
+                    </ion-row>
+                  </ion-slide>
+                </ion-slides>
               </ion-card-content>
               <!-- List of Text Items -->
             </ion-card>
@@ -60,6 +68,7 @@ export default {
   data: () => {
     return {
       arrowForwardCircle,
+      slidind: false,
       slideOpts:{
         initialSlide: getNextMonthIndex(),
         speed: 400
@@ -87,6 +96,15 @@ export default {
   },
 
   methods: {
+    ionSlideNextStarted(){
+      this.slidind = true
+      this.expenses = []
+    },
+
+    ionSlideNextEnded(){
+      this.slidind = false
+    },
+
     getMonthName(month){
       const monthIndex = parseInt(month) - 1
       return getMonths(monthIndex)
