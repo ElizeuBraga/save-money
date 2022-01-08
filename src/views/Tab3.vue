@@ -316,7 +316,7 @@ export default {
 
       const expiration = new Date(`${year}-${month}-${day}`).getTime()
 
-      updateDoc(doc(toReceiveRef(year, month), item.id), {price: item.price})
+      updateDoc(doc(toReceiveRef(year, month), item.id), {name: item.name, price: parseFloat(item.price)})
 
       this.showToast('success', 'Item editado com sucesso!')
     },
