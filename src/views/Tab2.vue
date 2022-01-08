@@ -14,7 +14,6 @@
         <ion-col size="12">
           <ion-grid>
             <ion-card>
-              <ion-button @click="alertNewExpense()">Novo</ion-button>
               <ion-slides ref="slides" v-if="slideDatesExp.length > 0" :options="slideOpts" @ionSlideDidChange="slideChanged($event)">
                 <ion-slide v-for="p in slideDatesExp" :key="p">
                   <span style="background: #3880ff; color: white; border-radius: 20px; padding: 0px 6px 0px 6px">{{getMonthName(p.month)}}/{{p.year}}</span>
@@ -41,6 +40,10 @@
           </ion-grid>
         </ion-col>
       </ion-row>
+      
+      <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+        <ion-fab-button @click="alertNewExpense()" style="font-size: 30px">+</ion-fab-button>
+      </ion-fab>
     </ion-content>
   </ion-page>
 </template>
@@ -48,13 +51,15 @@
 <script>
 import { addZero, getMonths, getNextMonthInt, getNextMonthIndex, expRef, getActualYear, toReceiveRef, userRef, dates} from '../Helper'
 import { doc, updateDoc, onSnapshot, addDoc, deleteDoc, Timestamp, arrayUnion} from "firebase/firestore";
-import { alertController, IonList, actionSheetController, IonSlides, IonSlide, IonImg, IonSpinner} from "@ionic/vue";
+import { alertController, IonList, actionSheetController, IonSlides, IonSlide, IonImg, IonSpinner, IonFabButton, IonFab} from "@ionic/vue";
 import TollbarComponent from '../components/TollbarComponent.vue'
+import { arrowForwardCircle } from 'ionicons/icons';
 
 export default {
-  components:{ IonList, IonSlides, IonSlide, IonImg, TollbarComponent, IonSpinner},
+  components:{ IonList, IonSlides, IonSlide, IonImg, TollbarComponent, IonSpinner, IonFabButton, IonFab},
   data: () => {
     return {
+      arrowForwardCircle,
       slideOpts:{
         initialSlide: getNextMonthIndex(),
         speed: 400
