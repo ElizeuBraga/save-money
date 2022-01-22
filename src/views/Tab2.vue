@@ -3,7 +3,7 @@
     <!-- Header -->
     <ion-header>
       <ion-toolbar color="primary">
-        <tollbar-component :total="(totalToreceive - amountExpense)" title="Saída"/>
+        <tollbar-component :total="totalToreceive - amountExpense" title="Saída"/>
       </ion-toolbar>
     </ion-header>
     <!-- Header -->
@@ -57,7 +57,7 @@
 </template>
 
 <script>
-import { addZero, getMonths, getNextMonthInt, getNextMonthIndex, expRef, getActualYear, toReceiveRef, userRef, dates} from '../Helper'
+import { addZero, getMonths, getNextMonthInt, getNextMonthIndex, expRef, getActualYear, toReceiveRef, userRef, dates, sumElements} from '../Helper'
 import { doc, updateDoc, onSnapshot, addDoc, deleteDoc, Timestamp, arrayUnion} from "firebase/firestore";
 import { alertController, IonList, actionSheetController, IonSlides, IonSlide, IonImg, IonSpinner, IonFabButton, IonFab} from "@ionic/vue";
 import TollbarComponent from '../components/TollbarComponent.vue'
@@ -428,7 +428,7 @@ export default {
             },
             {
               cssClass: 'ion-color-danger',
-              text: expense.scratch ? 'Remover risco' : 'Riscar',
+              text: expense.scratch ? 'Não paguei' : 'Pago',
               handler: () => {
                 this.scratchEspense(expense)
               },
@@ -449,21 +449,11 @@ export default {
     },
 
     amountExpense(){
-      let total = 0
-      this.expenses.forEach((e)=>{
-        total += e.price
-      })
-
-      return total;
+      return sumElements(this.expenses, 'price')
     },
 
     totalToreceive(){
-      let total = 0
-      this.toReceives.forEach((e)=>{
-        total += e.price
-      })
-
-      return total;
+      return sumElements(this.toReceives, 'price')
     }
   }
 };

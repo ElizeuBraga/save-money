@@ -3,7 +3,7 @@
     <!-- Header -->
     <ion-header>
       <ion-toolbar color="primary">
-        <tollbar-component :total="(getTotalToReceive - expenseTotal)" title="Entradas"/>
+        <tollbar-component :total="getTotalToReceive - expenseTotal" title="Entradas"/>
       </ion-toolbar>
     </ion-header>
     <!-- Header -->
@@ -26,8 +26,8 @@
                         <ion-list v-for="e in toReceives" :key="e.id">
                           <ion-item :style="e.scratch ? 'text-decoration: line-through; opacity: 0.5;' : '' " @click="presentActionSheet(e)">
                             <!-- <ion-img style="height: 30px; width: 30px; margin-right: 5px" :src="e.img"></ion-img> -->
-                            <ion-label class="ion-text-left">{{e.name}}</ion-label>
-                            <ion-label class="ion-text-right">{{"R$ " + parseFloat(e.price).toFixed(2).replace(".", ",")}}</ion-label>
+                            <ion-label class="ion-text-left" :style="e.doubt ? 'color: red' : ''">{{e.name}}</ion-label>
+                            <ion-label class="ion-text-right" :style="e.doubt ? 'color: red' : ''">{{"R$ " + parseFloat(e.price).toFixed(2).replace(".", ",")}}</ion-label>
                           </ion-item>
                         </ion-list>
 
@@ -54,7 +54,7 @@
 </template>
 
 <script>
-import { addZero, getMonths, getNextMonthInt, getNextMonthIndex, expRef, getActualYear, toReceiveRef, userRef, dates} from '../Helper'
+import { addZero, getMonths, getNextMonthInt, getNextMonthIndex, expRef, getActualYear, toReceiveRef, userRef, dates, sumElements} from '../Helper'
 import { onSnapshot, addDoc, Timestamp, updateDoc, arrayUnion, deleteDoc, doc} from "firebase/firestore";
 import { alertController, IonList, actionSheetController, IonSlides, IonSlide, IonFab, IonFabButton} from "@ionic/vue";
 // import FooterInfo from '../components/FooterInfo.vue'
@@ -379,9 +379,20 @@ export default {
             },
             {
               cssClass: 'ion-color-danger',
-              text: item.scratch ? 'Remover risco' : 'Riscar',
+              text: item.scratch ? 'Não recebi' : 'Recebido',
               handler: () => {
                 this.scratchItem(item)
+              },
+            },
+            {
+              cssClass: 'ion-color-danger',
+              text: item.doubt ? 'Remover dúvida' : 'Duvidoso',
+              handler: () => {
+                const month = new Date(item.expiration).getMonth() + 1
+                const year = new Date(item.expiration).getFullYear()
+                
+                updateDoc(doc(toReceiveRef(year, month), item.id), {doubt: item.doubt ? false : true});
+                this.showToast('success', 'Marcado como duvidoso!')
               },
             }
           ],
@@ -400,21 +411,11 @@ export default {
 
   computed:{
     getTotalToReceive(){
-      let total = 0
-      this.toReceives.forEach((e)=>{
-        total += e.price
-      })
-
-      return total;
+      return sumElements(this.toReceives, 'price')
     },
 
     expenseTotal(){
-      let total = 0
-      this.expenses.forEach((e)=>{
-        total += e.price
-      })
-
-      return total;
+      return sumElements(this.expenses, 'price')
     },
   }
 };

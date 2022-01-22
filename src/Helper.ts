@@ -81,3 +81,13 @@ export function formatInputRealV2(value: any){
 export function formatInputRealV3(value: any){
     return parseFloat(value).toFixed(2);
 }
+
+export function sumElements(array: any, field: any, config: any){
+    let total = 0
+    for (const element of array) {
+        if(element.doubt !== true){
+            total += parseFloat(element[field])
+        }
+    }
+    return total
+}
