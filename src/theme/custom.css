@@ -1,9 +1,9 @@
 ion-label{
     font-family: "LabelInputsFont" !important;
-    font-size: 16px!important;
+    /* font-size: 16px!important; */
 }
 
 .label-italic{
     font-family: "LabelItalic" !important;
-    font-size: 14px!important;
+    /* font-size: 14px!important; */
 }
