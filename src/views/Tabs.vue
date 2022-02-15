@@ -1,7 +1,7 @@
 <template>
   <ion-page>
     <ion-tabs>
-      <ion-tab-bar color="primary" slot="bottom">  
+      <ion-tab-bar color="dark" slot="bottom">  
         <ion-tab-button tab="tab2" href="/tabs/tab2">
           <ion-icon color="danger" :icon="arrowUp"/>
           <ion-label>Saídas</ion-label>

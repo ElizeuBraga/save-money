@@ -2,7 +2,7 @@
   <ion-page>
     <!-- Header -->
     <ion-header>
-      <ion-toolbar color="primary">
+      <ion-toolbar color="dark">
         <tollbar-component :total="totalToreceive - amountExpense" title="Saída"/>
       </ion-toolbar>
     </ion-header>
@@ -12,35 +12,42 @@
       <ion-spinner color="primary" style="margin-top: 50%; margin-left: 50%" v-if="!loaded" name="crescent"></ion-spinner>
       <ion-row v-else>
         <ion-col size="12">
-            <ion-slides ref="slides" style="width: 100%" @ionSlidePrevEnd="ionSlideNextEnded()" @ionSlideNextEnd="ionSlideNextEnded()" @ionSlideWillChange="ionSlideNextStarted()" v-if="slideDatesExp.length > 0" :options="slideOpts" @ionSlideDidChange="slideChanged($event)">
-              <ion-slide v-for="p in slideDatesExp" :key="p">
+          <ion-segment :value="tab" color="light" @ionChange="segmentChanged($event)">
+              <ion-segment-button value="toPaid">
+                <ion-label style="font-weight: bold;" color="danger">Á pagar</ion-label>
+              </ion-segment-button>
+              <ion-segment-button value="paid">
+                <ion-label style="font-weight: bold;" color="success">Pagos</ion-label>
+              </ion-segment-button>
+            </ion-segment>
+
+            <ion-slides ref="slides" @ionSlidePrevEnd="ionSlideNextEnded()" @ionSlideNextEnd="ionSlideNextEnded()" @ionSlideWillChange="ionSlideNextStarted()" v-if="slideDatesExp.length > 0" :options="slideOpts" @ionSlideDidChange="slideChanged($event)">
+              <ion-slide v-for="p in slideDatesExp" :key="p" style="min-height: 100vh">
                 <ion-row>
                   <ion-col size="12">
-                    <span style="background: #3880ff; color: white; border-radius: 20px; padding: 0px 6px 0px 6px">{{getMonthName(p.month)}}/{{p.year}}</span>
+                    <ion-label color="light">{{getMonthName(p.month)}}/{{p.year}}</ion-label><br>
+                    <ion-card :style="e.scratch ? 'font-style: italic; text-decoration: line-through; opacity: 0.8;' : ''" v-for="e in expenses" :key="e._id" @click="presentActionSheet(e)">
+                      <ion-card-content>
+                        <ion-row>
+                          <ion-col class="ion-text-center">
+                            <ion-label color="dark" style="font-weight: bold;" class="savem-font-big">{{e.description}}</ion-label>
+                          </ion-col>
+                          <ion-col class="ion-text-right savem-font-big">
+                            <ion-label color="dark" style="font-weight: bold;">{{formatMoney(e.price)}}</ion-label>
+                          </ion-col>
+                        </ion-row>
+                      </ion-card-content>
+                    </ion-card>
+                    <ion-label v-if="expenses.length === 0" color="light">Nada por aqui</ion-label>
                   </ion-col>
                 </ion-row>
               </ion-slide>
             </ion-slides>
-            <ion-card :style="e.scratch ? 'font-style: italic; text-decoration: line-through; opacity: 0.8;' : ''" v-for="e in expenses" :key="e._id" @click="presentActionSheet(e)">
-              <ion-card-content>
-                <ion-row>
-                  <ion-col size="1">
-                    <ion-img style="height: 30px; width: 30px; margin-right: 5px" :src="e.img"></ion-img>
-                  </ion-col>
-                  <ion-col class="ion-text-center">
-                    <ion-label class="savem-font-big">{{e.description}}</ion-label>
-                  </ion-col>
-                  <ion-col class="ion-text-right savem-font-big">
-                    <ion-label>{{formatMoney(e.price)}}</ion-label>
-                  </ion-col>
-                </ion-row>
-              </ion-card-content>
-            </ion-card>
         </ion-col>
       </ion-row>
       
       <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-        <ion-fab-button @click="alertNewExpense()" style="font-size: 30px">+</ion-fab-button>
+        <ion-fab-button color="dark" @click="alertNewExpense()" style="font-size: 30px">+</ion-fab-button>
       </ion-fab>
     </ion-content>
   </ion-page>
@@ -51,9 +58,9 @@ import { addZero, getMonths, getNextMonthInt, getNextMonthIndex, expRef, getActu
 import { doc, updateDoc, onSnapshot, addDoc, deleteDoc, Timestamp, arrayUnion} from "firebase/firestore";
 import { alertController, 
     //IonList, 
-    actionSheetController, IonSlides, IonSlide, 
+    actionSheetController, 
     //IonImg, 
-    IonSpinner, IonFabButton, IonFab, IonCard
+    IonSpinner, IonFabButton, IonFab, IonCard, IonSegment, IonSegmentButton
 } from "@ionic/vue";
 import TollbarComponent from '../components/TollbarComponent.vue'
 import { arrowForwardCircle } from 'ionicons/icons';
@@ -61,13 +68,12 @@ import { arrowForwardCircle } from 'ionicons/icons';
 export default {
   components:{ 
     //IonList, 
-    IonSlides, IonSlide, 
       //IonImg, 
-    TollbarComponent, IonSpinner, IonFabButton, IonFab, IonCard},
+    TollbarComponent, IonSpinner, IonFabButton, IonFab, IonCard, IonSegment, IonSegmentButton},
   data: () => {
     return {
+      tab: 'toPaid',
       arrowForwardCircle,
-      slidind: false,
       slideOpts:{
         initialSlide: getNextMonthIndex(),
         speed: 400
@@ -96,13 +102,9 @@ export default {
   },
 
   methods: {
-    ionSlideNextStarted(){
-      this.slidind = true
-      this.expenses = []
-    },
-
-    ionSlideNextEnded(){
-      this.slidind = false
+    segmentChanged(e){
+      this.tab = e.detail.value
+      this.loadAllData(this.actualSlide.year, parseInt(this.actualSlide.month))
     },
 
     getMonthName(month){
@@ -134,7 +136,16 @@ export default {
         expSnapshot.docs.forEach((doc)=>{
           const e = doc.data()
           e.id = doc.id
-          this.expenses.push(e)
+
+          if(this.tab === 'toPaid'){
+            if(!e.scratch){
+              this.expenses.push(e)
+            }
+          }else{
+            if(e.scratch){
+              this.expenses.push(e)
+            }
+          }
         })
 
 
@@ -472,6 +483,10 @@ export default {
   border-radius: 15px !important;
 }
 
+.swiper-slide {
+  display: block;
+}
+
 .savem-font-big{
   font-size: 20px;
   font-weight: 300;
@@ -486,20 +501,18 @@ ion-col{
 }
 
 ion-content {
-  --ion-background-color: #3880ff;
+  --ion-background-color: #252525;
 }
 
 ion-card{
   background: white;
+  /* background: rgb(13, 18, 40); */
   border-radius: 10px;
-  color:black;
+  /* color:white; */
   height: 100px;
 }
 
 .wallet{
-  background: white;
-  border-radius: 15px;
-  padding: 3px 6px 3px 6px;
   font-size: 20px!important;
   font-weight: bold;
 }

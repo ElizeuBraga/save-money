@@ -24,9 +24,6 @@ export default {
 
 <style scoped>
   .wallet{
-    background: white;
-    border-radius: 15px;
-    padding: 3px 6px 3px 6px;
     font-size: 20px!important;
     font-weight: bold;
   }
