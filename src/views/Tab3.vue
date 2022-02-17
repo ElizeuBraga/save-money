@@ -13,10 +13,10 @@
         <ion-col size="12">
           <ion-segment :value="tab" color="light" @ionChange="segmentChanged($event)">
               <ion-segment-button value="toPaid">
-                <ion-label style="font-weight: bold;" color="danger">Á receber</ion-label>
+                <ion-label style="font-weight: bold;" color="danger">Á pagar</ion-label>
               </ion-segment-button>
               <ion-segment-button value="paid">
-                <ion-label style="font-weight: bold;" color="success">Recebidos</ion-label>
+                <ion-label style="font-weight: bold;" color="success">Pagos</ion-label>
               </ion-segment-button>
             </ion-segment>
 
@@ -33,6 +33,11 @@
                           </ion-col>
                           <ion-col class="ion-text-right savem-font-big">
                             <ion-label color="dark" style="font-weight: bold;">{{formatMoney(e.price)}}</ion-label>
+                          </ion-col>
+                        </ion-row>
+                        <ion-row>
+                          <ion-col class="ion-text-right">
+                            <ion-label>Vencimento: {{formatDate(e.expiration)}}</ion-label>
                           </ion-col>
                         </ion-row>
                       </ion-card-content>
@@ -96,12 +101,18 @@ export default {
     this.actualizeData()
   },
   methods: {
+    formatDate(date){
+      return dates(date, 'dd/mm')
+    },
+
     async segmentChanged(e){
       this.tab = e.detail.value
       this.actualizeData()
     },
 
     async actualizeData(){
+      this.slideDatesExp = await getDates();
+
       if(this.tab === 'toPaid'){
         this.expenses = await getUnPaid(this.monthYear)
         this.totalUnPaid = sum(this.expenses, 'price')
@@ -110,8 +121,6 @@ export default {
         this.totalPaid = sum(this.expenses, 'price')
       }
       
-      this.slideDatesExp = await getDates();
-
       this.slideOpts.initialSlide = this.slideDatesExp.indexOf(this.monthYear)
     },
 
@@ -296,33 +305,31 @@ export default {
             {
               text: 'Editar',
               handler: () => {
-                this.saveOrUpdateAlert(item)
+                // this.alertUpdateExpense(expense)
               },
             },
             {
               text: 'Excluir',
               handler: () => {
-                item.deletedAt = dates()
-                update(item)
-                this.actualizeData()
+                this.deleteItem(item)
               },
             },
             {
               cssClass: 'ion-color-danger',
-              text: item.paid ? 'Não recebi' : 'Recebido',
+              text: item.scratch ? 'Não recebi' : 'Recebido',
               handler: () => {
-                item.paid = !item.paid
-                update(item)
-                this.actualizeData()
+                this.scratchItem(item)
               },
             },
             {
               cssClass: 'ion-color-danger',
               text: item.doubt ? 'Remover dúvida' : 'Duvidoso',
               handler: () => {
-                item.doubt = !item.doubt
-                update(item)
-                this.actualizeData()
+                const month = new Date(item.expiration).getMonth() + 1
+                const year = new Date(item.expiration).getFullYear()
+                
+                updateDoc(doc(toReceiveRef(year, month), item.id), {doubt: item.doubt ? false : true});
+                this.showToast('success', 'Marcado como duvidoso!')
               },
             }
           ],

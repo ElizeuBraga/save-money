@@ -20,7 +20,7 @@ export function update(doc: any){
 
 export function getPaid(yearMonth: string){
     return new Promise((resolve) =>{
-        db.find({paid: true, deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
+        db.find({paid: true, deletedAt: null, createdAt: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
             resolve(docs)
         });
     })
@@ -28,7 +28,7 @@ export function getPaid(yearMonth: string){
 
 export function getUnPaid(yearMonth: string){
     return new Promise((resolve) =>{
-        db.find({paid: false, deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
+        db.find({paid: false, deletedAt: null, createdAt: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
             resolve(docs)
         });
     })

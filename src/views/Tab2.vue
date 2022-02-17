@@ -35,6 +35,11 @@
                             <ion-label color="dark" style="font-weight: bold;">{{formatMoney(e.price)}}</ion-label>
                           </ion-col>
                         </ion-row>
+                        <ion-row>
+                          <ion-col class="ion-text-right">
+                            <ion-label>Vencimento: {{formatDate(e.expiration)}}</ion-label>
+                          </ion-col>
+                        </ion-row>
                       </ion-card-content>
                     </ion-card>
                     <ion-label v-if="expenses.length === 0" color="light">Nada por aqui</ion-label>
@@ -98,7 +103,7 @@ export default {
 
   methods: {
     formatDate(date){
-      return dates(date, 'mm/yyyy')
+      return dates(date, 'dd/mm')
     },
 
     async segmentChanged(e){
@@ -490,6 +495,7 @@ export default {
     },
 
     async actualizeData(){
+      this.slideDatesExp = await getDates();
       if(this.tab === 'toPaid'){
         this.expenses = await getUnPaid(this.monthYear)
         this.totalUnPaid = sum(this.expenses, 'price')
@@ -499,7 +505,6 @@ export default {
       }
       
       this.slideOpts.initialSlide = this.slideDatesExp.indexOf(this.monthYear)
-      this.slideDatesExp = await getDates();
     },
 
     async presentActionSheet(expense) {

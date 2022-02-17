@@ -18,6 +18,8 @@ export function dates(date: any, format: any, teste: any = false){
         dateFormated = day + '-' + month + '-' + year
     }else if(format === 'dd'){
         dateFormated = day
+    }else if(format === 'dd/mm'){
+        dateFormated = day + '/'+ month
     }else if(format === 'mm'){
         dateFormated = month
     }else if(format === 'yyyy'){
