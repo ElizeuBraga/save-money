@@ -1,16 +1,42 @@
 import { getAuth } from "firebase/auth"
 import { Timestamp, doc, getFirestore, collection} from "firebase/firestore"
 
-export function dates(date: string){
-    const day = new Date(date).getDate() + 1
-    const month = new Date(date).getMonth() + 1
-    const year = new Date(date).getFullYear()
+export function dates(date: any, format: any, teste: any = false){
+    date = !date ? Date.now() : date
+    let day = String(new Date(date).getDate())
+    let month = String(new Date(date).getMonth() + 1)
+    let year = String(new Date(date).getFullYear())
+    
+    day = (parseInt(day) < 10) ? '0' + day : day
+    month =  (parseInt(month) < 10) ? '0' + month : month
+    year = String(year)
 
-    return {
-        day: String(((day < 10) ? '0' + day : day)),
-        month: String(((month < 10) ? '0' + month : month)),
-        year: String(year)
+    let dateFormated = null
+    if(format === 'dd/mm/yyyy'){
+        dateFormated = day + '/' + month + '/' + year
+    }else if(format === 'dd-mm-yyyy'){
+        dateFormated = day + '-' + month + '-' + year
+    }else if(format === 'dd'){
+        dateFormated = day
+    }else if(format === 'mm'){
+        dateFormated = month
+    }else if(format === 'yyyy'){
+        dateFormated = year
+    }else if(format === 'mm-yyyy'){
+        dateFormated = month + '-' + year
+    }else if(format === 'mm/yyyy'){
+        dateFormated = month + '/' + year
+    }else if(format === 'yyyy-mm'){
+        dateFormated = year + '-' + month
+    }else{
+        dateFormated = year + '-' + month + '-' + day 
     }
+
+    if(teste){
+        console.log(date)
+    }
+
+    return dateFormated
 }
 
 export function addZero(num: number){
@@ -82,12 +108,33 @@ export function formatInputRealV3(value: any){
     return parseFloat(value).toFixed(2);
 }
 
-export function sumElements(array: any, field: any, config: any){
+export function sumElements(array: any, field: any){
     let total = 0
+
+    if(!field){
+        for (const element of array) {
+            if(element.doubt !== true){
+                total += parseFloat(element[field])
+            }
+        }
+
+        return total
+    }
+
     for (const element of array) {
         if(element.doubt !== true){
             total += parseFloat(element[field])
         }
     }
+    return total
+}
+
+export function sum(array: any, field: any){
+    let total = 0
+
+    for (const element of array) {
+        total += parseFloat(element[field])
+    }
+
     return total
 }

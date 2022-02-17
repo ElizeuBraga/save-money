@@ -3,14 +3,13 @@
     <!-- Header -->
     <ion-header>
       <ion-toolbar color="dark">
-        <tollbar-component :total="totalToreceive - amountExpense" title="Saída"/>
+        <tollbar-component :total="total" title="Saída"/>
       </ion-toolbar>
     </ion-header>
     <!-- Header -->
 
     <ion-content :fullscreen="true">
-      <ion-spinner color="primary" style="margin-top: 50%; margin-left: 50%" v-if="!loaded" name="crescent"></ion-spinner>
-      <ion-row v-else>
+      <ion-row>
         <ion-col size="12">
           <ion-segment :value="tab" color="light" @ionChange="segmentChanged($event)">
               <ion-segment-button value="toPaid">
@@ -21,11 +20,11 @@
               </ion-segment-button>
             </ion-segment>
 
-            <ion-slides ref="slides" @ionSlidePrevEnd="ionSlideNextEnded()" @ionSlideNextEnd="ionSlideNextEnded()" @ionSlideWillChange="ionSlideNextStarted()" v-if="slideDatesExp.length > 0" :options="slideOpts" @ionSlideDidChange="slideChanged($event)">
-              <ion-slide v-for="p in slideDatesExp" :key="p" style="min-height: 100vh">
+            <ion-slides ref="slides" v-if="slideDatesExp.length > 0" :options="slideOpts" @ionSlideDidChange="slideChanged($event)">
+              <ion-slide style="min-height: 100vh" v-for="p in slideDatesExp" :key="p">
                 <ion-row>
                   <ion-col size="12">
-                    <ion-label color="light">{{getMonthName(p.month)}}/{{p.year}}</ion-label><br>
+                    <ion-label color="light">{{p}}</ion-label><br>
                     <ion-card :style="e.scratch ? 'font-style: italic; text-decoration: line-through; opacity: 0.8;' : ''" v-for="e in expenses" :key="e._id" @click="presentActionSheet(e)">
                       <ion-card-content>
                         <ion-row>
@@ -47,35 +46,31 @@
       </ion-row>
       
       <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-        <ion-fab-button color="dark" @click="alertNewExpense()" style="font-size: 30px">+</ion-fab-button>
+        <ion-fab-button color="dark" @click="saveOrUpdateAlert()" style="font-size: 30px">+</ion-fab-button>
       </ion-fab>
     </ion-content>
   </ion-page>
 </template>
 
 <script>
-import { addZero, getMonths, getNextMonthInt, getNextMonthIndex, expRef, getActualYear, toReceiveRef, userRef, dates, sumElements} from '../Helper'
+import { getUnPaid, update, insert, getPaid, getDates } from '../models/expense'
+import { addZero, getMonths, getNextMonthInt, expRef, getActualYear, toReceiveRef, userRef, dates, sumElements, sum} from '../Helper'
 import { doc, updateDoc, onSnapshot, addDoc, deleteDoc, Timestamp, arrayUnion} from "firebase/firestore";
-import { alertController, 
-    //IonList, 
-    actionSheetController, 
-    //IonImg, 
-    IonSpinner, IonFabButton, IonFab, IonCard, IonSegment, IonSegmentButton
-} from "@ionic/vue";
+import { alertController, actionSheetController, IonFabButton, IonFab, IonCard, IonSegment, IonSegmentButton} from "@ionic/vue";
 import TollbarComponent from '../components/TollbarComponent.vue'
 import { arrowForwardCircle } from 'ionicons/icons';
 
 export default {
-  components:{ 
-    //IonList, 
-      //IonImg, 
-    TollbarComponent, IonSpinner, IonFabButton, IonFab, IonCard, IonSegment, IonSegmentButton},
+  components:{ TollbarComponent, IonFabButton, IonFab, IonCard, IonSegment, IonSegmentButton },
   data: () => {
     return {
       tab: 'toPaid',
+      monthYear: dates(null, 'yyyy-mm'),
+      totalPaid: 0,
+      totalUnPaid: 0,
       arrowForwardCircle,
       slideOpts:{
-        initialSlide: getNextMonthIndex(),
+        initialSlide: 0,
         speed: 400
       },
       months: getMonths(),
@@ -98,13 +93,17 @@ export default {
   },
 
   async mounted(){
-    this.loadAllData()
+    this.actualizeData()
   },
 
   methods: {
-    segmentChanged(e){
+    formatDate(date){
+      return dates(date, 'mm/yyyy')
+    },
+
+    async segmentChanged(e){
       this.tab = e.detail.value
-      this.loadAllData(this.actualSlide.year, parseInt(this.actualSlide.month))
+      this.actualizeData()
     },
 
     getMonthName(month){
@@ -197,11 +196,10 @@ export default {
       }, 2000)
     },
 
-    slideChanged(e){
-      e.target.getActiveIndex().then(i => {
-        const obj = this.slideDatesExp[i]
-        this.actualSlide = obj;
-        this.loadAllData(obj.year, parseInt(obj.month))
+    async slideChanged(e){
+      e.target.getActiveIndex().then( async i => {
+        this.monthYear = this.slideDatesExp[i]
+        this.actualizeData()
       });
     },
 
@@ -275,6 +273,71 @@ export default {
       repeat.setAttribute('autocomplete', 'off')
 
       return alert.present();
+    },
+    
+    async saveOrUpdateAlert(doc = null){
+
+      const expiration = dates(Date.now())
+
+      const alert = await alertController
+        .create({
+          cssClass: 'my-custom-class',
+          header: doc ? doc.description :'Novo item',
+          inputs: [
+            {
+              label: 'Descrição',
+              name: 'description',
+              id: 'description',
+              value: doc ? doc.description : '',
+              placeholder: 'Digite uma descrição',
+            },
+            {
+              label: 'Valor',
+              name: 'price',
+              id: 'price',
+              value: doc ? doc.price : '',
+              placeholder: 'Digite o valor',
+              type: 'number'
+            },
+            {
+              label: 'Data de vencimento',
+              name: 'expiration',
+              id: 'expiration',
+              value: doc ? doc.expiration : expiration,
+              type: 'date'
+            },
+            {
+              label: 'Repetir',
+              name: 'repeat',
+              id: 'repeat',
+              value: '',
+              placeholder: 'Repetir?',
+              type: 'number',
+              max: 60
+            }
+          ],
+          buttons: [
+            {
+              text: 'Salvar',
+              handler: async (values) => {
+                if(doc){
+                  doc.description = values.description
+                  doc.price = values.price
+                  doc.expiration = values.expiration
+                  update(doc)
+                }else{
+                  insert(values)
+                }
+                this.actualizeData()
+              },
+            },
+            {
+              text: 'Cancelar'
+            }
+          ],
+        });
+
+        return alert.present();
     },
 
     async saveNewExpense(expense){
@@ -426,6 +489,19 @@ export default {
       this.showToast('success', 'Item riscado!')
     },
 
+    async actualizeData(){
+      if(this.tab === 'toPaid'){
+        this.expenses = await getUnPaid(this.monthYear)
+        this.totalUnPaid = sum(this.expenses, 'price')
+      }else{
+        this.expenses = await getPaid(this.monthYear)
+        this.totalPaid = sum(this.expenses, 'price')
+      }
+      
+      this.slideOpts.initialSlide = this.slideDatesExp.indexOf(this.monthYear)
+      this.slideDatesExp = await getDates();
+    },
+
     async presentActionSheet(expense) {
       const actionSheet = await actionSheetController
         .create({
@@ -435,20 +511,24 @@ export default {
             {
               text: 'Editar',
               handler: () => {
-                this.alertUpdateExpense(expense)
+                this.saveOrUpdateAlert(expense)
               },
             },
             {
               text: 'Excluir',
               handler: () => {
-                this.deleteExpense(expense)
+                expense.deletedAt = dates()
+                update(expense)
+                this.actualizeData()
               },
             },
             {
               cssClass: 'ion-color-danger',
-              text: expense.scratch ? 'Não paguei' : 'Pago',
+              text: expense.paid ? 'Não paguei' : 'Pago',
               handler: () => {
-                this.scratchEspense(expense)
+                expense.paid = !expense.paid
+                update(expense)
+                this.actualizeData()
               },
             }
           ],
@@ -472,6 +552,14 @@ export default {
 
     totalToreceive(){
       return sumElements(this.toReceives, 'price')
+    },
+
+    total(){
+      if(this.tab === 'toPaid'){
+        return this.totalUnPaid
+      }else{
+        return this.totalPaid
+      }
     }
   }
 };

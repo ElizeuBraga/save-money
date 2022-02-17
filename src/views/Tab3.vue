@@ -2,70 +2,74 @@
   <ion-page>
     <!-- Header -->
     <ion-header>
-      <ion-toolbar color="primary">
-        <tollbar-component :total="getTotalToReceive - expenseTotal" title="Entradas"/>
+      <ion-toolbar color="dark">
+        <tollbar-component :total="0" title="Entradas"/>
       </ion-toolbar>
     </ion-header>
     <!-- Header -->
 
     <ion-content :fullscreen="true">
-      <ion-spinner color="primary" style="margin-top: 50%; margin-left: 50%" v-if="!loaded" name="crescent"></ion-spinner>
-      <ion-row v-else>
+      <ion-row>
         <ion-col size="12">
-          <ion-grid>
-            <ion-card>
-              <ion-card-content align="center">
-                <ion-slides @ionSlidePrevEnd="ionSlideNextEnded()" @ionSlideNextEnd="ionSlideNextEnded()" @ionSlideWillChange="ionSlideNextStarted()" v-if="slideDatesToRe.length > 0" :options="slideOpts" @ionSlideDidChange="slideChanged($event)">
-                  <ion-slide v-for="m in slideDatesToRe" :key="m">
-                    <ion-row>
-                      <ion-col>
-                        <span style="background: #3880ff; color: white; border-radius: 20px; padding: 0px 6px 0px 6px">{{getMonthName(m.month)}}/{{m.year}}</span>
-                      </ion-col>
-                      <ion-col size="12">
-                        <ion-spinner color="primary" v-if="slidind" name="crescent"></ion-spinner>
-                        <ion-list v-for="e in toReceives" :key="e.id">
-                          <ion-item :style="e.scratch ? 'text-decoration: line-through; opacity: 0.5;' : '' " @click="presentActionSheet(e)">
-                            <!-- <ion-img style="height: 30px; width: 30px; margin-right: 5px" :src="e.img"></ion-img> -->
-                            <ion-label class="ion-text-left" :style="e.doubt ? 'color: red' : ''">{{e.name}}</ion-label>
-                            <ion-label class="ion-text-right" :style="e.doubt ? 'color: red' : ''">{{"R$ " + parseFloat(e.price).toFixed(2).replace(".", ",")}}</ion-label>
-                          </ion-item>
-                        </ion-list>
+          <ion-segment :value="tab" color="light" @ionChange="segmentChanged($event)">
+              <ion-segment-button value="toPaid">
+                <ion-label style="font-weight: bold;" color="danger">Á receber</ion-label>
+              </ion-segment-button>
+              <ion-segment-button value="paid">
+                <ion-label style="font-weight: bold;" color="success">Recebidos</ion-label>
+              </ion-segment-button>
+            </ion-segment>
 
-                        <ion-list v-if="toReceives.length == 0">
-                          <ion-item>
-                            <ion-label class="ion-text-center label-italic" color="danger">Nenhum item encontrado</ion-label>
-                          </ion-item>
-                        </ion-list>
-                      </ion-col>
-                    </ion-row>
-                  </ion-slide>
-                </ion-slides>
-              </ion-card-content>
-            </ion-card>
-          </ion-grid>
+            <ion-slides ref="slides" v-if="slideDatesExp.length > 0" :options="slideOpts" @ionSlideDidChange="slideChanged($event)">
+              <ion-slide style="min-height: 100vh" v-for="p in slideDatesExp" :key="p">
+                <ion-row>
+                  <ion-col size="12">
+                    <ion-label color="light">{{p}}</ion-label><br>
+                    <ion-card :style="e.scratch ? 'font-style: italic; text-decoration: line-through; opacity: 0.8;' : ''" v-for="e in expenses" :key="e._id" @click="presentActionSheet(e)">
+                      <ion-card-content>
+                        <ion-row>
+                          <ion-col class="ion-text-center">
+                            <ion-label color="dark" style="font-weight: bold;" class="savem-font-big">{{e.description}}</ion-label>
+                          </ion-col>
+                          <ion-col class="ion-text-right savem-font-big">
+                            <ion-label color="dark" style="font-weight: bold;">{{formatMoney(e.price)}}</ion-label>
+                          </ion-col>
+                        </ion-row>
+                      </ion-card-content>
+                    </ion-card>
+                    <ion-label v-if="expenses.length === 0" color="light">Nada por aqui</ion-label>
+                  </ion-col>
+                </ion-row>
+              </ion-slide>
+            </ion-slides>
         </ion-col>
       </ion-row>
-
+      
       <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-        <ion-fab-button @click="alertNewToReceive()" style="font-size: 30px">+</ion-fab-button>
+        <ion-fab-button color="dark" @click="saveOrUpdateAlert()" style="font-size: 30px">+</ion-fab-button>
       </ion-fab>
     </ion-content>
   </ion-page>
 </template>
 
 <script>
-import { addZero, getMonths, getNextMonthInt, getNextMonthIndex, expRef, getActualYear, toReceiveRef, userRef, dates, sumElements} from '../Helper'
-import { onSnapshot, addDoc, Timestamp, updateDoc, arrayUnion, deleteDoc, doc} from "firebase/firestore";
-import { alertController, IonList, actionSheetController, IonSlides, IonSlide, IonFab, IonFabButton} from "@ionic/vue";
+import { getUnPaid, update, insert, getPaid, getDates } from '../models/receivables'
+import { getMonths, getNextMonthInt, expRef, getActualYear, toReceiveRef, userRef, dates, sumElements, sum} from '../Helper'
+import { onSnapshot, Timestamp, updateDoc, deleteDoc, doc} from "firebase/firestore";
+import { alertController, actionSheetController, IonFabButton, IonFab, IonCard, IonSegment, IonSegmentButton} from "@ionic/vue";
 // import FooterInfo from '../components/FooterInfo.vue'
 import TollbarComponent from '../components/TollbarComponent.vue'
 
 export default {
-  components:{ IonList, IonSlides, IonSlide, TollbarComponent, IonFab, IonFabButton},
+  components:{ TollbarComponent, IonFabButton, IonFab, IonCard, IonSegment, IonSegmentButton },
   data: () => {
     return {
+      tab: 'toPaid',
+      monthYear: dates(null, 'yyyy-mm'),
+      totalUnPaid: 0,
+      totalPaid: 0,
       slideOpts:{
-        initialSlide: getNextMonthIndex(),
+        initialSlide: 0,
         speed: 400
       },
       slidind: false,
@@ -73,9 +77,11 @@ export default {
       months: getMonths(),
       loaded: false,
       expenses: [],
+      data: [],
       toReceives:[],
       slideDatesToRe: [],
       actualSlide: null,
+      slideDatesExp: [],
 
       milliseconds: Timestamp.now().toMillis(),
       
@@ -87,9 +93,28 @@ export default {
   },
 
   async mounted() {
-    this.loadAllData()
+    this.actualizeData()
   },
   methods: {
+    async segmentChanged(e){
+      this.tab = e.detail.value
+      this.actualizeData()
+    },
+
+    async actualizeData(){
+      if(this.tab === 'toPaid'){
+        this.expenses = await getUnPaid(this.monthYear)
+        this.totalUnPaid = sum(this.expenses, 'price')
+      }else{
+        this.expenses = await getPaid(this.monthYear)
+        this.totalPaid = sum(this.expenses, 'price')
+      }
+      
+      this.slideDatesExp = await getDates();
+
+      this.slideOpts.initialSlide = this.slideDatesExp.indexOf(this.monthYear)
+    },
+
     ionSlideNextStarted(){
       this.slidind = true
       this.toReceives = []
@@ -161,37 +186,33 @@ export default {
     },
 
     slideChanged(e){
-      e.target.getActiveIndex().then(i => {
-        const obj = this.slideDatesToRe[i]
-        this.actualSlide = obj;
-        this.loadAllData(obj.year, parseInt(obj.month))
+      e.target.getActiveIndex().then( async i => {
+        this.monthYear = this.slideDatesExp[i]
+        this.actualizeData()
       });
     },
 
-    async alertNewToReceive(item){
-      let expiration = this.actualSlide.year +'-'+this.actualSlide.month+'-'+'10'
-      if(item){
-        const date = dates(item.expiration);
-        expiration = date.year + '-' + date.month + '-' + date.day
-      }
+    async saveOrUpdateAlert(doc = null){
+
+      const expiration = dates(Date.now())
 
       const alert = await alertController
         .create({
           cssClass: 'my-custom-class',
-          header: 'Novo item',
+          header: doc ? doc.description :'Novo item',
           inputs: [
             {
-              label: 'Nome',
-              name: 'name',
-              id: 'name',
-              value: item ? item.name : '',
-              placeholder: 'Digite o nome',
+              label: 'Descrição',
+              name: 'description',
+              id: 'description',
+              value: doc ? doc.description : '',
+              placeholder: 'Digite uma descrição',
             },
             {
               label: 'Valor',
               name: 'price',
               id: 'price',
-              value: item ? item.price : '',
+              value: doc ? doc.price : '',
               placeholder: 'Digite o valor',
               type: 'number'
             },
@@ -199,9 +220,8 @@ export default {
               label: 'Data de vencimento',
               name: 'expiration',
               id: 'expiration',
-              value: expiration,
-              type: 'date',
-              disabled: item ? true : false
+              value: doc ? doc.expiration : expiration,
+              type: 'date'
             },
             {
               label: 'Repetir',
@@ -210,21 +230,22 @@ export default {
               value: '',
               placeholder: 'Repetir?',
               type: 'number',
-              max: 60,
-              disabled: item ? true : false
+              max: 60
             }
           ],
           buttons: [
             {
               text: 'Salvar',
-              handler: (values) => {
-                if(item){
-                  item.name = values.name
-                  item.price = values.price
-                  this.updateToReceive(item);
+              handler: async (values) => {
+                if(doc){
+                  doc.description = values.description
+                  doc.price = values.price
+                  doc.expiration = values.expiration
+                  update(doc)
                 }else{
-                  this.saveNewToReceive(values);
+                  insert(values)
                 }
+                  this.actualizeData()
               },
             },
             {
@@ -233,99 +254,7 @@ export default {
           ],
         });
 
-      const description = document.getElementById('name')
-      const price = document.getElementById('price')
-      const repeat = document.getElementById('repeat')
-
-      description.setAttribute('autocomplete', 'off')
-      price.setAttribute('autocomplete', 'off')
-      repeat.setAttribute('autocomplete', 'off')
-
-      return alert.present();
-    },
-
-    async saveNewExpense(expense){
-      let img = '../img/imgs/'+expense.description.toLowerCase()+'.png'
-  
-      if(!await this.imageExists(img)){
-        img = '../img/imgs/default.png'
-      }
-
-      // if repeat
-      let repeat = parseInt(expense.repeat)
-
-    
-      const day = new Date(expense.expiration).getUTCDate()
-      let month = new Date(expense.expiration).getMonth() + 1
-      let year = new Date(expense.expiration).getFullYear()
-
-      let expiration = new Date(`${year}-${addZero(month)}-${day}`).getTime()
-      addDoc(expRef(year, month), {description: expense.description, price: parseFloat(expense.price), img: img, expiration: expiration, createdAt: this.milliseconds})
-
-      await updateDoc(userRef(), {
-        slideDatesToRe: arrayUnion({year: String(year), month: addZero(month)})
-      })
-
-      while (repeat > 1) {
-        if(parseInt(month) == 12){
-          year = String(parseInt(year) + 1)
-          month = 1
-        }else{
-          month = String(parseInt(month) + 1)
-        }
-        
-        expiration = new Date(`${year}-${addZero(month)}-${day}`).getTime()
-        addDoc(expRef(year, month), {description: expense.description, price: parseFloat(expense.price), img: img, expiration: expiration, createdAt: this.milliseconds})
-        
-        await updateDoc(userRef(), {
-          slideDatesToRe: arrayUnion({year: String(year), month: addZero(month)})
-        })
-
-        repeat --
-      }
-
-      this.showToast('success', 'Novo item adicionado!')
-    },
-
-    async saveNewToReceive(expense){
-      let img = '../img/imgs/'+expense.name.toLowerCase()+'.png'
-  
-      if(!await this.imageExists(img)){
-        img = '../img/imgs/default.png'
-      }
-
-      // if repeat
-      let repeat = parseInt(expense.repeat)
-
-      console.log(expense.expiration)
-
-      let month = new Date(expense.expiration).getMonth() + 1
-      let year = new Date(expense.expiration).getFullYear()
-
-      addDoc(toReceiveRef(year, month), {name: expense.name, price: parseFloat(expense.price), img: img, expiration: expense.expiration, scratch: false})
-
-      await updateDoc(userRef(), {
-        slideDatesToRe: arrayUnion({year: String(year), month: addZero(month)})
-      })
-
-      while (repeat > 1) {
-        if(parseInt(month) == 12){
-          year = String(parseInt(year) + 1)
-          month = 1
-        }else{
-          month = String(parseInt(month) + 1)
-        }
-        
-
-        addDoc(toReceiveRef(year, month), {name: expense.name, price: parseFloat(expense.price), img: img, expiration: expense.expiration, createdAt: this.milliseconds})
-
-        await updateDoc(userRef(), {
-          slideDatesToRe: arrayUnion({year: String(year), month: addZero(month)})
-        })
-        repeat --
-      }
-
-      this.showToast('success', 'Novo item adicionado!')
+        return alert.present();
     },
 
     scratchItem(item){
@@ -367,32 +296,33 @@ export default {
             {
               text: 'Editar',
               handler: () => {
-                // this.alertUpdateExpense(expense)
-                this.alertNewToReceive(item)
+                this.saveOrUpdateAlert(item)
               },
             },
             {
               text: 'Excluir',
               handler: () => {
-                this.deleteItem(item)
+                item.deletedAt = dates()
+                update(item)
+                this.actualizeData()
               },
             },
             {
               cssClass: 'ion-color-danger',
-              text: item.scratch ? 'Não recebi' : 'Recebido',
+              text: item.paid ? 'Não recebi' : 'Recebido',
               handler: () => {
-                this.scratchItem(item)
+                item.paid = !item.paid
+                update(item)
+                this.actualizeData()
               },
             },
             {
               cssClass: 'ion-color-danger',
               text: item.doubt ? 'Remover dúvida' : 'Duvidoso',
               handler: () => {
-                const month = new Date(item.expiration).getMonth() + 1
-                const year = new Date(item.expiration).getFullYear()
-                
-                updateDoc(doc(toReceiveRef(year, month), item.id), {doubt: item.doubt ? false : true});
-                this.showToast('success', 'Marcado como duvidoso!')
+                item.doubt = !item.doubt
+                update(item)
+                this.actualizeData()
               },
             }
           ],
@@ -427,54 +357,36 @@ export default {
   border-radius: 15px !important;
 }
 
+.swiper-slide {
+  display: block;
+}
+
+.savem-font-big{
+  font-size: 20px;
+  font-weight: 300;
+}
+
+.savem-font-sm{
+  font-size: 17px;
+}
+
 ion-col{
   --padding-bottom: 0px
 }
 
-.progress-buffer-bar {
-  margin: 5px !important;
-}
-
-ion-card {
-  padding: 20px;
-  --ion-background-color: white;
-  border-radius: 9px;
-  padding-bottom: 40px;
-}
-
-.head-list {
-  font-family: "HeadTableFont" !important;
-}
-
 ion-content {
-  --ion-background-color: #e9eff0;
+  --ion-background-color: #252525;
 }
 
-@media screen and (min-width: 800px) {
-  ion-card {
-    width: 40%;
-  }
-
-  ion-grid{
-    display: flex; 
-    align-items: center; 
-    justify-content: center;
-  }
-}
-
-/* alerts */
-.btn-cancel-alert{
-  color: red!important;
-}
-
-.btn-save-alert{
-  color: green!important;
+ion-card{
+  background: white;
+  /* background: rgb(13, 18, 40); */
+  border-radius: 10px;
+  /* color:white; */
+  height: 100px;
 }
 
 .wallet{
-  background: white;
-  border-radius: 15px;
-  padding: 3px 6px 3px 6px;
   font-size: 20px!important;
   font-weight: bold;
 }
