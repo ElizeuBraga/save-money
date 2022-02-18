@@ -263,6 +263,14 @@ export default {
           ],
         });
 
+        const description = document.getElementById('description')
+        const price = document.getElementById('price')
+        const repeat = document.getElementById('repeat')
+
+        description.setAttribute('autocomplete', 'off')
+        price.setAttribute('autocomplete', 'off')
+        repeat.setAttribute('autocomplete', 'off')
+        
         return alert.present();
     },
 
