@@ -13,10 +13,10 @@
         <ion-col size="12">
           <ion-segment :value="tab" color="light" @ionChange="segmentChanged($event)">
               <ion-segment-button value="toPaid">
-                <ion-label style="font-weight: bold;" color="danger">Á pagar</ion-label>
+                <ion-label style="font-weight: bold;" color="danger">À receber</ion-label>
               </ion-segment-button>
               <ion-segment-button value="paid">
-                <ion-label style="font-weight: bold;" color="success">Pagos</ion-label>
+                <ion-label style="font-weight: bold;" color="success">Recebidos</ion-label>
               </ion-segment-button>
             </ion-segment>
 
