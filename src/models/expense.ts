@@ -4,12 +4,16 @@ const db = new Datastore({ filename: 'src/database/db.db', autoload: true })
 const model = 'expenses'
 
 export function insert(doc: any){
-    doc.createdAt = dates(Date.now(), 'yyyy-mm-dd')
-    doc.deletedAt = null
-    doc.updatedAt = null
-    doc.paid = false
-    doc.model = model
-    db.insert(doc);
+    return new Promise((resolve) =>{
+        doc.createdAt = dates(Date.now(), 'yyyy-mm-dd')
+        doc.deletedAt = null
+        doc.updatedAt = null
+        doc.paid = false
+        doc.model = model
+        db.insert(doc, (err, doc)=>{
+            resolve(doc)
+        });
+    })
 }
 
 export function update(doc: any){
