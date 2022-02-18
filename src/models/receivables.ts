@@ -20,7 +20,7 @@ export function update(doc: any){
 
 export function getPaid(yearMonth: string){
     return new Promise((resolve) =>{
-        db.find({paid: true, deletedAt: null, createdAt: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
+        db.find({paid: true, deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
             resolve(docs)
         });
     })
@@ -28,7 +28,7 @@ export function getPaid(yearMonth: string){
 
 export function getUnPaid(yearMonth: string){
     return new Promise((resolve) =>{
-        db.find({paid: false, deletedAt: null, createdAt: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
+        db.find({paid: false, deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
             resolve(docs)
         });
     })
@@ -38,6 +38,9 @@ export function getDates(){
     return new Promise((resolve) =>{
         db.find({model: model}, {expiration: 1, _id: 0}, function (err: any, docs: any) {
             const response: Array<string> = []
+
+            response.push(dates(null, 'yyyy-mm'))
+
             docs.forEach((e: any) => {
                 const date = dates(e.expiration, 'yyyy-mm')
                 if(!response.includes(date)){
@@ -49,9 +52,6 @@ export function getDates(){
                 return new Date(a).getTime() - new Date(b).getTime() // reverse chronological order
             });
             
-            if(response.length === 0){
-                response.push(dates(null, 'yyyy-mm'))
-            }
             resolve(response)
         });
     })

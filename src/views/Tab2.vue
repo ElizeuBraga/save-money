@@ -504,6 +504,7 @@ export default {
 
     async actualizeData(){
       this.slideDatesExp = await getDates();
+      this.slideOpts.initialSlide = this.slideDatesExp.indexOf(this.monthYear)
       if(this.tab === 'toPaid'){
         this.expenses = await getUnPaid(this.monthYear)
         this.totalUnPaid = sum(this.expenses, 'price')
@@ -512,7 +513,6 @@ export default {
         this.totalPaid = sum(this.expenses, 'price')
       }
       
-      this.slideOpts.initialSlide = this.slideDatesExp.indexOf(this.monthYear)
     },
 
     async presentActionSheet(expense) {
