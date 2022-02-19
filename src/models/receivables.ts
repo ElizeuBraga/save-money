@@ -39,7 +39,7 @@ export function getDates(){
         db.find({model: model}, {expiration: 1, _id: 0}, function (err: any, docs: any) {
             const response: Array<string> = []
 
-            response.push(dates(null, 'yyyy-mm'))
+            response.push(dates(null, 'yyyy-mm', 1))
 
             docs.forEach((e: any) => {
                 const date = dates(e.expiration, 'yyyy-mm')

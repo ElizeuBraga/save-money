@@ -1,10 +1,10 @@
 import { getAuth } from "firebase/auth"
 import { Timestamp, doc, getFirestore, collection} from "firebase/firestore"
 
-export function dates(date: any, format: any, teste: any = false){
+export function dates(date: any, format: any, addMonth = 0, addYear =  0){
     date = !date ? Date.now() : date
     let day = String(new Date(date).getDate())
-    let month = String(new Date(date).getMonth() + 1)
+    let month = String(new Date(date).getMonth() + 1 + addMonth)
     let year = String(new Date(date).getFullYear())
     
     day = (parseInt(day) < 10) ? '0' + day : day
@@ -32,10 +32,6 @@ export function dates(date: any, format: any, teste: any = false){
         dateFormated = year + '-' + month
     }else{
         dateFormated = year + '-' + month + '-' + day 
-    }
-
-    if(teste){
-        console.log(date)
     }
 
     return dateFormated

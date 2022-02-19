@@ -36,6 +36,9 @@
                           </ion-col>
                         </ion-row>
                         <ion-row>
+                          <ion-col class="ion-text-left">
+                            <ion-label>{{e.debtor}}</ion-label>
+                          </ion-col>
                           <ion-col class="ion-text-right">
                             <ion-label>Vencimento: {{formatDate(e.expiration)}}</ion-label>
                           </ion-col>
@@ -61,7 +64,8 @@
 import { getUnPaid, update, insert, getPaid, getDates } from '../models/receivables'
 import { getMonths, getNextMonthInt, expRef, getActualYear, toReceiveRef, userRef, dates, sumElements, sum} from '../Helper'
 import { onSnapshot, Timestamp, updateDoc, deleteDoc, doc} from "firebase/firestore";
-import { alertController, actionSheetController, IonFabButton, IonFab, IonCard, IonSegment, IonSegmentButton} from "@ionic/vue";
+import { actionSheetController, IonFabButton, IonFab, IonCard, IonSegment, IonSegmentButton} from "@ionic/vue";
+import Swal from 'sweetalert2'
 // import FooterInfo from '../components/FooterInfo.vue'
 import TollbarComponent from '../components/TollbarComponent.vue'
 
@@ -70,7 +74,7 @@ export default {
   data: () => {
     return {
       tab: 'toPaid',
-      monthYear: dates(null, 'yyyy-mm'),
+      monthYear: dates(null, 'yyyy-mm', 1),
       totalUnPaid: 0,
       totalPaid: 0,
       slideOpts:{
@@ -202,76 +206,58 @@ export default {
     },
 
     async saveOrUpdateAlert(doc = null){
+      const expiration = dates(Date.now(), null, 1)
+      let html = `
+        <input style="font-size: 16px" id="description" value="${doc ? doc.description : ''}" class="swal2-input">
+        <input style="font-size: 16px" id="price" type="number" value="${doc ? doc.price : ''}" class="swal2-input">
+      `;
 
-      const expiration = dates(Date.now())
+      html += `<input style="font-size: 16px" value="${doc ? doc.expiration : expiration}" id="expiration " type="date" class="swal2-input">`
+      
+      const debtors = ['Marcão', 'Cida', 'Anny', 'Geilton']
+      html+= `<select style="font-size: 16px" class="swal2-input" value="${ (doc && typeof doc.debtor !== undefined) ? debtors[0] : ''}" name="debtor" id="debtor">`;
+      debtors.forEach(c => {
+        html += `<option value="${c}">${c}</option>`;
+      });
+      html += `</select>`;
 
-      const alert = await alertController
-        .create({
-          cssClass: 'my-custom-class',
-          header: doc ? doc.description :'Novo item',
-          inputs: [
-            {
-              label: 'Descrição',
-              name: 'description',
-              id: 'description',
-              value: doc ? doc.description : '',
-              placeholder: 'Digite uma descrição',
-            },
-            {
-              label: 'Valor',
-              name: 'price',
-              id: 'price',
-              value: doc ? doc.price : '',
-              placeholder: 'Digite o valor',
-              type: 'number'
-            },
-            {
-              label: 'Data de vencimento',
-              name: 'expiration',
-              id: 'expiration',
-              value: doc ? doc.expiration : expiration,
-              type: 'date'
-            },
-            {
-              label: 'Repetir',
-              name: 'repeat',
-              id: 'repeat',
-              value: '',
-              placeholder: 'Repetir?',
-              type: 'number',
-              max: 60
-            }
-          ],
-          buttons: [
-            {
-              text: 'Salvar',
-              handler: async (values) => {
-                if(doc){
-                  doc.description = values.description
-                  doc.price = values.price
-                  doc.expiration = values.expiration
-                  update(doc)
-                }else{
-                  insert(values)
-                }
-                  this.actualizeData()
-              },
-            },
-            {
-              text: 'Cancelar'
-            }
-          ],
-        });
+      Swal.fire({
+        title: doc ? 'Editar' : 'Novo registro',
+        html: html,
+        didOpen:()=>{
+          const description = document.getElementById('description')
+          const price = document.getElementById('price')
 
-        const description = document.getElementById('description')
-        const price = document.getElementById('price')
-        const repeat = document.getElementById('repeat')
-
-        description.setAttribute('autocomplete', 'off')
-        price.setAttribute('autocomplete', 'off')
-        repeat.setAttribute('autocomplete', 'off')
-        
-        return alert.present();
+          description.setAttribute('autocomplete', 'off')
+          description.focus()
+          price.setAttribute('autocomplete', 'off')
+        },
+        confirmButtonText: 'Salvar',
+        confirmButtonColor: 'black'
+      }).then((values)=>{
+        if(values.isConfirmed){
+          const description = document.getElementById('description').value
+          const price = document.getElementById('price').value
+          const expiration = document.querySelector('input[type="date"]').value
+          const debtor = document.getElementById('debtor').value
+          
+          if(doc){
+            doc.description = description
+            doc.price = price
+            doc.expiration = expiration
+            doc.debtor = debtor
+            update(doc)
+          }else{
+            insert({
+              description: description,
+              price: price,
+              expiration: expiration,
+              debtor: debtor
+            })
+          }
+          this.actualizeData()
+        }
+      })
     },
 
     scratchItem(item){
@@ -313,7 +299,7 @@ export default {
             {
               text: 'Editar',
               handler: () => {
-                // this.alertUpdateExpense(expense)
+                this.saveOrUpdateAlert(item)
               },
             },
             {

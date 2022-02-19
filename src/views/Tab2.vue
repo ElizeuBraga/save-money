@@ -36,6 +36,9 @@
                           </ion-col>
                         </ion-row>
                         <ion-row>
+                          <ion-col class="ion-text-left">
+                            <ion-label>{{e.payment}}</ion-label>
+                          </ion-col>
                           <ion-col class="ion-text-right">
                             <ion-label>Vencimento: {{formatDate(e.expiration)}}</ion-label>
                           </ion-col>
@@ -64,13 +67,14 @@ import { doc, updateDoc, onSnapshot, addDoc, deleteDoc, Timestamp, arrayUnion} f
 import { alertController, actionSheetController, IonFabButton, IonFab, IonCard, IonSegment, IonSegmentButton} from "@ionic/vue";
 import TollbarComponent from '../components/TollbarComponent.vue'
 import { arrowForwardCircle } from 'ionicons/icons';
+import Swal from 'sweetalert2'
 
 export default {
   components:{ TollbarComponent, IonFabButton, IonFab, IonCard, IonSegment, IonSegmentButton },
   data: () => {
     return {
       tab: 'toPaid',
-      monthYear: dates(null, 'yyyy-mm'),
+      monthYear: dates(null, 'yyyy-mm', 1),
       totalPaid: 0,
       totalUnPaid: 0,
       arrowForwardCircle,
@@ -281,76 +285,58 @@ export default {
     },
     
     async saveOrUpdateAlert(doc = null){
+      const expiration = dates(Date.now(), null, 1)
+      let html = `
+        <input style="font-size: 16px" id="description" value="${doc ? doc.description : ''}" class="swal2-input">
+        <input style="font-size: 16px" id="price" type="number" value="${doc ? doc.price : ''}" class="swal2-input">
+      `;
 
-      const expiration = dates(Date.now())
+      html += `<input style="font-size: 16px" value="${doc ? doc.expiration : expiration}" id="expiration " type="date" class="swal2-input">`
+      
+      const payments = ['Nubank', 'Reserva', 'Dinheiro', 'Inter']
+      html+= `<select style="font-size: 16px" class="swal2-input" value="${ (doc && typeof doc.payment !== undefined) ? payments[0] : ''}" name="payment" id="payment">`;
+      payments.forEach(c => {
+        html += `<option value="${c}">${c}</option>`;
+      });
+      html += `</select>`;
 
-      const alert = await alertController
-        .create({
-          cssClass: 'my-custom-class',
-          header: doc ? doc.description :'Novo item',
-          inputs: [
-            {
-              label: 'Descrição',
-              name: 'description',
-              id: 'description',
-              value: doc ? doc.description : '',
-              placeholder: 'Digite uma descrição',
-            },
-            {
-              label: 'Valor',
-              name: 'price',
-              id: 'price',
-              value: doc ? doc.price : '',
-              placeholder: 'Digite o valor',
-              type: 'number'
-            },
-            {
-              label: 'Data de vencimento',
-              name: 'expiration',
-              id: 'expiration',
-              value: doc ? doc.expiration : expiration,
-              type: 'date'
-            },
-            {
-              label: 'Repetir',
-              name: 'repeat',
-              id: 'repeat',
-              value: '',
-              placeholder: 'Repetir?',
-              type: 'number',
-              max: 60
-            }
-          ],
-          buttons: [
-            {
-              text: 'Salvar',
-              handler: async (values) => {
-                if(doc){
-                  doc.description = values.description
-                  doc.price = values.price
-                  doc.expiration = values.expiration
-                  update(doc)
-                }else{
-                  insert(values)
-                }
-                this.actualizeData()
-              },
-            },
-            {
-              text: 'Cancelar'
-            }
-          ],
-        });
+      Swal.fire({
+        title: doc ? 'Editar' : 'Novo registro',
+        html: html,
+        didOpen:()=>{
+          const description = document.getElementById('description')
+          const price = document.getElementById('price')
 
-        const description = document.getElementById('description')
-        const price = document.getElementById('price')
-        const repeat = document.getElementById('repeat')
-
-        description.setAttribute('autocomplete', 'off')
-        price.setAttribute('autocomplete', 'off')
-        repeat.setAttribute('autocomplete', 'off')
-        
-        return alert.present();
+          description.setAttribute('autocomplete', 'off')
+          description.focus()
+          price.setAttribute('autocomplete', 'off')
+        },
+        confirmButtonText: 'Salvar',
+        confirmButtonColor: 'black'
+      }).then((values)=>{
+        if(values.isConfirmed){
+          const description = document.getElementById('description').value
+          const price = document.getElementById('price').value
+          const expiration = document.querySelector('input[type="date"]').value
+          const payment = document.getElementById('payment').value
+          
+          if(doc){
+            doc.description = description
+            doc.price = price
+            doc.expiration = expiration
+            doc.payment = payment
+            update(doc)
+          }else{
+            insert({
+              description: description,
+              price: price,
+              expiration: expiration,
+              payment: payment
+            })
+          }
+          this.actualizeData()
+        }
+      })
     },
 
     async saveNewExpense(expense){
@@ -616,5 +602,9 @@ ion-card{
 .wallet{
   font-size: 20px!important;
   font-weight: bold;
+}
+
+.swal2-file, .swal2-input, .swal2-textarea{
+  font-size: 10px;
 }
 </style>
