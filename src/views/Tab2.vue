@@ -293,7 +293,7 @@ export default {
 
       html += `<input style="font-size: 16px" value="${doc ? doc.expiration : expiration}" id="expiration " type="date" class="swal2-input">`
       
-      const payments = ['Nubank', 'Reserva', 'Dinheiro', 'Inter']
+      const payments = ['Crédito', 'Débito', 'Reserva']
       html+= `<select style="font-size: 16px" class="swal2-input" value="${ (doc && typeof doc.payment !== undefined) ? payments[0] : ''}" name="payment" id="payment">`;
       payments.forEach(c => {
         html += `<option value="${c}">${c}</option>`;
