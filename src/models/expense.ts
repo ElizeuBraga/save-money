@@ -22,11 +22,30 @@ export function update(doc: any){
     // db.insert(doc);
 }
 
-export function getPaid(yearMonth: string){
+export function getPaid(yearMonth: string, filter: string){
     return new Promise((resolve) =>{
         const response: Array<string> = []
         db.find({paid: true, deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
-            resolve(docs)
+            const result: any = []
+            docs.reduce(function(res: any, value: any) {
+                if(filter === 'description'){
+                    if (!res[value.description]) {
+                        res[value.description] = { _id: value._id, description: value.description, expiration: value.expiration, price: 0, payment: value.payment, quantity: 0};
+                        result.push(res[value.description])
+                    }
+                    res[value.description].price += parseFloat(value.price);
+                    res[value.description].quantity += 1
+                }else{
+                    if (!res[value.payment]) {
+                        res[value.payment] = { _id: value._id, description: value.payment, expiration: value.payment, price: 0, payment: value.payment, quantity: 0};
+                        result.push(res[value.payment])
+                    }
+                    res[value.payment].price += parseFloat(value.price);
+                    res[value.payment].quantity += 1
+                }
+                return res;
+            }, {});
+            resolve(result)
         });
     })
 }
@@ -47,17 +66,26 @@ export function getDataById(id: boolean){
     })
 }
 
-export function getUnPaid(yearMonth: string){
+export function getUnPaid(yearMonth: string, filter: string){
     return new Promise((resolve) =>{
         db.find({paid: false, deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
             const result: any = []
             docs.reduce(function(res: any, value: any) {
-                if (!res[value.description]) {
-                    res[value.description] = { _id: value._id, description: value.description, expiration: value.expiration, price: 0, payment: value.payment, quantity: 0};
-                    result.push(res[value.description])
+                if(filter === 'description'){
+                    if (!res[value.description]) {
+                        res[value.description] = { _id: value._id, description: value.description, expiration: value.expiration, price: 0, payment: value.payment, quantity: 0};
+                        result.push(res[value.description])
+                    }
+                    res[value.description].price += parseFloat(value.price);
+                    res[value.description].quantity += 1
+                }else{
+                    if (!res[value.payment]) {
+                        res[value.payment] = { _id: value._id, description: value.payment, expiration: value.payment, price: 0, payment: value.payment, quantity: 0};
+                        result.push(res[value.payment])
+                    }
+                    res[value.payment].price += parseFloat(value.price);
+                    res[value.payment].quantity += 1
                 }
-                res[value.description].price += parseFloat(value.price);
-                res[value.description].quantity += 1
                 return res;
             }, {});
             resolve(result)

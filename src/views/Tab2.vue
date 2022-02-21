@@ -11,14 +11,22 @@
     <ion-content :fullscreen="true">
       <ion-row>
         <ion-col size="12">
+          <ion-segment :value="filter" color="light" @ionChange="segmentFilterChanged($event)">
+            <ion-segment-button value="description">
+              <ion-label style="font-weight: bold;" color="light">Por Descrição</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="payment">
+              <ion-label style="font-weight: bold;" color="light">Por Pagamento</ion-label>
+            </ion-segment-button>
+          </ion-segment>
           <ion-segment :value="tab" color="light" @ionChange="segmentChanged($event)">
-              <ion-segment-button value="toPaid">
-                <ion-label style="font-weight: bold;" color="danger">Á pagar</ion-label>
-              </ion-segment-button>
-              <ion-segment-button value="paid">
-                <ion-label style="font-weight: bold;" color="success">Pagos</ion-label>
-              </ion-segment-button>
-            </ion-segment>
+            <ion-segment-button value="toPaid">
+              <ion-label style="font-weight: bold;" color="danger">Á pagar</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="paid">
+              <ion-label style="font-weight: bold;" color="success">Pagos</ion-label>
+            </ion-segment-button>
+          </ion-segment>
 
             <ion-slides ref="slides" v-if="slideDatesExp.length > 0" :options="slideOpts" @ionSlideDidChange="slideChanged($event)">
               <ion-slide style="min-height: 100vh" v-for="p in slideDatesExp" :key="p">
@@ -35,7 +43,7 @@
                             <ion-label color="dark" style="font-weight: bold;">{{formatMoney(e.price)}}</ion-label>
                           </ion-col>
                         </ion-row>
-                        <ion-row>
+                        <ion-row v-if="filter == 'all'">
                           <ion-col class="ion-text-left">
                             <ion-label>{{e.payment}}</ion-label>
                           </ion-col>
@@ -74,6 +82,7 @@ export default {
   data: () => {
     return {
       tab: 'toPaid',
+      filter: 'description',
       monthYear: dates(null, 'yyyy-mm', 1),
       totalPaid: 0,
       totalUnPaid: 0,
@@ -112,6 +121,11 @@ export default {
 
     async segmentChanged(e){
       this.tab = e.detail.value
+      this.actualizeData()
+    },
+
+    async segmentFilterChanged(e){
+      this.filter = e.detail.value
       this.actualizeData()
     },
 
@@ -510,10 +524,10 @@ export default {
       this.slideDatesExp = await getDates();
       this.slideOpts.initialSlide = this.slideDatesExp.indexOf(this.monthYear)
       if(this.tab === 'toPaid'){
-        this.expenses = await getUnPaid(this.monthYear)
+        this.expenses = await getUnPaid(this.monthYear, this.filter)
         this.totalUnPaid = sum(this.expenses, 'price')
       }else{
-        this.expenses = await getPaid(this.monthYear)
+        this.expenses = await getPaid(this.monthYear, this.filter)
         this.totalPaid = sum(this.expenses, 'price')
       }
       
@@ -538,6 +552,9 @@ export default {
     },
 
     async showInfo(item){
+      if(this.filter != 'description'){
+        return 
+      }
       const array = await getDataByDescription(this.monthYear, item, false)
       let html = `
         <table id="tableExpenses" class="table table-striped">
