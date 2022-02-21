@@ -314,8 +314,13 @@ export default {
           description.focus()
           price.setAttribute('autocomplete', 'off')
         },
+        showDenyButton: true,
+        showCancelButton: true,
+        cancelButtonText:'Pagar',
+        denyButtonText:'Excluir',
         confirmButtonText: 'Salvar',
-        confirmButtonColor: 'black'
+        confirmButtonColor: 'green',
+        cancelButtonColor: 'blue'
       }).then((values)=>{
         if(values.isConfirmed){
           const description = document.getElementById('description').value
@@ -338,8 +343,17 @@ export default {
               payment: payment
             })
           }
-          this.actualizeData()
+        }else if(values.isDenied){
+          doc.deletedAt = dates(null, 'yyyy-mm-dd')
+          update(doc)
+          this.showInfo(doc.description)
+        }else if(values.dismiss == 'cancel'){
+          doc.paid = true
+          update(doc)
+          this.showInfo(doc.description)
         }
+        console.log(values)
+        this.actualizeData()
       })
     },
 
@@ -552,6 +566,7 @@ export default {
       `;
       Swal.fire({
         html: html,
+        showCloseButton: true,
         showConfirmButton: false,
         didOpen:()=>{
           this.addRowHandlers()
