@@ -34,8 +34,15 @@ export function getPaid(yearMonth: string){
 export function getDataByDescription(yearMonth: string, description: string, paid: boolean){
     return new Promise((resolve) =>{
         db.find({description: description, paid: paid, deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
-            console.log(docs)
             resolve(docs)
+        });
+    })
+}
+
+export function getDataById(id: boolean){
+    return new Promise((resolve) =>{
+        db.find({_id: id, model: model}, function (err: any, docs: any) {
+            resolve(docs[0])
         });
     })
 }

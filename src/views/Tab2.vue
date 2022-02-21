@@ -61,7 +61,7 @@
 </template>
 
 <script>
-import { getDataByDescription, getUnPaid, update, insert, getPaid, getDates } from '../models/expense'
+import { getDataByDescription, getDataById, getUnPaid, update, insert, getPaid, getDates } from '../models/expense'
 import { addZero, getMonths, getNextMonthInt, expRef, getActualYear, toReceiveRef, userRef, dates, sumElements, sum} from '../Helper'
 import { doc, updateDoc, onSnapshot, addDoc, deleteDoc, Timestamp, arrayUnion} from "firebase/firestore";
 import { alertController, actionSheetController, IonFabButton, IonFab, IonCard, IonSegment, IonSegmentButton} from "@ionic/vue";
@@ -284,7 +284,10 @@ export default {
       return alert.present();
     },
     
-    async saveOrUpdateAlert(doc = null){
+    async saveOrUpdateAlert(doc= null){
+      if(doc){
+        doc = await getDataById(doc)
+      }
       const expiration = dates(Date.now(), null, 1)
       let html = `
         <input style="font-size: 16px" id="description" value="${doc ? doc.description : ''}" class="swal2-input">
@@ -326,6 +329,7 @@ export default {
             doc.expiration = expiration
             doc.payment = payment
             update(doc)
+            this.showInfo(doc.description)
           }else{
             insert({
               description: description,
@@ -501,34 +505,57 @@ export default {
       
     },
 
+    addRowHandlers() {
+      const table = document.getElementById("tableExpenses");
+      const rows = table.getElementsByTagName("tr");
+      let i;
+      for (i = 0; i < rows.length; i++) {
+        const currentRow = table.rows[i];
+        const createClickHandler = (row) => {
+          return () => {
+            const cell = row.getElementsByTagName("td")[0];
+            const id = cell.innerHTML;
+            
+            this.saveOrUpdateAlert(id)
+          };
+        };
+        currentRow.onclick = createClickHandler(currentRow);
+      }
+    },
+
     async showInfo(item){
       const array = await getDataByDescription(this.monthYear, item, false)
       let html = `
-      <center>
-        <table>
+        <table id="tableExpenses" class="table table-striped">
           <thead>
             <tr>
-              <th>Descrção</th>
-              <th>Vencimento</th>
-              <th>Valor</th>
+              <th scope="col">Descrção</th>
+              <th scope="col">Venc.</th>
+              <th scope="col">Valor</th>
             </tr>
           </thead>
           <tbody>`
 
           array.forEach(element => {
-            html +=`<tr>
-              <td style="text-align: left">${element.description}</td>
-              <td style="text-align: center">${dates(element.expiration, 'dd/mm')}</td>
-              <td style="text-align: right; font-weight: bold">${this.formatMoney(element.price)}</td>
-            </tr>`
+            html +=`
+              <tr>
+                <td style="display: none">${element._id}</td>
+                <td>${element.description}</td>
+                <td>${dates(element.expiration, 'dd/mm')}</td>
+                <td>${this.formatMoney(element.price)}</td>
+              </tr>
+            `
           });
 
           html+=`</tbody>
         </table>
-        </center>
       `;
       Swal.fire({
-        html: html
+        html: html,
+        showConfirmButton: false,
+        didOpen:()=>{
+          this.addRowHandlers()
+        }
       })
     },
 
