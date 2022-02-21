@@ -64,13 +64,13 @@
 import { getDataByDescription, getDataById, getUnPaid, update, insert, getPaid, getDates } from '../models/expense'
 import { addZero, getMonths, getNextMonthInt, expRef, getActualYear, toReceiveRef, userRef, dates, sumElements, sum} from '../Helper'
 import { doc, updateDoc, onSnapshot, addDoc, deleteDoc, Timestamp, arrayUnion} from "firebase/firestore";
-import { alertController, actionSheetController, IonFabButton, IonFab, IonCard, IonSegment, IonSegmentButton} from "@ionic/vue";
+import { alertController, actionSheetController, IonFabButton, IonFab, IonCard, IonSegment, IonSegmentButton, IonToolbar} from "@ionic/vue";
 import TollbarComponent from '../components/TollbarComponent.vue'
 import { arrowForwardCircle } from 'ionicons/icons';
 import Swal from 'sweetalert2'
 
 export default {
-  components:{ TollbarComponent, IonFabButton, IonFab, IonCard, IonSegment, IonSegmentButton },
+  components:{ TollbarComponent, IonFabButton, IonFab, IonCard, IonSegment, IonSegmentButton, IonToolbar},
   data: () => {
     return {
       tab: 'toPaid',
