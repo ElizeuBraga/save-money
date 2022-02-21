@@ -25,7 +25,7 @@
                 <ion-row>
                   <ion-col size="12">
                     <ion-label color="light">{{p}}</ion-label><br>
-                    <ion-card :style="e.scratch ? 'font-style: italic; text-decoration: line-through; opacity: 0.8;' : ''" v-for="e in expenses" :key="e._id" @click="presentActionSheet(e)">
+                    <ion-card :style="e.scratch ? 'font-style: italic; text-decoration: line-through; opacity: 0.8;' : ''" v-for="e in expenses" :key="e._id" @click="showInfo(e.description)">
                       <ion-card-content>
                         <ion-row>
                           <ion-col class="ion-text-center">
@@ -61,7 +61,7 @@
 </template>
 
 <script>
-import { getUnPaid, update, insert, getPaid, getDates } from '../models/expense'
+import { getDataByDescription, getUnPaid, update, insert, getPaid, getDates } from '../models/expense'
 import { addZero, getMonths, getNextMonthInt, expRef, getActualYear, toReceiveRef, userRef, dates, sumElements, sum} from '../Helper'
 import { doc, updateDoc, onSnapshot, addDoc, deleteDoc, Timestamp, arrayUnion} from "firebase/firestore";
 import { alertController, actionSheetController, IonFabButton, IonFab, IonCard, IonSegment, IonSegmentButton} from "@ionic/vue";
@@ -501,6 +501,37 @@ export default {
       
     },
 
+    async showInfo(item){
+      const array = await getDataByDescription(this.monthYear, item, false)
+      let html = `
+      <center>
+        <table>
+          <thead>
+            <tr>
+              <th>Descrção</th>
+              <th>Vencimento</th>
+              <th>Valor</th>
+            </tr>
+          </thead>
+          <tbody>`
+
+          array.forEach(element => {
+            html +=`<tr>
+              <td style="text-align: left">${element.description}</td>
+              <td style="text-align: center">${dates(element.expiration, 'dd/mm')}</td>
+              <td style="text-align: right; font-weight: bold">${this.formatMoney(element.price)}</td>
+            </tr>`
+          });
+
+          html+=`</tbody>
+        </table>
+        </center>
+      `;
+      Swal.fire({
+        html: html
+      })
+    },
+
     async presentActionSheet(expense) {
       const actionSheet = await actionSheetController
         .create({
@@ -606,5 +637,21 @@ ion-card{
 
 .swal2-file, .swal2-input, .swal2-textarea{
   font-size: 10px;
+}
+
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
 }
 </style>

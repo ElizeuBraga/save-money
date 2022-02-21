@@ -24,8 +24,17 @@ export function update(doc: any){
 
 export function getPaid(yearMonth: string){
     return new Promise((resolve) =>{
+        const response: Array<string> = []
         db.find({paid: true, deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
-            console.log(yearMonth)
+            resolve(docs)
+        });
+    })
+}
+
+export function getDataByDescription(yearMonth: string, description: string, paid: boolean){
+    return new Promise((resolve) =>{
+        db.find({description: description, paid: paid, deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
+            console.log(docs)
             resolve(docs)
         });
     })
@@ -34,8 +43,17 @@ export function getPaid(yearMonth: string){
 export function getUnPaid(yearMonth: string){
     return new Promise((resolve) =>{
         db.find({paid: false, deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
-            console.log(yearMonth)
-            resolve(docs)
+            const result: any = []
+            docs.reduce(function(res: any, value: any) {
+                if (!res[value.description]) {
+                    res[value.description] = { _id: value._id, description: value.description, expiration: value.expiration, price: 0, payment: value.payment, quantity: 0};
+                    result.push(res[value.description])
+                }
+                res[value.description].price += parseFloat(value.price);
+                res[value.description].quantity += 1
+                return res;
+            }, {});
+            resolve(result)
         });
     })
 }
