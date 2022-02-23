@@ -299,16 +299,20 @@ export default {
       html += `<input style="font-size: 16px" value="${doc ? doc.expiration : expiration}" id="expiration " type="date" class="swal2-input">`
       
       const payments = ['Crédito', 'Débito', 'Reserva']
-      html+= `<select style="font-size: 16px" class="swal2-input" value="${ (doc && typeof doc.payment !== undefined) ? payments[0] : ''}" name="payment" id="payment">`;
+      html+= `<select style="font-size: 16px" class="swal2-input" value="" name="payment" id="payment">`;
+      html += `<option value="">Selecione</option>`;
       payments.forEach(c => {
-        html += `<option value="${c}">${c}</option>`;
+        const selected = (doc && c === doc.payment) ? 'selected' : ''
+        html += `<option value="${c}" ${selected}>${c}</option>`;
       });
       html += `</select>`;
 
       const categories = ['50', '30', '20']
       html+= `<select style="font-size: 16px" class="swal2-input" value="" name="category" id="category">`;
+      html += `<option value="">Selecione</option>`;
       categories.forEach(c => {
-        html += `<option value="${c}">${c}</option>`;
+        const selected = (doc && c === doc.category) ? 'selected' : ''
+        html += `<option value="${c}" ${selected}>${c}</option>`;
       });
       html += `</select>`;
 
@@ -329,7 +333,18 @@ export default {
         denyButtonText:'Excluir',
         confirmButtonText: 'Salvar',
         confirmButtonColor: 'green',
-        cancelButtonColor: 'blue'
+        cancelButtonColor: 'blue',
+        preConfirm:()=>{
+          const description = document.getElementById('description').value
+          const price = document.getElementById('price').value
+          const expiration = document.querySelector('input[type="date"]').value
+          const payment = document.getElementById('payment').value
+          const category = document.getElementById('category').value
+
+          if(description == '' || price == '' || expiration == '' || payment == '' || category == ''){
+            Swal.showValidationMessage('Preencha todos os campos')
+          }
+        }
       }).then((values)=>{
         if(values.isConfirmed){
           const description = document.getElementById('description').value
@@ -350,7 +365,7 @@ export default {
               description: description,
               price: price,
               expiration: expiration,
-              payment: payment
+              category: category
             })
           }
         }else if(values.isDenied){
