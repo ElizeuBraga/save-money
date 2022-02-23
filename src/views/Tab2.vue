@@ -30,6 +30,18 @@
                         Gastos do mês
                       </ion-card-title>
                       <ion-card-content>
+                        <ion-row style="font-weight: bold">
+                          <ion-col @click="sort('description')">
+                            <ion-label>Descricao</ion-label>
+                          </ion-col>
+                          <ion-col @click="sort('category')">
+                            <ion-label>Categoria</ion-label>
+                          </ion-col>
+                          <ion-col @click="sort('price')" class="ion-text-right">
+                            <ion-label>Valor</ion-label>
+                          </ion-col>
+                          <ion-item-divider></ion-item-divider>
+                        </ion-row>
                         <ion-row  v-for="item in expenses" :key="item" @click="saveOrUpdateAlert(item)">
                           <ion-col>
                             <ion-label>{{item.description}}</ion-label>
@@ -106,6 +118,22 @@ export default {
   },
 
   methods: {
+    sort(sort){
+      if(sort == 'description'){
+        this.expenses.sort((a, b) =>{
+          return a.description - b.description
+        })
+      }else if(sort == 'category'){
+        this.expenses.sort((a, b)=>{
+          return a.category - b.category
+        })
+      }else{
+        this.expenses.sort((a, b)=>{
+          return parseFloat(b.price) - parseFloat(a.price)
+        })
+      }
+    },
+
     formatDate(date){
       return dates(date, 'dd/mm')
     },
@@ -539,6 +567,7 @@ export default {
         this.totalPaid = sum(this.expenses, 'price')
       }
       
+      this.sort()
     },
 
     addRowHandlers() {
