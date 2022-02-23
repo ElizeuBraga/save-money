@@ -305,7 +305,7 @@ export default {
       });
       html += `</select>`;
 
-      const categories = ['Moradia', 'Diversão', 'Alimentação']
+      const categories = ['50', '30', '20']
       html+= `<select style="font-size: 16px" class="swal2-input" value="" name="category" id="category">`;
       categories.forEach(c => {
         html += `<option value="${c}">${c}</option>`;
