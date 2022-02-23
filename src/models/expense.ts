@@ -41,7 +41,6 @@ export function getDataByDescription(yearMonth: string, description: string, pai
 export function getDataById(id: boolean){
     return new Promise((resolve) =>{
         db.find({_id: id, model: model}, function (err: any, docs: any) {
-            console.log(docs)
             resolve(docs[0])
         });
     })
@@ -69,7 +68,6 @@ export function dataInMonthGroupByProduct(yearMonth: string){
                 return res;
             }, {});
             
-            console.log(result)
             resolve(result)
         });
     })

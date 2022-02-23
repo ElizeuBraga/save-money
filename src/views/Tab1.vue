@@ -162,6 +162,7 @@ export default {
         confirmButtonText: 'Salvar',
         confirmButtonColor: 'green',
         cancelButtonColor: 'blue',
+        showCloseButton: true,
         preConfirm:()=>{
           const description = document.getElementById('description').value
           const price = document.getElementById('price').value
@@ -193,7 +194,8 @@ export default {
               description: description,
               price: price,
               expiration: expiration,
-              category: category
+              category: category,
+              payment: payment
             })
           }
         }else if(values.isDenied){
@@ -216,6 +218,7 @@ export default {
       }else{
         array = await getDataByProduct(this.monthYear, item.description)
       }
+
       let html = `
         <table id="tableExpenses" class="table table-striped">
           <thead>
