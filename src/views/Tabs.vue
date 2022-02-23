@@ -2,6 +2,11 @@
   <ion-page>
     <ion-tabs>
       <ion-tab-bar color="dark" slot="bottom">  
+        <ion-tab-button tab="tab1" href="/tabs/tab1">
+          <ion-icon color="warning" :icon="arrowUp"/>
+          <ion-label>Resumo</ion-label>
+        </ion-tab-button>
+
         <ion-tab-button tab="tab2" href="/tabs/tab2">
           <ion-icon color="danger" :icon="arrowUp"/>
           <ion-label>Saídas</ion-label>

@@ -11,14 +11,6 @@
     <ion-content :fullscreen="true">
       <ion-row>
         <ion-col size="12">
-          <ion-segment :value="filter" color="light" @ionChange="segmentFilterChanged($event)">
-            <ion-segment-button value="description">
-              <ion-label style="font-weight: bold;" color="light">Por Descrição</ion-label>
-            </ion-segment-button>
-            <ion-segment-button value="payment">
-              <ion-label style="font-weight: bold;" color="light">Por Pagamento</ion-label>
-            </ion-segment-button>
-          </ion-segment>
           <ion-segment :value="tab" color="light" @ionChange="segmentChanged($event)">
             <ion-segment-button value="toPaid">
               <ion-label style="font-weight: bold;" color="danger">Á pagar</ion-label>
@@ -33,23 +25,22 @@
                 <ion-row>
                   <ion-col size="12">
                     <ion-label color="light">{{p}}</ion-label><br>
-                    <ion-card :style="e.scratch ? 'font-style: italic; text-decoration: line-through; opacity: 0.8;' : ''" v-for="e in expenses" :key="e._id" @click="showInfo(e.description)">
+                    <ion-card>
+                      <ion-card-title class="ion-text-center">
+                        Gastos do mês
+                      </ion-card-title>
                       <ion-card-content>
-                        <ion-row>
-                          <ion-col class="ion-text-center">
-                            <ion-label color="dark" style="font-weight: bold;" class="savem-font-big">{{e.description}}</ion-label>
+                        <ion-row  v-for="item in expenses" :key="item" @click="saveOrUpdateAlert(item)">
+                          <ion-col>
+                            <ion-label>{{item.description}}</ion-label>
                           </ion-col>
-                          <ion-col class="ion-text-right savem-font-big">
-                            <ion-label color="dark" style="font-weight: bold;">{{formatMoney(e.price)}}</ion-label>
-                          </ion-col>
-                        </ion-row>
-                        <ion-row v-if="filter == 'all'">
-                          <ion-col class="ion-text-left">
-                            <ion-label>{{e.payment}}</ion-label>
+                          <ion-col>
+                            <ion-label>{{item.category ? item.category : '-'}}</ion-label>
                           </ion-col>
                           <ion-col class="ion-text-right">
-                            <ion-label>Vencimento: {{formatDate(e.expiration)}}</ion-label>
+                            <ion-label>{{formatMoney(item.price)}}</ion-label>
                           </ion-col>
+                          <ion-item-divider></ion-item-divider>
                         </ion-row>
                       </ion-card-content>
                     </ion-card>
@@ -299,9 +290,6 @@ export default {
     },
     
     async saveOrUpdateAlert(doc= null){
-      if(doc){
-        doc = await getDataById(doc)
-      }
       const expiration = dates(Date.now(), null, 1)
       let html = `
         <input style="font-size: 16px" id="description" value="${doc ? doc.description : ''}" class="swal2-input">
@@ -313,6 +301,13 @@ export default {
       const payments = ['Crédito', 'Débito', 'Reserva']
       html+= `<select style="font-size: 16px" class="swal2-input" value="${ (doc && typeof doc.payment !== undefined) ? payments[0] : ''}" name="payment" id="payment">`;
       payments.forEach(c => {
+        html += `<option value="${c}">${c}</option>`;
+      });
+      html += `</select>`;
+
+      const categories = ['Moradia', 'Diversão', 'Alimentação']
+      html+= `<select style="font-size: 16px" class="swal2-input" value="" name="category" id="category">`;
+      categories.forEach(c => {
         html += `<option value="${c}">${c}</option>`;
       });
       html += `</select>`;
@@ -341,14 +336,15 @@ export default {
           const price = document.getElementById('price').value
           const expiration = document.querySelector('input[type="date"]').value
           const payment = document.getElementById('payment').value
+          const category = document.getElementById('category').value
           
           if(doc){
             doc.description = description
             doc.price = price
             doc.expiration = expiration
             doc.payment = payment
+            doc.category = category
             update(doc)
-            this.showInfo(doc.description)
           }else{
             insert({
               description: description,
@@ -360,13 +356,10 @@ export default {
         }else if(values.isDenied){
           doc.deletedAt = dates(null, 'yyyy-mm-dd')
           update(doc)
-          this.showInfo(doc.description)
         }else if(values.dismiss == 'cancel'){
           doc.paid = true
           update(doc)
-          this.showInfo(doc.description)
         }
-        console.log(values)
         this.actualizeData()
       })
     },
@@ -524,10 +517,10 @@ export default {
       this.slideDatesExp = await getDates();
       this.slideOpts.initialSlide = this.slideDatesExp.indexOf(this.monthYear)
       if(this.tab === 'toPaid'){
-        this.expenses = await getUnPaid(this.monthYear, this.filter)
+        this.expenses = await getUnPaid(this.monthYear)
         this.totalUnPaid = sum(this.expenses, 'price')
       }else{
-        this.expenses = await getPaid(this.monthYear, this.filter)
+        this.expenses = await getPaid(this.monthYear)
         this.totalPaid = sum(this.expenses, 'price')
       }
       
@@ -681,12 +674,11 @@ ion-content {
   --ion-background-color: #252525;
 }
 
-ion-card{
-  background: white;
-  /* background: rgb(13, 18, 40); */
-  border-radius: 10px;
-  /* color:white; */
-  height: 100px;
+ion-card {
+  padding: 20px;
+  --ion-background-color: white;
+  border-radius: 9px;
+  padding-bottom: 40px;
 }
 
 .wallet{
@@ -712,5 +704,10 @@ td, th {
 
 tr:nth-child(even) {
   background-color: #dddddd;
+}
+
+ion-item-divider{
+  margin-top: 0px;
+  min-height: 1px!important;
 }
 </style>

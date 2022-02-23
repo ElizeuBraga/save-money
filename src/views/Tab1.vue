@@ -2,94 +2,66 @@
   <ion-page>
     <!-- Header -->
     <ion-header>
-      <ion-toolbar color="primary">
+      <ion-toolbar color="dark">
         <tollbar-component :total="inWallet" :title="(getMonthName(monthToShow))"/>
       </ion-toolbar>
     </ion-header>
     <!-- Header -->
 
-
     <ion-content :fullscreen="true">
-      <ion-spinner color="primary" style="margin-top: 50%; margin-left: 50%" v-if="!loaded" name="crescent"></ion-spinner>
-      <ion-row v-else>
-      <!--Resume card-->
-        <ion-grid>
-          <ion-card>
-            <ion-card-title class="ion-text-center">
-              Gastos este mês
-            </ion-card-title>
-            <ion-card-content>
-              <ion-row style="margin-bottom: 12px">
-                <ion-progress-bar
-                  :color="colorForBarExpenses()"
-                  :value="((amountExpense * 100)/totalToreceive)/100"
-                  class="ion-progress-bar-infopercentage"
-                ></ion-progress-bar>
+      <ion-card>
+        <ion-card-title class="ion-text-center">
+          Por pagamento
+        </ion-card-title>
+        <ion-card-content>
+          <ion-row  v-for="item in groupByPayment" :key="item" @click="showInfo(item)">
+            <ion-col>
+              <ion-label>{{item.payment}}</ion-label>
+            </ion-col>
+            <ion-col class="ion-text-right">
+              <ion-label>{{formatMoney(item.price)}}</ion-label>
+            </ion-col>
+            <ion-item-divider></ion-item-divider>
+          </ion-row>
+        </ion-card-content>
+      </ion-card>
 
-                <ion-col class="ion-no-padding ion-text-left" @click="alertNewToReceive()">
-                  <ion-label class="label-italic">
-                      Proventos:<b>{{formatMoney(totalToreceive)}}</b>
-                  </ion-label>
-                </ion-col>
-                <ion-col class="ion-no-padding ion-text-right">
-                  <ion-label class="label-italic">Gastos:<b>{{formatMoney(amountExpense)}}</b></ion-label>
-                </ion-col>
-                  <ion-col size="12" class="ion-text-center" v-if="inWallet > 0">
-                    <span style="font-size: 30px">&#128512;</span><br>
-                    <ion-label color="success" class="label-italic">Podemos gastar: <b>{{formatMoney(inWallet)}}</b></ion-label>
-                  </ion-col>
-                  <ion-col size="12" class="ion-text-center" v-else>
-                    <span style="font-size: 30px">&#128542;</span><br>
-                    <ion-label color="danger" class="label-italic">Estamos devendo: <b>{{formatMoney(inWallet)}}</b></ion-label>
-                  </ion-col>
-              </ion-row>
-            </ion-card-content>
-          </ion-card>
-
-
-          <ion-card>
-            <ion-card-title class="ion-text-center">
-              Reserva de emergência
-            </ion-card-title>
-            <ion-card-content>
-              <ion-row>
-                <ion-progress-bar
-                  :color="colorForBarEmergencyGoal()"
-                  :value="calcBarEmergencyGoal"
-                  class="ion-progress-bar-infopercentage"
-                ></ion-progress-bar>
-
-                <ion-col class="ion-no-padding ion-text-left">
-                  <ion-label class="label-italic" @click="alertUpdateEmergencyReserveGoal()">Meta:<b>{{formatMoney(emergencyReserveGoal)}}</b></ion-label><br>
-                </ion-col>
-                <ion-col class="ion-no-padding ion-text-right">
-                  <ion-label class="label-italic" @click="alertUpdateEmergencyReserveReached()">Conquista:<b>{{formatMoney(emergencyReserveReached)}}</b></ion-label><br>
-                </ion-col>
-                <ion-col size="12" class="ion-text-center">
-                  <ion-label class="label-italic" @click="alertUpdateEmergencyReserveReached()">Faltam:<b>{{formatMoney(emergencyGoalMissing)}}</b></ion-label>
-                </ion-col>
-              </ion-row>
-            </ion-card-content>
-          </ion-card>
-        </ion-grid>
-        <!--Resume card-->
-      </ion-row>
+      <ion-card>
+        <ion-card-title class="ion-text-center">
+          Por categoria
+        </ion-card-title>
+        <ion-card-content>
+          <ion-row  v-for="item in groupByCategory" :key="item" @click="showInfo(item)">
+            <ion-col>
+              <ion-label>{{item.category ? item.category: '-'}}</ion-label>
+            </ion-col>
+            <ion-col class="ion-text-right">
+              <ion-label>{{formatMoney(item.price)}}</ion-label>
+            </ion-col>
+            <ion-item-divider></ion-item-divider>
+          </ion-row>
+        </ion-card-content>
+      </ion-card>
     </ion-content>
   </ion-page>
 </template>
 
 <script>
 
-import eventBus from '../eventBus'
-import {getMonths, getActualMonthInt, getNextMonthIndex, userRef, expRef, getActualYear, toReceiveRef, formatInputReal, formatInputRealV3} from '../Helper'
-import {updateDoc, onSnapshot, Timestamp, arrayUnion } from "firebase/firestore";
+import {getMonths, getActualMonthInt, getNextMonthIndex, userRef, formatInputReal, formatInputRealV3, dates} from '../Helper'
+import {updateDoc, Timestamp, arrayUnion } from "firebase/firestore";
+import { dataInMonthGroupByPayment, dataInMonthGroupByCategory, getDataByPayment, getDataByCategory} from '../models/expense'
 import { alertController} from "@ionic/vue";
 import TollbarComponent from '../components/TollbarComponent.vue'
+import Swal from 'sweetalert2'
 
 export default {
   components:{TollbarComponent},
   data: () => {
     return {
+      groupByCategory: [],
+      groupByPayment: [],
+      monthYear: dates(null, 'yyyy-mm', 1),
       monthToShow: getActualMonthInt(),
       slideOpts:{
         initialSlide: getNextMonthIndex(),
@@ -118,88 +90,56 @@ export default {
     this.loadAllData()
   },
   methods: {
+    async showInfo(item){
+      let array = []
+      if(item.payment){
+        array = await getDataByPayment(this.monthYear, item.payment)
+      }else{
+        array = await getDataByCategory(this.monthYear, item.category)
+      }
+      let html = `
+        <table id="tableExpenses" class="table table-striped">
+          <thead>
+            <tr>
+              <th scope="col">Descrção</th>
+              <th scope="col">Venc.</th>
+              <th scope="col">Valor</th>
+            </tr>
+          </thead>
+          <tbody>`
+
+          array.forEach(element => {
+            html +=`
+              <tr>
+                <td style="display: none">${element._id}</td>
+                <td>${element.description}</td>
+                <td>${dates(element.expiration, 'dd/mm')}</td>
+                <td>${this.formatMoney(element.price)}</td>
+              </tr>
+            `
+          });
+
+          html+=`</tbody>
+        </table>
+      `;
+      Swal.fire({
+        html: html,
+        showCloseButton: true,
+        showConfirmButton: false,
+        didOpen:()=>{
+          this.addRowHandlers()
+        }
+      })
+    },
+
     getMonthName(month){
       const monthIndex = parseInt(month) - 1
       return getMonths(monthIndex)
     },
 
-    loadAllData(year = null, month = null){
-      if(!year && !month){
-        month = getActualMonthInt();
-        year = getActualYear()
-        
-        if(month === 12){
-          month = 1
-          year = year + 1
-        }
-      }
-
-      // load user data
-      onSnapshot(userRef(), (userSnapshot) => {
-        this.emergencyReserveReached = userSnapshot.data().emergencyReserveReached
-        this.emergencyReserveGoal = userSnapshot.data().emergencyReserveGoal
-      })
-
-      // load expenses data
-      onSnapshot(expRef(year, month), (expSnapshot) => {
-        this.expenses = []
-        expSnapshot.docs.forEach((doc)=>{
-          const e = doc.data()
-          e.id = doc.id
-          this.expenses.push(e)
-        })
-
-        this.expenses.sort((a, b) => {
-          return  b.price - a.price;
-        })
-
-        if(this.allStratched){
-          month = month + 1
-          if(month === 12){
-            month = 1
-            year = year + 1
-          }
-
-          if(this.count === 0){
-            this.loadAllData(year, month)
-            this.count += 1
-
-            this.monthToShow = month
-          }
-        }
-      })
-
-      // load toReceiveData
-      onSnapshot(toReceiveRef(year, month), (toReceiveSnapShot) => {
-        this.toReceives = []
-        toReceiveSnapShot.docs.forEach((doc)=>{
-          const e = doc.data()
-          e.id = doc.id
-          this.toReceives.push(e)
-        })
-
-        this.sendDataToComponents(this.toReceives)
-      })
-
-      setTimeout(() => {
-        this.loaded = true
-      }, 2000);
-    },
-    
-    sendDataToComponents(data){
-      console.log('Emitido')
-      eventBus().emitter.emit("dataBetweenComponents", true);
-    },
-
-    colorForBarExpenses(){
-      const result = ((this.amountExpense * 100) / this.totalToreceive) 
-      if(result < 33){
-        return 'success'
-      }else if(result > 66){
-        return 'danger' 
-      }else{
-        return 'warning'
-      }
+    async loadAllData(){
+      this.groupByPayment = await dataInMonthGroupByPayment(this.yearMonth)
+      this.groupByCategory = await dataInMonthGroupByCategory(this.yearMonth)
     },
 
     colorForBarEmergencyGoal(){
@@ -467,5 +407,14 @@ ion-content {
   padding: 3px 6px 3px 6px;
   font-size: 20px!important;
   font-weight: bold;
+}
+
+ion-item-divider{
+  margin-top: 0px;
+  min-height: 1px!important;
+}
+
+ion-content {
+  --ion-background-color: #252525;
 }
 </style>

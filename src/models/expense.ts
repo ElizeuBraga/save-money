@@ -22,30 +22,10 @@ export function update(doc: any){
     // db.insert(doc);
 }
 
-export function getPaid(yearMonth: string, filter: string){
+export function getPaid(yearMonth: string){
     return new Promise((resolve) =>{
-        const response: Array<string> = []
         db.find({paid: true, deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
-            const result: any = []
-            docs.reduce(function(res: any, value: any) {
-                if(filter === 'description'){
-                    if (!res[value.description]) {
-                        res[value.description] = { _id: value._id, description: value.description, expiration: value.expiration, price: 0, payment: value.payment, quantity: 0};
-                        result.push(res[value.description])
-                    }
-                    res[value.description].price += parseFloat(value.price);
-                    res[value.description].quantity += 1
-                }else{
-                    if (!res[value.payment]) {
-                        res[value.payment] = { _id: value._id, description: value.payment, expiration: value.payment, price: 0, payment: value.payment, quantity: 0};
-                        result.push(res[value.payment])
-                    }
-                    res[value.payment].price += parseFloat(value.price);
-                    res[value.payment].quantity += 1
-                }
-                return res;
-            }, {});
-            resolve(result)
+            resolve(docs)
         });
     })
 }
@@ -66,28 +46,47 @@ export function getDataById(id: boolean){
     })
 }
 
-export function getUnPaid(yearMonth: string, filter: string){
+export function getUnPaid(yearMonth: string){
     return new Promise((resolve) =>{
         db.find({paid: false, deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
+            resolve(docs)
+        });
+    })
+}
+
+export function dataInMonthGroupByCategory(yearMonth: string){
+    return new Promise((resolve) =>{
+        db.find({deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
             const result: any = []
             docs.reduce(function(res: any, value: any) {
-                if(filter === 'description'){
-                    if (!res[value.description]) {
-                        res[value.description] = { _id: value._id, description: value.description, expiration: value.expiration, price: 0, payment: value.payment, quantity: 0};
-                        result.push(res[value.description])
-                    }
-                    res[value.description].price += parseFloat(value.price);
-                    res[value.description].quantity += 1
-                }else{
-                    if (!res[value.payment]) {
-                        res[value.payment] = { _id: value._id, description: value.payment, expiration: value.payment, price: 0, payment: value.payment, quantity: 0};
-                        result.push(res[value.payment])
-                    }
-                    res[value.payment].price += parseFloat(value.price);
-                    res[value.payment].quantity += 1
+                if (!res[value.category]) {
+                    res[value.category] = {category: value.category, price: 0, quantity: 0};
+                    result.push(res[value.category])
                 }
+                res[value.category].price += parseFloat(value.price);
+                res[value.category].quantity += 1
                 return res;
             }, {});
+
+            resolve(result)
+        });
+    })
+}
+
+export function dataInMonthGroupByPayment(yearMonth: string){
+    return new Promise((resolve) =>{
+        db.find({deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
+            const result: any = []
+            docs.reduce(function(res: any, value: any) {
+                if (!res[value.payment]) {
+                    res[value.payment] = {payment: value.payment, price: 0, quantity: 0};
+                    result.push(res[value.payment])
+                }
+                res[value.payment].price += parseFloat(value.price);
+                res[value.payment].quantity += 1
+                return res;
+            }, {});
+
             resolve(result)
         });
     })
@@ -112,6 +111,34 @@ export function getDates(){
             });
             
             resolve(response)
+        });
+    })
+}
+
+export function getDataByPayment(yearMonth: string, payment: string){
+    const object = {
+        deletedAt: null, 
+        expiration: new RegExp(yearMonth), 
+        model: model,
+        payment: payment
+    }
+    return new Promise((resolve) =>{
+        db.find(object, function (err: any, docs: any) {
+            resolve(docs)
+        });
+    })
+}
+
+export function getDataByCategory(yearMonth: string, category: string){
+    const object = {
+        deletedAt: null, 
+        expiration: new RegExp(yearMonth), 
+        model: model,
+        category: category
+    }
+    return new Promise((resolve) =>{
+        db.find(object, function (err: any, docs: any) {
+            resolve(docs)
         });
     })
 }
