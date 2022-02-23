@@ -41,6 +41,7 @@ export function getDataByDescription(yearMonth: string, description: string, pai
 export function getDataById(id: boolean){
     return new Promise((resolve) =>{
         db.find({_id: id, model: model}, function (err: any, docs: any) {
+            console.log(docs)
             resolve(docs[0])
         });
     })
@@ -50,6 +51,26 @@ export function getUnPaid(yearMonth: string){
     return new Promise((resolve) =>{
         db.find({paid: false, deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
             resolve(docs)
+        });
+    })
+}
+
+export function dataInMonthGroupByProduct(yearMonth: string){
+    return new Promise((resolve) =>{
+        db.find({deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
+            const result: any = []
+            docs.reduce(function(res: any, value: any) {
+                if (!res[value.description]) {
+                    res[value.description] = {description: value.description, price: 0, quantity: 0};
+                    result.push(res[value.description])
+                }
+                res[value.description].price += parseFloat(value.price);
+                res[value.description].quantity += 1
+                return res;
+            }, {});
+            
+            console.log(result)
+            resolve(result)
         });
     })
 }
@@ -135,6 +156,20 @@ export function getDataByCategory(yearMonth: string, category: string){
         expiration: new RegExp(yearMonth), 
         model: model,
         category: category
+    }
+    return new Promise((resolve) =>{
+        db.find(object, function (err: any, docs: any) {
+            resolve(docs)
+        });
+    })
+}
+
+export function getDataByProduct(yearMonth: string, product: string){
+    const object = {
+        deletedAt: null, 
+        expiration: new RegExp(yearMonth), 
+        model: model,
+        description: product
     }
     return new Promise((resolve) =>{
         db.find(object, function (err: any, docs: any) {
