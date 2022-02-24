@@ -72,7 +72,7 @@
 import {getMonths, getActualMonthInt, getNextMonthIndex, userRef, formatInputReal, formatInputRealV3, dates, sum} from '../Helper'
 import {updateDoc, Timestamp, arrayUnion } from "firebase/firestore";
 import { dataInMonthGroupByPayment, dataInMonthGroupByCategory, getDataByPayment, getDataByCategory, getDataByProduct, dataInMonthGroupByProduct,  update, insert, getDataById} from '../models/expense'
-import { updateReceivable, insertReceivable, dataInMonthGroupByDebtor} from '../models/receivables'
+import { updateReceivable, insertReceivable, dataInMonthGroupByDebtor, getDataByDebtor, getDataByDebtorId} from '../models/receivables'
 import { alertController} from "@ionic/vue";
 import TollbarComponent from '../components/TollbarComponent.vue'
 import Swal from 'sweetalert2'
@@ -215,9 +215,12 @@ export default {
     },
 
     async saveOrUpdateAlertIn(doc= null, getById = false){
+      console.log(doc)
       if(getById){
-        doc = await getDataById(doc)
+        doc = await getDataByDebtorId(this.monthYear, doc)
       }
+
+      console.log(doc)
 
       const expiration = dates(Date.now(), null, 1)
 
@@ -227,7 +230,7 @@ export default {
       html+= `<select style="font-size: 16px" class="swal2-input" value="" name="debtor" id="debtor">`;
       html += `<option value="">Selecione</option>`;
       debtors.forEach(c => {
-        const selected = (doc && c === doc.payment) ? 'selected' : ''
+        const selected = (doc && c === doc.debtor) ? 'selected' : ''
         html += `<option value="${c}" ${selected}>${c}</option>`;
       });
       html += `</select>`;
@@ -327,17 +330,22 @@ export default {
       })
     },
 
-    async showInfoReceivables(){
-      const array = this.groupByDebtor
-      
-      let html = `<div id="tableExpenses" class="container">`
+    async showInfoReceivables(debtor = null){
+      let array = []
+      if(debtor){
+        array = await getDataByDebtor(this.monthYear,debtor)
+      }else{
+        array = this.groupByDebtor
+      }
+
+      let html = `<div id="${debtor ? 'tableReceivables2' : 'tableReceivables'}" class="container">`
       html += `<h4>Recebíveis</h4>`
           array.forEach(element => {
             html +=`
               <div id="row" class="row">
-                  <div class="col-6" style="display: none">${element._id}</div>
-                  <div class="col-6 ion-text-left">${element.debtor}</div>
-                  <div class="col-6 ion-text-right">${this.formatMoney(element.price)}</div>
+                <div style="display: none" class="col-6 ion-text-left">${debtor ? element._id : ''}</div>
+                <div class="col-6 ion-text-left">${element.debtor}</div>
+                <div class="col-6 ion-text-right">${this.formatMoney(element.price)}</div>
               </div>
               <hr>
             `
@@ -351,7 +359,11 @@ export default {
         showConfirmButton: true,
         confirmButtonText: 'Novo registro',
         didOpen:()=>{
-          this.addRowHandlers()
+          if(debtor){
+            this.addRowHandlersReceiv2()
+          }else{
+            this.addRowHandlersReceiv()
+          }
         }
       }).then((values)=>{
         if(values.isConfirmed){
@@ -396,6 +408,45 @@ export default {
         currentRow.onclick = createClickHandler(currentRow);
       }
     },
+
+    addRowHandlersReceiv() {
+      const table = document.getElementById("tableReceivables");
+      const rows = table.getElementsByClassName("row");
+
+      let i;
+      for (i = 0; i < rows.length; i++) {
+        const currentRow = rows[i];
+        const createClickHandler = (row) => {
+          return () => {
+            const cell = row.getElementsByClassName("col-6")[1];
+            const id = cell.innerHTML;
+            
+            this.showInfoReceivables(id, true)
+          };
+        };
+        currentRow.onclick = createClickHandler(currentRow);
+      }
+    },
+
+    addRowHandlersReceiv2() {
+      const table = document.getElementById("tableReceivables2");
+      const rows = table.getElementsByClassName("row");
+
+      let i;
+      for (i = 0; i < rows.length; i++) {
+        const currentRow = rows[i];
+        const createClickHandler = (row) => {
+          return () => {
+            const cell = row.getElementsByClassName("col-6")[0];
+            const id = cell.innerHTML;
+            this.saveOrUpdateAlertIn(id, true)
+          };
+        };
+        currentRow.onclick = createClickHandler(currentRow);
+      }
+    },
+
+    // getDataByDebtor
 
     async alertToReceiveFromThirdParties(){
       const alert = await alertController

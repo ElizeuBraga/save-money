@@ -90,3 +90,19 @@ export function dataInMonthGroupByDebtor(yearMonth: string){
         });
     })
 }
+
+export function getDataByDebtor(yearMonth: string, debtor: string){
+    return new Promise((resolve) =>{
+        db.find({debtor: debtor, deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
+            resolve(docs)
+        });
+    })
+}
+
+export function getDataByDebtorId(yearMonth: string, debtorId: string){
+    return new Promise((resolve) =>{
+        db.find({_id: debtorId, deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
+            resolve(docs[0])
+        });
+    })
+}
