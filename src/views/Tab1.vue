@@ -33,13 +33,13 @@
         <ion-card-content>
           <ion-row  v-for="item in groupByCategory" :key="item" @click="showInfo(item, 'category')">
             <ion-col>
-              <ion-label>{{item.category ? item.category: '-'}}</ion-label>
+              <ion-label :color="returnColor(item)">{{item.category ? item.category: '-'}}</ion-label>
             </ion-col>
             <ion-col class="ion-text-center">
-              <ion-label>{{calcPercentage(item.price)}}%</ion-label>
+              <ion-label :color="returnColor(item)">{{calcPercentage(item.price)}}%</ion-label>
             </ion-col>
             <ion-col class="ion-text-right">
-              <ion-label>{{formatMoney(item.price)}}</ion-label>
+              <ion-label :color="returnColor(item)">{{formatMoney(item.price)}}</ion-label>
             </ion-col>
             <ion-item-divider></ion-item-divider>
           </ion-row>
@@ -120,6 +120,22 @@ export default {
   },
 
   methods: {
+    returnColor(item){
+      if(item.category === '50'){
+        if(this.calcPercentage(item.price) > 50){
+          return 'danger'
+        }
+      }else if(item.category === '30'){
+        if(this.calcPercentage(item.price) > 30){
+          return 'danger'
+        }
+      }else{
+        if(this.calcPercentage(item.price) > 20){
+          return 'danger'
+        }
+      }
+    },
+
     async saveOrUpdateAlert(doc= null, getById = false){
       if(getById){
         doc = await getDataById(doc)
