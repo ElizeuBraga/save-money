@@ -35,6 +35,9 @@
             <ion-col>
               <ion-label>{{item.category ? item.category: '-'}}</ion-label>
             </ion-col>
+            <ion-col class="ion-text-center">
+              <ion-label>{{calcPercentage(item.price)}}%</ion-label>
+            </ion-col>
             <ion-col class="ion-text-right">
               <ion-label>{{formatMoney(item.price)}}</ion-label>
             </ion-col>
@@ -579,6 +582,10 @@ export default {
       })
 
       this.showToast('success', 'Conquista alterada com sucesso!')
+    },
+
+    calcPercentage(value){
+      return ((100 * value) / this.totalDeb).toFixed(2)
     },
   },
 
