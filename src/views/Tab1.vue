@@ -505,6 +505,7 @@ ion-content {
 @media screen and (min-width: 800px) {
   ion-card {
     width: 40%;
+    font-size: 16px!important;
   }
 
   ion-grid{
@@ -538,5 +539,9 @@ ion-item-divider{
 
 ion-content {
   --ion-background-color: #252525;
+}
+
+.swal2-popup {
+  font-family: "LabelInputsFont" !important;
 }
 </style>
