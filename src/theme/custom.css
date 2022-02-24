@@ -7,3 +7,15 @@ ion-label{
     font-family: "LabelItalic" !important;
     /* font-size: 14px!important; */
 }
+
+hr
+{
+    /* height: 3px; */
+    margin: 5px!important;
+}
+
+.nopadding {
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+    margin: 0 !important;
+ }

@@ -211,39 +211,33 @@ export default {
     
     async showInfo(item, type){
       let array = []
+      let title = ''
       if(type === 'payment'){
         array = await getDataByPayment(this.monthYear, item.payment)
+        title = item.payment
       }else if(type === 'category'){
         array = await getDataByCategory(this.monthYear, item.category)
+        title = item.category
       }else{
         array = await getDataByProduct(this.monthYear, item.description)
+        title = item.description
       }
 
-      let html = `
-        <table id="tableExpenses" class="table table-striped">
-          <thead>
-            <tr>
-              <th scope="col">Descrção</th>
-              <th scope="col">Venc.</th>
-              <th scope="col">Valor</th>
-            </tr>
-          </thead>
-          <tbody>`
-
+      let html = `<div id="tableExpenses" class="container">`
+          html += `<h3>${title}</h3>`
           array.forEach(element => {
             html +=`
-              <tr>
-                <td style="display: none">${element._id}</td>
-                <td>${element.description}</td>
-                <td>${dates(element.expiration, 'dd/mm')}</td>
-                <td>${this.formatMoney(element.price)}</td>
-              </tr>
+              <div id="row" class="row">
+                  <div class="col-6" style="display: none">${element._id}</div>
+                  <div class="col-6 ion-text-left">${element.description}</div>
+                  <div class="col-6 ion-text-right">${this.formatMoney(element.price)}</div>
+              </div>
+              <hr>
             `
           });
 
-          html+=`</tbody>
-        </table>
-      `;
+          html+=`</div>`;
+      
       Swal.fire({
         html: html,
         showCloseButton: true,
@@ -267,13 +261,14 @@ export default {
 
     addRowHandlers() {
       const table = document.getElementById("tableExpenses");
-      const rows = table.getElementsByTagName("tr");
+      const rows = table.getElementsByClassName("row");
+
       let i;
       for (i = 0; i < rows.length; i++) {
-        const currentRow = table.rows[i];
+        const currentRow = rows[i];
         const createClickHandler = (row) => {
           return () => {
-            const cell = row.getElementsByTagName("td")[0];
+            const cell = row.getElementsByClassName("col-6")[0];
             const id = cell.innerHTML;
             
             this.saveOrUpdateAlert(id, true)
@@ -543,5 +538,14 @@ ion-content {
 
 .swal2-popup {
   font-family: "LabelInputsFont" !important;
+}
+
+hr
+{
+    background-color: #eee;
+    border: 0 none;
+    color: #eee;
+    height: 1px;
+    margin: 0!important;
 }
 </style>
