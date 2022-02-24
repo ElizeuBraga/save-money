@@ -18,6 +18,21 @@ export function update(doc: any){
     // db.insert(doc);
 }
 
+export function insertReceivable(doc: any){
+    doc.createdAt = dates(Date.now(), 'yyyy-mm-dd')
+    doc.deletedAt = null
+    doc.updatedAt = null
+    doc.paid = false
+    doc.model = model
+    db.insert(doc);
+}
+
+export function updateReceivable(doc: any){
+    doc.updatedAt = dates(Date.now(), 'yyyy-mm-dd')
+    db.update({ _id: doc._id }, { $set: doc });
+    // db.insert(doc);
+}
+
 export function getPaid(yearMonth: string){
     return new Promise((resolve) =>{
         db.find({paid: true, deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
@@ -53,6 +68,25 @@ export function getDates(){
             });
             
             resolve(response)
+        });
+    })
+}
+
+export function dataInMonthGroupByDebtor(yearMonth: string){
+    return new Promise((resolve) =>{
+        db.find({deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
+            const result: any = []
+            docs.reduce(function(res: any, value: any) {
+                if (!res[value.debtor]) {
+                    res[value.debtor] = {debtor: value.debtor, price: 0, quantity: 0};
+                    result.push(res[value.debtor])
+                }
+                res[value.debtor].price += parseFloat(value.price);
+                res[value.debtor].quantity += 1
+                return res;
+            }, {});
+            
+            resolve(result)
         });
     })
 }

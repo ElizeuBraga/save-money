@@ -61,16 +61,18 @@
       </ion-card>
     </ion-content>
     <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-      <ion-fab-button color="dark" @click="saveOrUpdateAlert()" style="font-size: 30px">+</ion-fab-button>
+      <ion-fab-button color="dark" @click="showInfoReceivables()" style="font-size: 30px">+</ion-fab-button>
+      <ion-fab-button color="dark" @click="saveOrUpdateAlert()" style="font-size: 30px">-</ion-fab-button>
     </ion-fab>
   </ion-page>
 </template>
 
 <script>
 
-import {getMonths, getActualMonthInt, getNextMonthIndex, userRef, formatInputReal, formatInputRealV3, dates} from '../Helper'
+import {getMonths, getActualMonthInt, getNextMonthIndex, userRef, formatInputReal, formatInputRealV3, dates, sum} from '../Helper'
 import {updateDoc, Timestamp, arrayUnion } from "firebase/firestore";
 import { dataInMonthGroupByPayment, dataInMonthGroupByCategory, getDataByPayment, getDataByCategory, getDataByProduct, dataInMonthGroupByProduct,  update, insert, getDataById} from '../models/expense'
+import { updateReceivable, insertReceivable, dataInMonthGroupByDebtor} from '../models/receivables'
 import { alertController} from "@ionic/vue";
 import TollbarComponent from '../components/TollbarComponent.vue'
 import Swal from 'sweetalert2'
@@ -82,6 +84,9 @@ export default {
       groupByCategory: [],
       groupByPayment: [],
       groupByProduct: [],
+      groupByDebtor: [],
+      totalExp: 0,
+      totalDeb: 0,
       monthYear: dates(null, 'yyyy-mm', 1),
       monthToShow: getActualMonthInt(),
       slideOpts:{
@@ -208,6 +213,80 @@ export default {
         this.loadAllData()
       })
     },
+
+    async saveOrUpdateAlertIn(doc= null, getById = false){
+      if(getById){
+        doc = await getDataById(doc)
+      }
+
+      const expiration = dates(Date.now(), null, 1)
+
+      let html = ``
+
+      const debtors = ['Marcão', 'Mary', 'Geilton', 'Digisystem']
+      html+= `<select style="font-size: 16px" class="swal2-input" value="" name="debtor" id="debtor">`;
+      html += `<option value="">Selecione</option>`;
+      debtors.forEach(c => {
+        const selected = (doc && c === doc.payment) ? 'selected' : ''
+        html += `<option value="${c}" ${selected}>${c}</option>`;
+      });
+      html += `</select>`;
+
+      html += `
+        <input style="font-size: 16px" id="price" type="number" value="${doc ? doc.price : ''}" class="swal2-input">
+      `;
+
+      html += `<input style="font-size: 16px" value="${doc ? doc.expiration : expiration}" id="expiration " type="date" class="swal2-input">`
+      
+      
+      Swal.fire({
+        title: doc ? 'Editar' : 'Novo registro',
+        html: html,
+        didOpen:()=>{
+          const price = document.getElementById('price')
+
+          price.setAttribute('autocomplete', 'off')
+          price.focus()
+        },
+        showDenyButton: true,
+        showCancelButton: true,
+        cancelButtonText:'Pagar',
+        denyButtonText:'Excluir',
+        confirmButtonText: 'Salvar',
+        confirmButtonColor: 'green',
+        cancelButtonColor: 'blue',
+        showCloseButton: true,
+        preConfirm:()=>{
+          const price = document.getElementById('price').value
+          const debtor = document.getElementById('debtor').value
+          const expiration = document.querySelector('input[type="date"]').value
+
+          if(price == '' || expiration == '' || debtor == ''){
+            Swal.showValidationMessage('Preencha todos os campos')
+          }
+        }
+      }).then((values)=>{
+        if(values.isConfirmed){
+          const price = document.getElementById('price').value
+          const expiration = document.querySelector('input[type="date"]').value
+          const debtor = document.getElementById('debtor').value
+          
+          if(doc){
+            doc.price = price
+            doc.expiration = expiration
+            doc.debtor = debtor
+            updateReceivable(doc)
+          }else{
+            insertReceivable({
+              price: price,
+              expiration: expiration,
+              debtor: debtor
+            })
+          }
+        }
+        this.loadAllData()
+      })
+    },
     
     async showInfo(item, type){
       let array = []
@@ -248,6 +327,39 @@ export default {
       })
     },
 
+    async showInfoReceivables(){
+      const array = this.groupByDebtor
+      
+      let html = `<div id="tableExpenses" class="container">`
+      html += `<h4>Recebíveis</h4>`
+          array.forEach(element => {
+            html +=`
+              <div id="row" class="row">
+                  <div class="col-6" style="display: none">${element._id}</div>
+                  <div class="col-6 ion-text-left">${element.debtor}</div>
+                  <div class="col-6 ion-text-right">${this.formatMoney(element.price)}</div>
+              </div>
+              <hr>
+            `
+          });
+
+          html+=`</div>`;
+      
+      Swal.fire({
+        html: html,
+        showCloseButton: true,
+        showConfirmButton: true,
+        confirmButtonText: 'Novo registro',
+        didOpen:()=>{
+          this.addRowHandlers()
+        }
+      }).then((values)=>{
+        if(values.isConfirmed){
+          this.saveOrUpdateAlertIn()
+        }
+      })
+    },
+
     getMonthName(month){
       const monthIndex = parseInt(month) - 1
       return getMonths(monthIndex)
@@ -257,6 +369,13 @@ export default {
       this.groupByPayment = await dataInMonthGroupByPayment(this.yearMonth)
       this.groupByCategory = await dataInMonthGroupByCategory(this.yearMonth)
       this.groupByProduct = await dataInMonthGroupByProduct(this.yearMonth)
+      this.groupByDebtor = await dataInMonthGroupByDebtor(this.yearMonth)
+
+      this.totalExp =  await sum(this.groupByPayment, 'price')
+      this.totalDeb =  await sum(this.groupByDebtor, 'price')
+
+      console.log(this.totalExp)
+      console.log(this.totalDeb)
     },
 
     addRowHandlers() {
@@ -445,7 +564,8 @@ export default {
     },
 
     inWallet(){
-      return this.totalToreceive - this.amountExpense;
+      const total = this.totalDeb - this.totalExp;
+      return total
     },
 
     calcBarEmergencyGoal(){
