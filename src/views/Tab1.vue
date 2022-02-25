@@ -430,8 +430,20 @@ export default {
 
     async loadAllData(){
       this.groupByPayment = await dataInMonthGroupByPayment(this.yearMonth)
+      this.groupByPayment.sort((a, b)=>{
+        return a.payment.localeCompare(b.payment)
+      })
+
       this.groupByCategory = await dataInMonthGroupByCategory(this.yearMonth)
+      this.groupByCategory.sort((a, b)=>{
+        return parseFloat(a.category) - parseFloat(b.category)
+      })
+
       this.groupByProduct = await dataInMonthGroupByProduct(this.yearMonth)
+      this.groupByProduct.sort((a, b)=>{
+        return a.description.localeCompare(b.description)
+      })
+
       this.groupByDebtor = await dataInMonthGroupByDebtor(this.yearMonth)
 
       this.totalExp =  await sum(this.groupByPayment, 'price')
