@@ -64,6 +64,7 @@
       </ion-card>
     </ion-content>
     <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+      <ion-fab-button color="dark" @click="insertOrUpdatePerson()" style="font-size: 30px">P</ion-fab-button>
       <ion-fab-button color="dark" @click="showInfoReceivables()" style="font-size: 30px">+</ion-fab-button>
       <ion-fab-button color="dark" @click="saveOrUpdateAlert()" style="font-size: 30px">-</ion-fab-button>
     </ion-fab>
@@ -76,6 +77,7 @@ import {getMonths, getActualMonthInt, getNextMonthIndex, userRef, formatInputRea
 import {updateDoc, Timestamp, arrayUnion } from "firebase/firestore";
 import { dataInMonthGroupByPayment, dataInMonthGroupByCategory, getDataByPayment, getDataByCategory, getDataByProduct, dataInMonthGroupByProduct,  update, insert, getDataById} from '../models/expense'
 import { updateReceivable, insertReceivable, dataInMonthGroupByDebtor, getDataByDebtor, getDataByDebtorId} from '../models/receivables'
+import { insertPerson, updatePerson, getPersons} from '../models/persons'
 import { alertController} from "@ionic/vue";
 import TollbarComponent from '../components/TollbarComponent.vue'
 import Swal from 'sweetalert2'
@@ -233,6 +235,36 @@ export default {
       })
     },
 
+    async insertOrUpdatePerson(person= null){
+      Swal.fire({
+        title: person ? person.name : 'Nova pessoa',
+        input: 'text',
+        showCancelButton: true,
+        cancelButtonText:'Cancelar',
+        confirmButtonText: 'Salvar',
+        confirmButtonColor: 'green',
+        cancelButtonColor: 'blue',
+        showCloseButton: true,
+        preConfirm:(value)=>{
+          if(value === ''){
+            Swal.showValidationMessage('Informe o nome')
+          }
+        }
+      }).then(async (values)=>{
+        if(values.isConfirmed){
+          if(person){
+            updatePerson(person)
+          }else{
+            insertPerson({
+              name: values.value
+            })
+          }
+        }
+
+        console.log(await getPersons())
+      })
+    },
+
     async saveOrUpdateAlertIn(doc= null, getById = false){
       console.log(doc)
       if(getById){
@@ -245,7 +277,7 @@ export default {
 
       let html = ``
 
-      const debtors = ['Marcão', 'Mary', 'Geilton', 'Digisystem']
+      const debtors = await getPersons()
       html+= `<select style="font-size: 16px" class="swal2-input" value="" name="debtor" id="debtor">`;
       html += `<option value="">Selecione</option>`;
       debtors.forEach(c => {
