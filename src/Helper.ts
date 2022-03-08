@@ -127,14 +127,11 @@ export function sumElements(array: any, field: any){
     return total
 }
 
-export function sum(array: any, field: any){
-    return new Promise((resolve) =>{
-        
-        let total = 0
-        
-        for (const element of array) {
-            total += parseFloat(element[field])
-        }  
-        resolve(total)
-    })
+export function sum(array: any, field: any){    
+    let total = 0
+    for (const element of array) {
+        total += parseFloat(element[field])
+    }  
+
+    return total
 }

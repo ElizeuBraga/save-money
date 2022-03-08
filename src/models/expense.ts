@@ -111,7 +111,7 @@ export function dataInMonthGroupByPayment(yearMonth: string){
     })
 }
 
-export function getDates(){
+export function getDatesExpenses(){
     return new Promise((resolve) =>{
         db.find({model: model}, {expiration: 1, _id: 0}, function (err: any, docs: any) {
             const response: Array<string> = []
@@ -128,7 +128,7 @@ export function getDates(){
             response.sort((a: string, b: string)=>{
                 return new Date(a).getTime() - new Date(b).getTime() // reverse chronological order
             });
-            
+        
             resolve(response)
         });
     })

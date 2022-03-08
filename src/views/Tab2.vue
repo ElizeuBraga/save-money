@@ -3,7 +3,7 @@
     <!-- Header -->
     <ion-header>
       <ion-toolbar color="dark">
-        <tollbar-component :total="total" title="Saída"/>
+        <tollbar-component :total="0" :title="'Saída'"/>
       </ion-toolbar>
     </ion-header>
     <!-- Header -->
@@ -72,7 +72,7 @@
 </template>
 
 <script>
-import { getDataByDescription, getDataById, getUnPaid, update, insert, getPaid, getDates } from '../models/expense'
+import { getDataByDescription, getDataById, getUnPaid, update, insert, getPaid, getDatesExpenses } from '../models/expense'
 import { addZero, getMonths, getNextMonthInt, expRef, getActualYear, toReceiveRef, userRef, dates, sumElements, sum} from '../Helper'
 import { doc, updateDoc, onSnapshot, addDoc, deleteDoc, Timestamp, arrayUnion} from "firebase/firestore";
 import { alertController, actionSheetController, IonFabButton, IonFab, IonCard, IonSegment, IonSegmentButton, IonToolbar} from "@ionic/vue";
@@ -557,7 +557,7 @@ export default {
     },
 
     async actualizeData(){
-      this.slideDatesExp = await getDates();
+      this.slideDatesExp = await getDatesExpenses();
       this.slideOpts.initialSlide = this.slideDatesExp.indexOf(this.monthYear)
       if(this.tab === 'toPaid'){
         this.expenses = await getUnPaid(this.monthYear)

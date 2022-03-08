@@ -3,7 +3,7 @@
     <!-- Header -->
     <ion-header>
       <ion-toolbar color="dark">
-        <tollbar-component :total="inWallet" :title="(getMonthName(monthToShow))"/>
+        <tollbar-component :total="inWallet" :months="months" :defaultmonth="yearMonth"/>
       </ion-toolbar>
     </ion-header>
     <!-- Header -->
@@ -72,34 +72,84 @@
 </template>
 
 <script>
+import {
+  getActualMonthInt, 
+  getNextMonthIndex, 
+  formatInputRealV3, 
+  formatInputReal, 
+  getMonths, 
+  userRef, 
+  dates, 
+  sum
+} from '../Helper'
 
-import {getMonths, getActualMonthInt, getNextMonthIndex, userRef, formatInputReal, formatInputRealV3, dates, sum} from '../Helper'
-import {updateDoc, Timestamp, arrayUnion } from "firebase/firestore";
-import { dataInMonthGroupByPayment, dataInMonthGroupByCategory, getDataByPayment, getDataByCategory, getDataByProduct, dataInMonthGroupByProduct,  update, insert, getDataById} from '../models/expense'
-import { updateReceivable, insertReceivable, dataInMonthGroupByDebtor, getDataByDebtor, getDataByDebtorId} from '../models/receivables'
-import { insertPerson, updatePerson, getPersons} from '../models/persons'
-import { alertController} from "@ionic/vue";
+import {
+  arrayUnion, 
+  updateDoc, 
+  Timestamp, 
+} from "firebase/firestore";
+
+import { 
+  dataInMonthGroupByCategory, 
+  dataInMonthGroupByPayment, 
+  dataInMonthGroupByProduct,  
+  getDataByCategory, 
+  getDataByPayment, 
+  getDataByProduct, 
+  getDatesExpenses,
+  getDataById, 
+  update, 
+  insert
+} from '../models/expense'
+
+import { 
+  dataInMonthGroupByDebtor, 
+  getDataByDebtorId,
+  updateReceivable, 
+  insertReceivable, 
+  getDataByDebtor, 
+} from '../models/receivables'
+
+import { 
+  insertPerson, 
+  updatePerson, 
+  getPersons
+} from '../models/persons'
+
+import { 
+  alertController,
+  IonItemDivider,
+  IonFab, 
+  IonFabButton
+} from "@ionic/vue";
 import TollbarComponent from '../components/TollbarComponent.vue'
 import Swal from 'sweetalert2'
+import eventBus from '../eventBus'
 
 export default {
-  components:{TollbarComponent},
+  components:{
+      TollbarComponent,
+      IonItemDivider,
+      IonFab, 
+      IonFabButton
+    },
   data: () => {
     return {
+      componentKey: 0,
       groupByCategory: [],
       groupByPayment: [],
       groupByProduct: [],
       groupByDebtor: [],
       totalExp: 0,
       totalDeb: 0,
-      monthYear: dates(null, 'yyyy-mm', 1),
+      yearMonth: '',
       monthToShow: getActualMonthInt(),
       slideOpts:{
         initialSlide: getNextMonthIndex(),
         speed: 400
       },
       name: '',
-      months: getMonths(),
+      months: [],
       loaded: false,
       emergencyReserveGoal: 0,
       emergencyReserveReached: 0,
@@ -118,7 +168,12 @@ export default {
   },
 
   async mounted() {
-    this.loadAllData()
+    this.yearMonth = dates(null, 'yyyy-mm', 1);
+    eventBus().emitter.on("changeMonthSelect", async (e)=>{
+      this.yearMonth = e
+      await this.loadAllData()
+    });
+    await this.loadAllData()
   },
 
   methods: {
@@ -268,7 +323,7 @@ export default {
     async saveOrUpdateAlertIn(doc= null, getById = false){
       console.log(doc)
       if(getById){
-        doc = await getDataByDebtorId(this.monthYear, doc)
+        doc = await getDataByDebtorId(this.yearMonth, doc)
       }
 
       console.log(doc)
@@ -346,13 +401,13 @@ export default {
       let array = []
       let title = ''
       if(type === 'payment'){
-        array = await getDataByPayment(this.monthYear, item.payment)
+        array = await getDataByPayment(this.yearMonth, item.payment)
         title = item.payment
       }else if(type === 'category'){
-        array = await getDataByCategory(this.monthYear, item.category)
+        array = await getDataByCategory(this.yearMonth, item.category)
         title = item.category
       }else{
-        array = await getDataByProduct(this.monthYear, item.description)
+        array = await getDataByProduct(this.yearMonth, item.description)
         title = item.description
       }
 
@@ -384,7 +439,7 @@ export default {
     async showInfoReceivables(debtor = null){
       let array = []
       if(debtor){
-        array = await getDataByDebtor(this.monthYear,debtor)
+        array = await getDataByDebtor(this.yearMonth,debtor)
       }else{
         array = this.groupByDebtor
       }
@@ -446,11 +501,9 @@ export default {
 
       this.groupByDebtor = await dataInMonthGroupByDebtor(this.yearMonth)
 
-      this.totalExp =  await sum(this.groupByPayment, 'price')
-      this.totalDeb =  await sum(this.groupByDebtor, 'price')
+      this.months = await getDatesExpenses()
 
-      console.log(this.totalExp)
-      console.log(this.totalDeb)
+      this.inWallet = (sum(this.groupByDebtor, 'price') - sum(this.groupByPayment, 'price'));
     },
 
     addRowHandlers() {
@@ -679,11 +732,6 @@ export default {
       })
 
       return total;
-    },
-
-    inWallet(){
-      const total = this.totalDeb - this.totalExp;
-      return total
     },
 
     calcBarEmergencyGoal(){
