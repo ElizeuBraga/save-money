@@ -1,5 +1,5 @@
 import Datastore from 'nedb'
-import {dates} from '../Helper'
+import {addZero, dates} from '../Helper'
 const db = new Datastore({ filename: 'src/database/db.db', autoload: true })
 const model = 'expenses'
 
@@ -10,18 +10,36 @@ interface Expense {
     updatedAt: any;
     paid: boolean;
     model: string;
+    expiration: string;
+    parcel: number;
 }
 
 export function insert(doc: Expense){
-    return new Promise((resolve) =>{
+    return new Promise(() =>{
         doc.createdAt = dates(Date.now(), 'yyyy-mm-dd')
         doc.deletedAt = null
         doc.updatedAt = null
         doc.paid = false
         doc.model = model
-        db.insert(doc, (err, doc)=>{
-            resolve(doc)
-        });
+        
+        let start = parseInt(dates(doc.expiration, 'mm'))
+        let month = parseInt(dates(doc.expiration, 'mm'))
+        const expiration = doc.expiration
+        const end = (doc.parcel + start)
+        let year = parseInt(dates(expiration, 'yyyy'))
+        while(start < end){
+            if(month > 12){
+                year = year + 1
+                month = 1
+            }
+            
+            const newDoc = JSON.parse(JSON.stringify(doc))
+            newDoc.expiration = String(year) + '-' + addZero(month) + '-' + dates(expiration, 'dd')
+            db.insert(newDoc)
+            
+            month ++
+            start ++
+        }
     })
 }
 

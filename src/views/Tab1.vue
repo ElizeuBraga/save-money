@@ -73,6 +73,7 @@
 
 <script>
 import {
+  returnArrayDatesBetween,
   getActualMonthInt, 
   getNextMonthIndex, 
   formatInputRealV3, 
@@ -80,7 +81,7 @@ import {
   getMonths, 
   userRef, 
   dates, 
-  sum
+  sum,
 } from '../Helper'
 
 import {
@@ -168,6 +169,7 @@ export default {
   },
 
   async mounted() {
+
     this.yearMonth = dates(null, 'yyyy-mm', 1);
     eventBus().emitter.on("changeMonthSelect", async (e)=>{
       this.yearMonth = e
@@ -201,8 +203,9 @@ export default {
       const expiration = dates(Date.now(), null, 1)
 
       let html = `
-        <input style="font-size: 16px" id="description" value="${doc ? doc.description : ''}" class="swal2-input">
-        <input style="font-size: 16px" id="price" type="number" value="${doc ? doc.price : ''}" class="swal2-input">
+        <input style="font-size: 16px" placeholder="Descrição" id="description" value="${doc ? doc.description : ''}" class="swal2-input">
+        <input style="font-size: 16px" placeholder="Valor" id="price" type="number" value="${doc ? doc.price : ''}" class="swal2-input">
+        <input style="font-size: 16px" placeholder="Parcelas" id="parcel" type="number" value="${doc ? doc.parcel : ''}" class="swal2-input">
       `;
 
       html += `<input style="font-size: 16px" value="${doc ? doc.expiration : expiration}" id="expiration " type="date" class="swal2-input">`
@@ -262,6 +265,7 @@ export default {
           const expiration = document.querySelector('input[type="date"]').value
           const payment = document.getElementById('payment').value
           const category = document.getElementById('category').value
+          const parcel = document.getElementById('parcel').value
           
           if(doc){
             doc.description = description
@@ -276,7 +280,8 @@ export default {
               price: price,
               expiration: expiration,
               category: category,
-              payment: payment
+              payment: payment,
+              parcel: parseInt(parcel)
             })
           }
         }else if(values.isDenied){
