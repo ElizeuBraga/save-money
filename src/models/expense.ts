@@ -3,7 +3,16 @@ import {dates} from '../Helper'
 const db = new Datastore({ filename: 'src/database/db.db', autoload: true })
 const model = 'expenses'
 
-export function insert(doc: any){
+interface Expense {
+    _id: string;
+    createdAt: string;
+    deletedAt: any;
+    updatedAt: any;
+    paid: boolean;
+    model: string;
+}
+
+export function insert(doc: Expense){
     return new Promise((resolve) =>{
         doc.createdAt = dates(Date.now(), 'yyyy-mm-dd')
         doc.deletedAt = null
@@ -16,10 +25,9 @@ export function insert(doc: any){
     })
 }
 
-export function update(doc: any){
+export function update(doc: Expense){
     doc.updatedAt = dates(Date.now(), 'yyyy-mm-dd')
     db.update({ _id: doc._id }, { $set: doc });
-    // db.insert(doc);
 }
 
 export function getPaid(yearMonth: string){

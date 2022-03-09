@@ -503,7 +503,8 @@ export default {
 
       this.months = await getDatesExpenses()
 
-      this.inWallet = (sum(this.groupByDebtor, 'price') - sum(this.groupByPayment, 'price'));
+      this.totalDeb = sum(this.groupByDebtor, 'price')
+      this.inWallet = (this.totalDeb - sum(this.groupByPayment, 'price'));
     },
 
     addRowHandlers() {
