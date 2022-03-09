@@ -237,8 +237,8 @@ export default {
           price.setAttribute('autocomplete', 'off')
         },
         showDenyButton: true,
-        showCancelButton: true,
-        cancelButtonText:'Pagar',
+        showCancelButton: doc,
+        cancelButtonText: (doc && doc.paid) ? 'Não paguei' : 'Pagar',
         denyButtonText:'Excluir',
         confirmButtonText: 'Salvar',
         confirmButtonColor: 'green',
@@ -283,7 +283,7 @@ export default {
           doc.deletedAt = dates(null, 'yyyy-mm-dd')
           update(doc)
         }else if(values.dismiss == 'cancel'){
-          doc.paid = true
+          doc.paid = !doc.paid
           update(doc)
         }
         this.loadAllData()

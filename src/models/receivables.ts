@@ -3,7 +3,16 @@ import {dates} from '../Helper'
 const db = new Datastore({ filename: 'src/database/db.db', autoload: true })
 const model = 'receivables'
 
-export function insert(doc: any){
+interface Receivable {
+    _id: string;
+    createdAt: string;
+    deletedAt: any;
+    updatedAt: any;
+    paid: boolean;
+    model: string;
+}
+
+export function insertReceivable(doc: Receivable){
     doc.createdAt = dates(Date.now(), 'yyyy-mm-dd')
     doc.deletedAt = null
     doc.updatedAt = null
@@ -12,25 +21,9 @@ export function insert(doc: any){
     db.insert(doc);
 }
 
-export function update(doc: any){
+export function updateReceivable(doc: Receivable){
     doc.updatedAt = dates(Date.now(), 'yyyy-mm-dd')
     db.update({ _id: doc._id }, { $set: doc });
-    // db.insert(doc);
-}
-
-export function insertReceivable(doc: any){
-    doc.createdAt = dates(Date.now(), 'yyyy-mm-dd')
-    doc.deletedAt = null
-    doc.updatedAt = null
-    doc.paid = false
-    doc.model = model
-    db.insert(doc);
-}
-
-export function updateReceivable(doc: any){
-    doc.updatedAt = dates(Date.now(), 'yyyy-mm-dd')
-    db.update({ _id: doc._id }, { $set: doc });
-    // db.insert(doc);
 }
 
 export function getPaid(yearMonth: string){
