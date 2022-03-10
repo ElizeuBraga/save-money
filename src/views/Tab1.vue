@@ -326,13 +326,10 @@ export default {
     },
 
     async saveOrUpdateAlertIn(doc= null, getById = false){
-      console.log(doc)
       if(getById){
         doc = await getDataByDebtorId(this.yearMonth, doc)
       }
-
-      console.log(doc)
-
+      
       const expiration = dates(Date.now(), null, 1)
 
       let html = ``
@@ -399,6 +396,9 @@ export default {
           }
         }else if(values.isDenied){
           doc.deletedAt = dates(null, 'yyyy-mm-dd')
+          updateReceivable(doc)
+        }else if(values.dismiss == 'cancel'){
+          doc.paid = !doc.paid
           updateReceivable(doc)
         }
         this.loadAllData()
@@ -707,6 +707,10 @@ export default {
     },
 
     calcPercentage(value){
+      if(!this.totalDeb){
+        return 100
+      }
+
       return ((100 * value) / this.totalDeb).toFixed(2)
     },
   },
