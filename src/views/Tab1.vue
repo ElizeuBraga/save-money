@@ -397,6 +397,9 @@ export default {
               debtor: debtor
             })
           }
+        }else if(values.isDenied){
+          doc.deletedAt = dates(null, 'yyyy-mm-dd')
+          updateReceivable(doc)
         }
         this.loadAllData()
       })
