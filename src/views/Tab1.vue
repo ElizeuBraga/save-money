@@ -23,6 +23,14 @@
             </ion-col>
             <ion-item-divider></ion-item-divider>
           </ion-row>
+          <ion-row style="font-weight: bold">
+            <ion-col>
+              <ion-label>Total:</ion-label>
+            </ion-col>
+            <ion-col class="ion-text-right">
+              <ion-label>{{formatMoney(totalExp)}}</ion-label>
+            </ion-col>
+          </ion-row>
         </ion-card-content>
       </ion-card>
 
@@ -43,6 +51,14 @@
             </ion-col>
             <ion-item-divider></ion-item-divider>
           </ion-row>
+          <ion-row style="font-weight: bold">
+            <ion-col>
+              <ion-label>Total:</ion-label>
+            </ion-col>
+            <ion-col class="ion-text-right">
+              <ion-label>{{formatMoney(totalExp)}}</ion-label>
+            </ion-col>
+          </ion-row>
         </ion-card-content>
       </ion-card>
 
@@ -59,6 +75,14 @@
               <ion-label>{{formatMoney(item.price)}}</ion-label>
             </ion-col>
             <ion-item-divider></ion-item-divider>
+          </ion-row>
+          <ion-row style="font-weight: bold">
+            <ion-col>
+              <ion-label>Total:</ion-label>
+            </ion-col>
+            <ion-col class="ion-text-right">
+              <ion-label>{{formatMoney(totalExp)}}</ion-label>
+            </ion-col>
           </ion-row>
         </ion-card-content>
       </ion-card>
@@ -514,6 +538,7 @@ export default {
       this.months = await getDatesExpenses()
 
       this.totalDeb = sum(this.groupByDebtor, 'price')
+      this.totalExp = sum(this.groupByPayment, 'price')
       this.inWallet = (this.totalDeb - sum(this.groupByPayment, 'price'));
     },
 
