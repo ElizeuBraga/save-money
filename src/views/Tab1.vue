@@ -73,7 +73,6 @@
 
 <script>
 import {
-  returnArrayDatesBetween,
   getActualMonthInt, 
   getNextMonthIndex, 
   formatInputRealV3, 
@@ -329,7 +328,7 @@ export default {
       if(getById){
         doc = await getDataByDebtorId(this.yearMonth, doc)
       }
-      
+
       const expiration = dates(Date.now(), null, 1)
 
       let html = ``
@@ -344,7 +343,8 @@ export default {
       html += `</select>`;
 
       html += `
-        <input style="font-size: 16px" id="price" type="number" value="${doc ? doc.price : ''}" class="swal2-input">
+        <input style="font-size: 16px" placeholder="Valor" id="price" type="number" value="${doc ? doc.price : ''}" class="swal2-input">
+        <input style="font-size: 16px" placeholder="Parcelas" id="parcel" type="number" value="${doc ? doc.parcel : '1'}" class="swal2-input">
       `;
 
       html += `<input style="font-size: 16px" value="${doc ? doc.expiration : expiration}" id="expiration " type="date" class="swal2-input">`
@@ -381,6 +381,7 @@ export default {
           const price = document.getElementById('price').value
           const expiration = document.querySelector('input[type="date"]').value
           const debtor = document.getElementById('debtor').value
+          const parcel = document.getElementById('parcel').value
           
           if(doc){
             doc.price = price
@@ -391,7 +392,8 @@ export default {
             insertReceivable({
               price: price,
               expiration: expiration,
-              debtor: debtor
+              debtor: debtor,
+              parcel: parseInt(parcel)
             })
           }
         }else if(values.isDenied){
