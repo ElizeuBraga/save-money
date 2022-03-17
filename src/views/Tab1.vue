@@ -525,7 +525,8 @@ export default {
 
       this.groupByCategory = await dataInMonthGroupByCategory(this.yearMonth)
       this.groupByCategory.sort((a, b)=>{
-        return parseFloat(a.category) - parseFloat(b.category)
+        console.log(a)
+        return parseInt(b.category) - parseInt(a.category)
       })
 
       this.groupByProduct = await dataInMonthGroupByProduct(this.yearMonth)
