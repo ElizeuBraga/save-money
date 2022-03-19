@@ -77,8 +77,8 @@ export default {
       const totalExp = sum(await dataInMonthGroupByPayment(this.defaultmonth), 'price')
       this.total = (totalDeb - totalExp);
 
-      eventBus().emitter.on("loadAllData", async ()=>{
-        await this.loadAllData()
+      eventBus().emitter.on("loadAllData", ()=>{
+        this.loadAllData()
       });
     },
 

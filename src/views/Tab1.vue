@@ -496,6 +496,8 @@ export default {
       this.totalDeb = sum(this.groupByDebtor, 'price')
       this.totalExp = sum(this.groupByPayment, 'price')
       this.inWallet = (this.totalDeb - sum(this.groupByPayment, 'price'));
+
+      eventBus().emitter.emit("loadAllData", true);
     },
 
     addRowHandlers() {
