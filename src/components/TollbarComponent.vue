@@ -12,35 +12,84 @@
 </template>
 
 
-<script lang="ts">
+<script>
 // no-parsing-error
 
 import {
-  IonSelect, IonSelectOption, IonRow, IonCol, IonLabel
+  IonRow, 
+  IonCol, 
+  IonLabel,
+  IonSelect, 
+  IonSelectOption, 
 } from '@ionic/vue'
+
+import {
+  getDatesExpenses,
+  dataInMonthGroupByPayment,
+} from '../models/expense'
+
+import {
+  getDatesReceivables,
+  dataInMonthGroupByDebtor
+} from '../models/receivables'
+
+import {
+  sum,
+  dates,
+} from '../Helper'
 
 import eventBus from '../eventBus';
 
 export default {
   components:{
-    IonSelect, IonSelectOption,IonRow, IonCol, IonLabel
+    IonRow, 
+    IonCol, 
+    IonLabel,
+    IonSelect, 
+    IonSelectOption,
   },
   props: {
-    total: Number,
-    title: String,
-    months: Array,
-    defaultmonth: String,
+    tab: String,
+  },
+
+  data: () => {
+    return{
+      months: [],
+      defaultmonth: '',
+      total: 0,
+    }
   },
 
   mounted(){
-    console.log('Tollbar montado')
+    this.defaultmonth = dates(null, 'yyyy-mm', 1);
+    this.loadAllData()
   },
 
   methods:{
-    sendEvent(e: any){
-      eventBus().emitter.emit("changeMonthSelect", e.target.value);
+    async loadAllData(){
+      if(this.tab === 'tab1'){
+        this.months = await getDatesExpenses()
+      }else{
+        this.months = await getDatesReceivables()
+      }
+
+      const totalDeb = sum(await dataInMonthGroupByDebtor(this.defaultmonth), 'price')
+      const totalExp = sum(await dataInMonthGroupByPayment(this.defaultmonth), 'price')
+      this.total = (totalDeb - totalExp);
+
+      eventBus().emitter.on("loadAllData", async ()=>{
+        await this.loadAllData()
+      });
     },
-    formatMoney(amount: any) {
+
+    sendEvent(e){
+      this.defaultmonth = e.target.value
+      eventBus().emitter.emit("changeMonthSelect", this.defaultmonth);
+
+      this.loadAllData()
+    },
+
+    formatMoney(amount) {
       if(amount){
         return parseFloat(amount).toLocaleString('pt-br',{style: 'currency', currency: 'BRL'});
       }else{

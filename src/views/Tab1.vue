@@ -3,7 +3,7 @@
     <!-- Header -->
     <ion-header>
       <ion-toolbar color="dark">
-        <tollbar-component :total="inWallet" :months="months" :defaultmonth="yearMonth"/>
+        <tollbar-component tab="tab1"/>
       </ion-toolbar>
     </ion-header>
     <!-- Header -->
@@ -89,7 +89,6 @@
     </ion-content>
     <ion-fab vertical="bottom" horizontal="end" slot="fixed">
       <ion-fab-button color="dark" @click="insertOrUpdatePerson()" style="font-size: 30px">P</ion-fab-button>
-      <ion-fab-button color="dark" @click="showInfoReceivables()" style="font-size: 30px">+</ion-fab-button>
       <ion-fab-button color="dark" @click="saveOrUpdateAlert()" style="font-size: 30px">-</ion-fab-button>
     </ion-fab>
   </ion-page>
@@ -192,7 +191,6 @@ export default {
   },
 
   async mounted() {
-
     this.yearMonth = dates(null, 'yyyy-mm', 1);
     eventBus().emitter.on("changeMonthSelect", async (e)=>{
       this.yearMonth = e
@@ -470,48 +468,6 @@ export default {
       })
     },
 
-    async showInfoReceivables(debtor = null){
-      let array = []
-      if(debtor){
-        array = await getDataByDebtor(this.yearMonth,debtor)
-      }else{
-        array = this.groupByDebtor
-      }
-
-      let html = `<div id="${debtor ? 'tableReceivables2' : 'tableReceivables'}" class="container">`
-      html += `<h4>Recebíveis</h4>`
-          array.forEach(element => {
-            html +=`
-              <div id="row" class="row">
-                <div style="display: none" class="col-6 ion-text-left">${debtor ? element._id : ''}</div>
-                <div class="col-6 ion-text-left">${element.debtor}</div>
-                <div class="col-6 ion-text-right">${this.formatMoney(element.price)}</div>
-              </div>
-              <hr>
-            `
-          });
-
-          html+=`</div>`;
-      
-      Swal.fire({
-        html: html,
-        showCloseButton: true,
-        showConfirmButton: true,
-        confirmButtonText: 'Novo registro',
-        didOpen:()=>{
-          if(debtor){
-            this.addRowHandlersReceiv2()
-          }else{
-            this.addRowHandlersReceiv()
-          }
-        }
-      }).then((values)=>{
-        if(values.isConfirmed){
-          this.saveOrUpdateAlertIn()
-        }
-      })
-    },
-
     getMonthName(month){
       const monthIndex = parseInt(month) - 1
       return getMonths(monthIndex)
@@ -555,43 +511,6 @@ export default {
             const id = cell.innerHTML;
             
             this.saveOrUpdateAlert(id, true)
-          };
-        };
-        currentRow.onclick = createClickHandler(currentRow);
-      }
-    },
-
-    addRowHandlersReceiv() {
-      const table = document.getElementById("tableReceivables");
-      const rows = table.getElementsByClassName("row");
-
-      let i;
-      for (i = 0; i < rows.length; i++) {
-        const currentRow = rows[i];
-        const createClickHandler = (row) => {
-          return () => {
-            const cell = row.getElementsByClassName("col-6")[1];
-            const id = cell.innerHTML;
-            
-            this.showInfoReceivables(id, true)
-          };
-        };
-        currentRow.onclick = createClickHandler(currentRow);
-      }
-    },
-
-    addRowHandlersReceiv2() {
-      const table = document.getElementById("tableReceivables2");
-      const rows = table.getElementsByClassName("row");
-
-      let i;
-      for (i = 0; i < rows.length; i++) {
-        const currentRow = rows[i];
-        const createClickHandler = (row) => {
-          return () => {
-            const cell = row.getElementsByClassName("col-6")[0];
-            const id = cell.innerHTML;
-            this.saveOrUpdateAlertIn(id, true)
           };
         };
         currentRow.onclick = createClickHandler(currentRow);

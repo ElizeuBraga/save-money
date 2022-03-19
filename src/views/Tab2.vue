@@ -3,88 +3,115 @@
     <!-- Header -->
     <ion-header>
       <ion-toolbar color="dark">
-        <tollbar-component :total="0" :title="'Saída'"/>
+        <tollbar-component :tab="tab"/>
       </ion-toolbar>
     </ion-header>
     <!-- Header -->
 
     <ion-content :fullscreen="true">
-      <ion-row>
-        <ion-col size="12">
-          <ion-segment :value="tab" color="light" @ionChange="segmentChanged($event)">
-            <ion-segment-button value="toPaid">
-              <ion-label style="font-weight: bold;" color="danger">Á pagar</ion-label>
-            </ion-segment-button>
-            <ion-segment-button value="paid">
-              <ion-label style="font-weight: bold;" color="success">Pagos</ion-label>
-            </ion-segment-button>
-          </ion-segment>
-
-            <ion-slides ref="slides" v-if="slideDatesExp.length > 0" :options="slideOpts" @ionSlideDidChange="slideChanged($event)">
-              <ion-slide style="min-height: 100vh" v-for="p in slideDatesExp" :key="p">
-                <ion-row>
-                  <ion-col size="12">
-                    <ion-label color="light">{{p}}</ion-label><br>
-                    <ion-card>
-                      <ion-card-title class="ion-text-center">
-                        Gastos do mês
-                      </ion-card-title>
-                      <ion-card-content>
-                        <ion-row style="font-weight: bold">
-                          <ion-col @click="sort('description')">
-                            <ion-label>Descricao</ion-label>
-                          </ion-col>
-                          <ion-col @click="sort('category')">
-                            <ion-label>Categoria</ion-label>
-                          </ion-col>
-                          <ion-col @click="sort('price')" class="ion-text-right">
-                            <ion-label>Valor</ion-label>
-                          </ion-col>
-                          <ion-item-divider></ion-item-divider>
-                        </ion-row>
-                        <ion-row  v-for="item in expenses" :key="item" @click="saveOrUpdateAlert(item)">
-                          <ion-col>
-                            <ion-label>{{item.description}}</ion-label>
-                          </ion-col>
-                          <ion-col>
-                            <ion-label>{{item.category ? item.category : '-'}}</ion-label>
-                          </ion-col>
-                          <ion-col class="ion-text-right">
-                            <ion-label>{{formatMoney(item.price)}}</ion-label>
-                          </ion-col>
-                          <ion-item-divider></ion-item-divider>
-                        </ion-row>
-                      </ion-card-content>
-                    </ion-card>
-                    <ion-label v-if="expenses.length === 0" color="light">Nada por aqui</ion-label>
-                  </ion-col>
-                </ion-row>
-              </ion-slide>
-            </ion-slides>
-        </ion-col>
-      </ion-row>
+      <ion-card>
+        <ion-card-title class="ion-text-center">
+          Entradas
+        </ion-card-title>
+        <ion-card-content>
+          <ion-row  v-for="item in groupByDebtor" :key="item" @click="showInfoReceivables(item.debtor)">
+            <ion-col>
+              <ion-label>{{item.debtor}}</ion-label>
+            </ion-col>
+            <ion-col class="ion-text-right">
+              <ion-label>{{formatMoney(item.price)}}</ion-label>
+            </ion-col>
+            <ion-item-divider></ion-item-divider>
+          </ion-row>
+          <ion-row style="font-weight: bold">
+            <ion-col>
+              <ion-label>Total:</ion-label>
+            </ion-col>
+            <ion-col class="ion-text-right">
+              <ion-label>{{formatMoney(totalExp)}}</ion-label>
+            </ion-col>
+          </ion-row>
+        </ion-card-content>
+      </ion-card>
       
       <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-        <ion-fab-button color="dark" @click="saveOrUpdateAlert()" style="font-size: 30px">+</ion-fab-button>
+        <ion-fab-button color="dark" @click="saveOrUpdateAlertIn()" style="font-size: 30px">+</ion-fab-button>
       </ion-fab>
     </ion-content>
   </ion-page>
 </template>
 
 <script>
-import { getDataByDescription, getDataById, getUnPaid, update, insert, getPaid, getDatesExpenses } from '../models/expense'
-import { addZero, getMonths, getNextMonthInt, expRef, getActualYear, toReceiveRef, userRef, dates, sumElements, sum} from '../Helper'
-import { doc, updateDoc, onSnapshot, addDoc, deleteDoc, Timestamp, arrayUnion} from "firebase/firestore";
-import { alertController, actionSheetController, IonFabButton, IonFab, IonCard, IonSegment, IonSegmentButton, IonToolbar} from "@ionic/vue";
+import { 
+  update, 
+  insert, 
+  getPaid, 
+  getUnPaid, 
+  getDatesExpenses,
+  getDataByDescription,
+} from '../models/expense'
+
+import {
+  insertReceivable,
+  updateReceivable,
+  getDataByDebtorId,
+  dataInMonthGroupByDebtor,
+  getDataByDebtor
+} from '../models/receivables'
+
+import {
+  getPersons
+} from '../models/persons'
+
+import { 
+  sum,
+  dates, 
+  expRef, 
+  userRef, 
+  addZero, 
+  getMonths, 
+  sumElements
+} from '../Helper'
+import { 
+  doc, 
+  addDoc, 
+  deleteDoc, 
+  Timestamp, 
+  updateDoc, 
+  arrayUnion 
+} from "firebase/firestore";
+
+import { 
+  IonFab, 
+  IonCard, 
+  IonToolbar,
+  IonFabButton, 
+  alertController, 
+  actionSheetController, 
+} from "@ionic/vue";
+
 import TollbarComponent from '../components/TollbarComponent.vue'
-import { arrowForwardCircle } from 'ionicons/icons';
+
+import { 
+  arrowForwardCircle 
+} from 'ionicons/icons';
+
 import Swal from 'sweetalert2'
 
+import eventBus from '../eventBus'
+
 export default {
-  components:{ TollbarComponent, IonFabButton, IonFab, IonCard, IonSegment, IonSegmentButton, IonToolbar},
+  components:{ 
+    IonFab, 
+    IonCard, 
+    IonToolbar,
+    IonFabButton, 
+    TollbarComponent, 
+  },
   data: () => {
     return {
-      tab: 'toPaid',
+      groupByDebtor: [],
+      tab: 'tab1',
       filter: 'description',
       monthYear: dates(null, 'yyyy-mm', 1),
       totalPaid: 0,
@@ -115,9 +142,182 @@ export default {
 
   async mounted(){
     this.actualizeData()
+
+    this.yearMonth = dates(null, 'yyyy-mm', 1);
+    eventBus().emitter.on("changeMonthSelect", async (e)=>{
+      this.yearMonth = e
+      await this.loadAllData()
+    });
+    this.loadAllData()
   },
 
   methods: {
+    async showInfoReceivables(debtor = null){
+      let array = []
+      if(debtor){
+        array = await getDataByDebtor(this.yearMonth,debtor)
+      }else{
+        array = this.groupByDebtor
+      }
+
+      let html = `<div id="${debtor ? 'tableReceivables2' : 'tableReceivables'}" class="container">`
+      html += `<h4>${debtor}</h4>`
+          array.forEach(element => {
+            html +=`
+              <div id="row" class="row">
+                <div style="display: none" class="col-6 ion-text-left">${debtor ? element._id : ''}</div>
+                <div class="col-6 ion-text-left">${element.description? element.description : '-'}</div>
+                <div class="col-6 ion-text-right">${this.formatMoney(element.price)}</div>
+              </div>
+              <hr>
+            `
+          });
+
+          html+=`</div>`;
+      
+      Swal.fire({
+        html: html,
+        showCloseButton: true,
+        showConfirmButton: true,
+        didOpen:()=>{
+          if(debtor){
+            this.addRowHandlersReceiv2()
+          }else{
+            this.addRowHandlersReceiv()
+          }
+        }
+      }).then((values)=>{
+        if(values.isConfirmed){
+          this.saveOrUpdateAlertIn()
+        }
+      })
+    },
+
+    addRowHandlersReceiv() {
+      const table = document.getElementById("tableReceivables");
+      const rows = table.getElementsByClassName("row");
+
+      let i;
+      for (i = 0; i < rows.length; i++) {
+        const currentRow = rows[i];
+        const createClickHandler = (row) => {
+          return () => {
+            const cell = row.getElementsByClassName("col-6")[1];
+            const id = cell.innerHTML;
+            
+            this.showInfoReceivables(id, true)
+          };
+        };
+        currentRow.onclick = createClickHandler(currentRow);
+      }
+    },
+
+    addRowHandlersReceiv2() {
+      const table = document.getElementById("tableReceivables2");
+      const rows = table.getElementsByClassName("row");
+
+      let i;
+      for (i = 0; i < rows.length; i++) {
+        const currentRow = rows[i];
+        const createClickHandler = (row) => {
+          return () => {
+            const cell = row.getElementsByClassName("col-6")[0];
+            const id = cell.innerHTML;
+            this.saveOrUpdateAlertIn(id, true)
+          };
+        };
+        currentRow.onclick = createClickHandler(currentRow);
+      }
+    },
+
+    async saveOrUpdateAlertIn(doc= null, getById = false){
+      if(getById){
+        doc = await getDataByDebtorId(this.yearMonth, doc)
+      }
+
+      const expiration = dates(Date.now(), null, 1)
+
+      let html = ``
+
+      const debtors = await getPersons()
+      html+= `<select style="font-size: 16px" class="swal2-input" value="" name="debtor" id="debtor">`;
+      html += `<option value="">Selecione</option>`;
+      debtors.forEach(c => {
+        const selected = (doc && c === doc.debtor) ? 'selected' : ''
+        html += `<option value="${c}" ${selected}>${c}</option>`;
+      });
+      html += `</select>`;
+
+      html += `
+        <input style="font-size: 16px" placeholder="Descrição" id="description" type="text" value="${doc ? doc.description : ''}" class="swal2-input">
+        <input style="font-size: 16px" placeholder="Valor" id="price" type="number" value="${doc ? doc.price : ''}" class="swal2-input">
+        <input style="font-size: 16px" placeholder="Parcelas" id="parcel" type="number" value="${doc ? doc.parcel : '1'}" class="swal2-input">
+      `;
+
+      html += `<input style="font-size: 16px" value="${doc ? doc.expiration : expiration}" id="expiration " type="date" class="swal2-input">`
+      
+      
+      Swal.fire({
+        title: doc ? 'Editar' : 'Novo registro',
+        html: html,
+        didOpen:()=>{
+          const price = document.getElementById('price')
+
+          price.setAttribute('autocomplete', 'off')
+          price.focus()
+        },
+        showDenyButton: true,
+        showCancelButton: true,
+        cancelButtonText:'Pagar',
+        denyButtonText:'Excluir',
+        confirmButtonText: 'Salvar',
+        confirmButtonColor: 'green',
+        cancelButtonColor: 'blue',
+        showCloseButton: true,
+        preConfirm:()=>{
+          const price = document.getElementById('price').value
+          const description = document.getElementById('description').value
+          const debtor = document.getElementById('debtor').value
+          const expiration = document.querySelector('input[type="date"]').value
+
+          if(description == '' || price == '' || expiration == '' || debtor == ''){
+            Swal.showValidationMessage('Preencha todos os campos')
+          }
+        }
+      }).then((values)=>{
+        if(values.isConfirmed){
+          const price = document.getElementById('price').value
+          const description = document.getElementById('description').value
+          const expiration = document.querySelector('input[type="date"]').value
+          const debtor = document.getElementById('debtor').value
+          const parcel = document.getElementById('parcel').value
+          
+          if(doc){
+            doc.price = price
+            doc.expiration = expiration
+            doc.debtor = debtor
+            doc.description = description
+            updateReceivable(doc)
+          }else{
+            insertReceivable({
+              price: price,
+              description: description,
+              expiration: expiration,
+              debtor: debtor,
+              parcel: parseInt(parcel)
+            })
+          }
+        }else if(values.isDenied){
+          doc.deletedAt = dates(null, 'yyyy-mm-dd')
+          updateReceivable(doc)
+        }else if(values.dismiss == 'cancel'){
+          doc.paid = !doc.paid
+          updateReceivable(doc)
+        }
+        this.loadAllData()
+      })
+    },
+
     sort(sort){
       if(sort == 'description'){
         this.expenses.sort((a, b) =>{
@@ -153,89 +353,10 @@ export default {
       return getMonths(monthIndex)
     },
 
-    loadAllData(year = null, month = null){
-      let teste = false;
-      if(!year && !month){
-        teste = true;
-        month = getNextMonthInt();
-        year = getActualYear()
-  
-        if(month === 12){
-          year = getActualYear() + 1
-        }
-      }
-
-      onSnapshot(userRef(), (userSnapshot) => {
-        if(teste){
-          this.slideDatesExp = userSnapshot.data().slideDatesExp
-        }
-      })
-
-      // load expenses data
-      onSnapshot(expRef(year, month), (expSnapshot) => {
-        this.expenses = []
-        expSnapshot.docs.forEach((doc)=>{
-          const e = doc.data()
-          e.id = doc.id
-
-          if(this.tab === 'toPaid'){
-            if(!e.scratch){
-              this.expenses.push(e)
-            }
-          }else{
-            if(e.scratch){
-              this.expenses.push(e)
-            }
-          }
-        })
-
-
-        this.expenses.sort((a, b) => {
-          return  b.price - a.price;
-        })
-
-        this.expenses.sort((a, b) => {
-          if(!a.scratch){
-            a.scratch = false
-          }
-
-          if(!b.scratch){
-            b.scratch = false
-          }
-          return  a.scratch - b.scratch;
-        })
-      })
-
-      // load toReceiveData
-      onSnapshot(toReceiveRef(year, month), (toReceiveSnapShot) => {
-        this.toReceives = []
-        toReceiveSnapShot.docs.forEach((doc)=>{
-          const e = doc.data()
-          e.id = doc.id
-          this.toReceives.push(e)
-        })
-      })
-
-      setTimeout(()=>{
-        const date = dates(Date.now())
-        const index = this.slideDatesExp.findIndex(x => (x.month === date.month && x.year === date.year));
-
-        if(this.allStratched){
-          this.slideOpts.initialSlide = index + 1
-        }else{
-          this.slideOpts.initialSlide = index
-        }
-
-        this.expenses.sort((a, b) => {
-          return  b.price - a.price;
-        })
-
-        this.expenses.sort((a, b) => {
-          return  a.scratch - b.scratch;
-        })
-
-        this.loaded = true
-      }, 2000)
+    async loadAllData(){
+      this.groupByDebtor = await dataInMonthGroupByDebtor(this.yearMonth)
+      
+      eventBus().emitter.emit("loadAllData", true);
     },
 
     async slideChanged(e){

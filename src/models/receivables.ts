@@ -92,6 +92,29 @@ export function getDates(){
     })
 }
 
+export function getDatesReceivables(){
+    return new Promise((resolve) =>{
+        db.find({model: model}, {expiration: 1, _id: 0}, function (err: any, docs: any) {
+            const response: Array<string> = []
+
+            response.push(dates(null, 'yyyy-mm', 1))
+
+            docs.forEach((e: any) => {
+                const date = dates(e.expiration, 'yyyy-mm')
+                if(!response.includes(date)){
+                    response.push(date)
+                }
+            });
+
+            response.sort((a: string, b: string)=>{
+                return new Date(a).getTime() - new Date(b).getTime() // reverse chronological order
+            });
+        
+            resolve(response)
+        });
+    })
+}
+
 export function dataInMonthGroupByDebtor(yearMonth: string){
     return new Promise((resolve) =>{
         db.find({deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
