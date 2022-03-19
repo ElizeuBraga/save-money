@@ -144,9 +144,9 @@ export default {
     this.actualizeData()
 
     this.yearMonth = dates(null, 'yyyy-mm', 1);
-    eventBus().emitter.on("changeMonthSelect", async (e)=>{
+    eventBus().emitter.on("changeMonthSelect", (e)=>{
       this.yearMonth = e
-      await this.loadAllData()
+      this.loadAllData()
     });
     this.loadAllData()
   },

@@ -63,6 +63,10 @@ export default {
   mounted(){
     this.defaultmonth = dates(null, 'yyyy-mm', 1);
     this.loadAllData()
+
+    eventBus().emitter.on("loadAllData", ()=>{
+      this.loadAllData()
+    });
   },
 
   methods:{
@@ -76,10 +80,6 @@ export default {
       const totalDeb = sum(await dataInMonthGroupByDebtor(this.defaultmonth), 'price')
       const totalExp = sum(await dataInMonthGroupByPayment(this.defaultmonth), 'price')
       this.total = (totalDeb - totalExp);
-
-      eventBus().emitter.on("loadAllData", ()=>{
-        this.loadAllData()
-      });
     },
 
     sendEvent(e){
