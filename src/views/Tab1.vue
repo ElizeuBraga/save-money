@@ -88,7 +88,6 @@
       </ion-card>
     </ion-content>
     <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-      <ion-fab-button color="dark" @click="insertOrUpdatePerson()" style="font-size: 30px">P</ion-fab-button>
       <ion-fab-button color="dark" @click="saveOrUpdateAlert()" style="font-size: 30px">-</ion-fab-button>
     </ion-fab>
   </ion-page>
@@ -315,36 +314,6 @@ export default {
           update(doc)
         }
         this.loadAllData()
-      })
-    },
-
-    async insertOrUpdatePerson(person= null){
-      Swal.fire({
-        title: person ? person.name : 'Nova pessoa',
-        input: 'text',
-        showCancelButton: true,
-        cancelButtonText:'Cancelar',
-        confirmButtonText: 'Salvar',
-        confirmButtonColor: 'green',
-        cancelButtonColor: 'blue',
-        showCloseButton: true,
-        preConfirm:(value)=>{
-          if(value === ''){
-            Swal.showValidationMessage('Informe o nome')
-          }
-        }
-      }).then(async (values)=>{
-        if(values.isConfirmed){
-          if(person){
-            updatePerson(person)
-          }else{
-            insertPerson({
-              name: values.value
-            })
-          }
-        }
-
-        console.log(await getPersons())
       })
     },
 
