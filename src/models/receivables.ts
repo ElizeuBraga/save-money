@@ -53,6 +53,10 @@ export function updateReceivable(doc: Receivable){
     db.update({ _id: doc._id }, { $set: doc });
 }
 
+export function updateReceivablePerson(oldDebtor: string, newDebtor: string){
+    db.update({ debtor: oldDebtor }, { $set: {debtor: newDebtor, updatedAt: dates(Date.now(), 'yyyy-mm-dd')}}, {multi: true});
+}
+
 export function getPaid(yearMonth: string){
     return new Promise((resolve) =>{
         db.find({paid: true, deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {

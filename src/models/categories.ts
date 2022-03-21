@@ -1,13 +1,13 @@
 import Datastore from 'nedb'
 import {dates} from '../Helper'
 const db = new Datastore({ filename: 'src/database/db.db', autoload: true })
-const model = 'persons'
+const model = 'categories'
 
 interface Person {
     name: string;
 }
 
-export function insertPerson(doc: any){
+export function insertCategory(doc: any){
     return new Promise((resolve) =>{
         doc.createdAt = dates(Date.now(), 'yyyy-mm-dd')
         doc.deletedAt = null
@@ -19,12 +19,12 @@ export function insertPerson(doc: any){
     })
 }
 
-export function updatePerson(doc: any){
+export function updateCategory(doc: any){
     doc.updatedAt = dates(Date.now(), 'yyyy-mm-dd')
     db.update({ _id: doc._id }, { $set: doc });
 }
 
-export function getPersonById(id: string){
+export function getCategoryById(id: string){
     return new Promise((resolve) =>{
         db.find({_id: id, model: model}, function (err: any, docs: any) {
             resolve(docs[0])
@@ -32,7 +32,7 @@ export function getPersonById(id: string){
     })
 }
 
-export function getPersonByName(name: string){
+export function getCategoryByName(name: string){
     return new Promise((resolve) =>{
         db.find({name: name, model: model}, function (err: any, docs: any) {
             resolve(docs[0])
@@ -40,7 +40,7 @@ export function getPersonByName(name: string){
     })
 }
 
-export function getPersons(){
+export function getCategorys(){
     return new Promise((resolve) =>{
         const response: Array<string> = []
         db.find({model: model}, function (err: any, docs: any) {
@@ -52,7 +52,7 @@ export function getPersons(){
     })
 }
 
-export function getAllPersons(){
+export function getAllCategorys(){
     return new Promise((resolve) =>{
         const response: Array<string> = []
         db.find({model: model}, function (err: any, docs: any) {

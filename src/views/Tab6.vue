@@ -4,18 +4,15 @@
       <ion-toolbar color="dark">
         <ion-row>
           <ion-col>
-            <ion-label>Pessoas</ion-label>
+            <ion-label>Categorias</ion-label>
           </ion-col>
         </ion-row>
       </ion-toolbar>
     </ion-header>
     <ion-content :fullscreen="true">
       <ion-card>
-        <ion-card-title class="ion-text-center">
-          Pessoas
-        </ion-card-title>
         <ion-card-content>
-          <ion-row  v-for="item in persons" :key="item" @click="insertOrUpdatePerson(item)">
+          <ion-row  v-for="item in categories" :key="item" @click="insertOrUpdateRole(item)">
             <ion-col>
               <ion-label>{{item.name ? item.name : '-'}}</ion-label>
             </ion-col>
@@ -28,7 +25,7 @@
       </ion-card>
 
       <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-        <ion-fab-button color="dark" @click="insertOrUpdatePerson()" style="font-size: 30px">+</ion-fab-button>
+        <ion-fab-button color="dark" @click="insertOrUpdateRole()" style="font-size: 30px">+</ion-fab-button>
       </ion-fab>
     </ion-content>
   </ion-page>
@@ -39,13 +36,13 @@ import { IonPage,IonHeader,IonToolbar,IonContent,IonLabel} from '@ionic/vue';
 import { peopleOutline, arrowForwardOutline} from 'ionicons/icons';
 import Swal from 'sweetalert2'
 import {
-  getAllPersons,
-  updatePerson,
-  insertPerson
-} from '../models/persons'
+  getAllCategorys,
+  updateCategory,
+  insertCategory
+} from '../models/categories'
 
 import {
-  updateReceivablePerson
+  // updateReceivablePerson
 } from '../models/receivables'
 // import TollbarComponent from '../components/TollbarComponent.vue'
 
@@ -60,18 +57,22 @@ export default  {
 
   data:()=>{
     return {
-      persons: []
+      categories: []
     }
   },
 
   async mounted(){
-    this.persons = await getAllPersons() 
+    this.loadAllData()
   },
 
   methods:{
-    async insertOrUpdatePerson(person= null){
+    async loadAllData(){
+      this.categories = await getAllCategorys() 
+    },
+
+    async insertOrUpdateRole(category= null){
       Swal.fire({
-        title: person ? person.name : 'Nova pessoa',
+        title: category ? category.name : 'Nova categoria',
         input: 'text',
         showCancelButton: true,
         cancelButtonText:'Cancelar',
@@ -79,7 +80,7 @@ export default  {
         confirmButtonColor: 'green',
         cancelButtonColor: 'blue',
         showCloseButton: true,
-        inputValue: person ? person.name : '',
+        inputValue: category ? category.name : '',
         preConfirm:(value)=>{
           if(value === ''){
             Swal.showValidationMessage('Informe o nome')
@@ -87,15 +88,17 @@ export default  {
         }
       }).then(async (values)=>{
         if(values.isConfirmed){
-          if(person){
-            updateReceivablePerson(person.name, values.value)
-            person.name = values.value
-            updatePerson(person)
+          if(category){
+            // updateReceivablePerson(category.name, values.value)
+            category.name = values.value
+            updateCategory(category)
           }else{
-            insertPerson({
+            insertCategory({
               name: values.value
             })
           }
+
+          this.loadAllData()
         }
       })
     },

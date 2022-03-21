@@ -12,10 +12,10 @@
           <ion-label>Entradas</ion-label>
         </ion-tab-button>
         
-        <!-- <ion-tab-button tab="tab3" href="/tabs/tab3">
+        <ion-tab-button tab="tab3" href="/tabs/tab3">
           <ion-icon :icon="menu" />
           <ion-label>Menu</ion-label>
-        </ion-tab-button> -->
+        </ion-tab-button>
       </ion-tab-bar>
     </ion-tabs>
   </ion-page>
