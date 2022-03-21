@@ -88,7 +88,7 @@
       </ion-card>
     </ion-content>
     <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-      <ion-fab-button color="dark" @click="saveOrUpdateAlert()" style="font-size: 30px">-</ion-fab-button>
+      <ion-fab-button color="dark" @click="saveOrUpdateAlert()" style="font-size: 30px">+</ion-fab-button>
     </ion-fab>
   </ion-page>
 </template>
