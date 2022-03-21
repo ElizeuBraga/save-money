@@ -40,22 +40,29 @@ export function getRoleByName(name: string){
     })
 }
 
-export function getRoles(){
+export function getRules(){
     return new Promise((resolve) =>{
         const response: Array<string> = []
         db.find({model: model}, function (err: any, docs: any) {
             docs.forEach((element: Person) => {
                 response.push(element.name)
             });
+
+            response.sort((a, b)=>{
+                return parseInt(b) - parseInt(a)
+            })
             resolve(response)
         });
     })
 }
 
-export function getAllRoles(){
+export function getAllRules(){
     return new Promise((resolve) =>{
         const response: Array<string> = []
         db.find({model: model}, function (err: any, docs: any) {
+            docs.sort((a: any, b: any)=>{
+                return parseInt(b.name) - parseInt(a.name)
+            })
             resolve(docs)
         });
     })

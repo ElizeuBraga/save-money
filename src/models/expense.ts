@@ -12,6 +12,8 @@ interface Expense {
     model: string;
     expiration: string;
     parcel: number;
+    rule: string;
+    category: string;
 }
 
 export function insert(doc: Expense){
@@ -118,6 +120,25 @@ export function dataInMonthGroupByCategory(yearMonth: string){
     })
 }
 
+export function dataInMonthGroupByRule(yearMonth: string){
+    return new Promise((resolve) =>{
+        db.find({deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
+            const result: any = []
+            docs.reduce(function(res: any, value: any) {
+                if (!res[value.rule]) {
+                    res[value.rule] = {rule: value.rule, price: 0, quantity: 0};
+                    result.push(res[value.rule])
+                }
+                res[value.rule].price += parseFloat(value.price);
+                res[value.rule].quantity += 1
+                return res;
+            }, {});
+
+            resolve(result)
+        });
+    })
+}
+
 export function dataInMonthGroupByPayment(yearMonth: string){
     return new Promise((resolve) =>{
         db.find({deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
@@ -194,6 +215,20 @@ export function getDataByProduct(yearMonth: string, product: string){
         expiration: new RegExp(yearMonth), 
         model: model,
         description: product
+    }
+    return new Promise((resolve) =>{
+        db.find(object, function (err: any, docs: any) {
+            resolve(docs)
+        });
+    })
+}
+
+export function getDataByRule(yearMonth: string, rule: string){
+    const object = {
+        deletedAt: null, 
+        expiration: new RegExp(yearMonth), 
+        model: model,
+        rule: rule
     }
     return new Promise((resolve) =>{
         db.find(object, function (err: any, docs: any) {

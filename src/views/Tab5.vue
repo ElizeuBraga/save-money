@@ -36,7 +36,7 @@ import { IonPage,IonHeader,IonToolbar,IonContent,IonLabel} from '@ionic/vue';
 import { peopleOutline, arrowForwardOutline} from 'ionicons/icons';
 import Swal from 'sweetalert2'
 import {
-  getAllRoles,
+  getAllRules,
   updateRole,
   insertRole
 } from '../models/rules'
@@ -67,7 +67,7 @@ export default  {
 
   methods:{
     async loadAllData(){
-      this.rules = await getAllRoles() 
+      this.rules = await getAllRules() 
     },
 
     async insertOrUpdateRole(rule= null){

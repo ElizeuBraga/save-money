@@ -36,18 +36,43 @@
 
       <ion-card>
         <ion-card-title class="ion-text-center">
-          Por categoria
+          Por regra
         </ion-card-title>
         <ion-card-content>
-          <ion-row  v-for="item in groupByCategory" :key="item" @click="showInfo(item, 'category')">
+          <ion-row  v-for="item in groupByRule" :key="item" @click="showInfo(item, 'rule')">
             <ion-col>
-              <ion-label :color="returnColor(item)">{{item.category ? item.category: '-'}}</ion-label>
+              <ion-label :color="returnColor(item)">{{item.rule ? item.rule: '-'}}</ion-label>
             </ion-col>
             <ion-col class="ion-text-center">
               <ion-label :color="returnColor(item)">{{calcPercentage(item.price)}}%</ion-label>
             </ion-col>
             <ion-col class="ion-text-right">
               <ion-label :color="returnColor(item)">{{formatMoney(item.price)}}</ion-label>
+            </ion-col>
+            <ion-item-divider></ion-item-divider>
+          </ion-row>
+          <ion-row style="font-weight: bold">
+            <ion-col>
+              <ion-label>Total:</ion-label>
+            </ion-col>
+            <ion-col class="ion-text-right">
+              <ion-label>{{formatMoney(totalExp)}}</ion-label>
+            </ion-col>
+          </ion-row>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card>
+        <ion-card-title class="ion-text-center">
+          Por categoria
+        </ion-card-title>
+        <ion-card-content>
+          <ion-row  v-for="item in groupByCategory" :key="item" @click="showInfo(item, 'category')">
+            <ion-col>
+              <ion-label>{{item.category ? item.category: '-'}}</ion-label>
+            </ion-col>
+            <ion-col class="ion-text-right">
+              <ion-label>{{formatMoney(item.price)}}</ion-label>
             </ion-col>
             <ion-item-divider></ion-item-divider>
           </ion-row>
@@ -112,13 +137,15 @@ import {
 } from "firebase/firestore";
 
 import { 
-  dataInMonthGroupByCategory, 
+  dataInMonthGroupByCategory,
+  dataInMonthGroupByRule,
   dataInMonthGroupByPayment, 
   dataInMonthGroupByProduct,  
   getDataByCategory, 
   getDataByPayment, 
   getDataByProduct, 
   getDatesExpenses,
+  getDataByRule,
   getDataById, 
   update, 
   insert
@@ -129,14 +156,19 @@ import {
   getDataByDebtorId,
   updateReceivable, 
   insertReceivable, 
-  getDataByDebtor, 
 } from '../models/receivables'
 
 import { 
-  insertPerson, 
-  updatePerson, 
   getPersons
 } from '../models/persons'
+
+import { 
+  getCategorys
+} from '../models/categories'
+
+import { 
+  getRules
+} from '../models/rules'
 
 import { 
   alertController,
@@ -161,6 +193,7 @@ export default {
     return {
       componentKey: 0,
       groupByCategory: [],
+      groupByRule: [],
       groupByPayment: [],
       groupByProduct: [],
       groupByDebtor: [],
@@ -241,7 +274,16 @@ export default {
       });
       html += `</select>`;
 
-      const categories = ['50', '30', '20']
+      const rules = await getRules() 
+      html+= `<select style="font-size: 16px" class="swal2-input" value="" name="rule" id="rule">`;
+      html += `<option value="">Selecione</option>`;
+      rules.forEach(c => {
+        const selected = (doc && c === doc.rule) ? 'selected' : ''
+        html += `<option value="${c}" ${selected}>${c}</option>`;
+      });
+      html += `</select>`;
+
+      const categories = await getCategorys()
       html+= `<select style="font-size: 16px" class="swal2-input" value="" name="category" id="category">`;
       html += `<option value="">Selecione</option>`;
       categories.forEach(c => {
@@ -275,8 +317,9 @@ export default {
           const expiration = document.querySelector('input[type="date"]').value
           const payment = document.getElementById('payment').value
           const category = document.getElementById('category').value
+          const rule = document.getElementById('rule').value
 
-          if(description == '' || price == '' || expiration == '' || payment == '' || category == ''){
+          if(description == '' || price == '' || expiration == '' || payment == '' || category == '' || rule == ''){
             Swal.showValidationMessage('Preencha todos os campos')
           }
         }
@@ -287,6 +330,7 @@ export default {
           const expiration = document.querySelector('input[type="date"]').value
           const payment = document.getElementById('payment').value
           const category = document.getElementById('category').value
+          const rule = document.getElementById('rule').value
           const parcel = document.getElementById('parcel').value
           
           if(doc){
@@ -295,6 +339,7 @@ export default {
             doc.expiration = expiration
             doc.payment = payment
             doc.category = category
+            doc.rule = rule
             update(doc)
           }else{
             insert({
@@ -302,6 +347,7 @@ export default {
               price: price,
               expiration: expiration,
               category: category,
+              rule: rule,
               payment: payment,
               parcel: parseInt(parcel)
             })
@@ -405,13 +451,16 @@ export default {
       let title = ''
       if(type === 'payment'){
         array = await getDataByPayment(this.yearMonth, item.payment)
-        title = item.payment
+        title = `Pagamento: ${item.payment}`
       }else if(type === 'category'){
         array = await getDataByCategory(this.yearMonth, item.category)
-        title = item.category
-      }else{
+        title = `Categoria: ${item.category}`
+      }else if (type === 'product'){
         array = await getDataByProduct(this.yearMonth, item.description)
-        title = item.description
+        title = `Produto: ${item.description}`
+      }else if(type === 'rule'){
+        array = await getDataByRule(this.yearMonth, item.rule)
+        title = `Regra: ${item.rule}`
       }
 
       let html = `<div id="tableExpenses" class="container">`
@@ -453,6 +502,11 @@ export default {
       this.groupByCategory = await dataInMonthGroupByCategory(this.yearMonth)
       this.groupByCategory.sort((a, b)=>{
         return parseInt(b.category) - parseInt(a.category)
+      })
+
+      this.groupByRule = await dataInMonthGroupByRule(this.yearMonth)
+      this.groupByRule.sort((a, b)=>{
+        return parseInt(b.rule) - parseInt(a.rule)
       })
 
       this.groupByProduct = await dataInMonthGroupByProduct(this.yearMonth)
