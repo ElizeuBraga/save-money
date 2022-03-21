@@ -465,6 +465,7 @@ export default {
 
       let html = `<div id="tableExpenses" class="container">`
           html += `<h3>${title}</h3>`
+          html +=``
           array.forEach(element => {
             html +=`
               <div id="row" class="row">
@@ -475,6 +476,11 @@ export default {
               <hr>
             `
           });
+          html+=`
+            <div id="row" class="row" style="font-weight: bold">
+              <div class="col-6 ion-text-left">Total:</div>
+              <div class="col-6 ion-text-right">${this.formatMoney(sum(array, 'price'))}</div>
+            </div>`;
 
           html+=`</div>`;
       
