@@ -300,7 +300,6 @@ export default {
           const price = document.getElementById('price')
 
           description.setAttribute('autocomplete', 'off')
-          description.focus()
           price.setAttribute('autocomplete', 'off')
         },
         showDenyButton: true,
