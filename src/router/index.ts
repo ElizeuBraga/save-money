@@ -9,21 +9,6 @@ const routes: Array<RouteRecordRaw> = [
     redirect: '/tabs/tab1'
   },
   {
-    name: 'Login',
-    path: '/login',
-    component: () => import('@/views/Login.vue')
-  },
-  {
-    name: 'Register',
-    path: '/register',
-    component: () => import('@/views/Register.vue')
-  },
-  {
-    name: 'RecoverPassword',
-    path: '/recoverPassword',
-    component: () => import('@/views/RecoverPassword.vue')
-  },
-  {
     path: '/tabs',
     component: Tabs,
     children: [
@@ -58,23 +43,7 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: 'tab7',
         component: () => import('@/views/Tab7.vue')
-      },
-      {
-        path: 'monthlyIncomes',
-        component: () => import('@/views/MonthlyIncomes.vue')
-      },
-      {
-        path: 'familyHelp',
-        component: () => import('@/views/FamilyHelp.vue')
-      },
-      {
-        path: 'user',
-        component: () => import('@/views/User.vue')
-      },
-      {
-        path: 'toReceiveFromThirdParties',
-        component: () => import('@/views/toReceiveFromThirdParties.vue')
-      },
+      }
     ]
   }
 ]
