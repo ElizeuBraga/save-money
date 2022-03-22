@@ -19,9 +19,6 @@
             <ion-col>
               <ion-label>{{item.name ? item.name : '-'}}</ion-label>
             </ion-col>
-            <!-- <ion-col class="ion-text-right">
-              <ion-label>{{formatMoney(item.price)}}</ion-label>
-            </ion-col> -->
             <ion-item-divider></ion-item-divider>
           </ion-row>
         </ion-card-content>
@@ -35,9 +32,16 @@
 </template>
 
 <script>
-import { IonPage,IonHeader,IonToolbar,IonContent,IonLabel} from '@ionic/vue';
-import { peopleOutline, arrowForwardOutline} from 'ionicons/icons';
+import { 
+  IonPage,
+  IonLabel,
+  IonHeader,
+  IonToolbar,
+  IonContent,
+} from '@ionic/vue';
+
 import Swal from 'sweetalert2'
+
 import {
   getAllPersons,
   updatePerson,
@@ -47,15 +51,15 @@ import {
 import {
   updateReceivablePerson
 } from '../models/receivables'
-// import TollbarComponent from '../components/TollbarComponent.vue'
 
 export default  {
   name: 'Tab3',
-  components: {IonPage,IonHeader,IonToolbar,IonContent,IonLabel},
-  setup(){
-    return{
-      peopleOutline, arrowForwardOutline
-    }
+  components: {
+    IonPage,
+    IonLabel,
+    IonHeader,
+    IonToolbar,
+    IonContent,
   },
 
   data:()=>{
