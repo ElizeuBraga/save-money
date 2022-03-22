@@ -1,8 +1,8 @@
 <template>
   <ion-row>
       <ion-col>
-        <ion-select @ionChange="sendEvent($event)" :selected-text="defaultmonth" :value="defaultmonth" interface="popover">
-          <ion-select-option v-for="m in months" :value="m" :key="m">{{m}}</ion-select-option>
+        <ion-select @ionChange="sendEvent($event)" :selected-text="returnMonthName(defaultmonth)" :value="defaultmonth" interface="popover">
+          <ion-select-option v-for="m in months" :value="m" :key="m">{{returnMonthName(m)}}</ion-select-option>
         </ion-select>
       </ion-col>
       <ion-col size="6" class="ion-text-right">
@@ -70,6 +70,37 @@ export default {
   },
 
   methods:{
+    returnMonthName(key){
+      switch (key.slice(-2)) {
+        case '01':
+          return 'Janeiro'
+        case '02':
+          return 'Fevereiro'
+        case '03':
+          return 'Março'
+        case '04':
+          return 'Abril'
+        case '05':
+          return 'Maio'
+        case '06':
+          return 'Junho'
+        case '07':
+          return 'Julho'
+        case '08':
+          return 'Agosto'
+        case '09':
+          return 'Setembro'
+        case '10':
+          return 'Outubro'
+        case '11':
+          return 'Novembro'
+        case '12':
+          return 'Dezembro'
+        default:
+          return key;
+      }
+    },
+
     async loadAllData(){
       if(this.tab === 'tab1'){
         this.months = await getDatesExpenses()
