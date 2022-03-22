@@ -28,7 +28,7 @@
               <ion-label>Total:</ion-label>
             </ion-col>
             <ion-col class="ion-text-right">
-              <ion-label>{{formatMoney(totalExp)}}</ion-label>
+              <ion-label>{{sum(groupByPayment)}}</ion-label>
             </ion-col>
           </ion-row>
         </ion-card-content>
@@ -56,7 +56,7 @@
               <ion-label>Total:</ion-label>
             </ion-col>
             <ion-col class="ion-text-right">
-              <ion-label>{{formatMoney(totalExp)}}</ion-label>
+              <ion-label>{{sum(groupByRule)}}</ion-label>
             </ion-col>
           </ion-row>
         </ion-card-content>
@@ -81,7 +81,7 @@
               <ion-label>Total:</ion-label>
             </ion-col>
             <ion-col class="ion-text-right">
-              <ion-label>{{formatMoney(totalExp)}}</ion-label>
+              <ion-label>{{sum(groupByCategory)}}</ion-label>
             </ion-col>
           </ion-row>
         </ion-card-content>
@@ -106,7 +106,7 @@
               <ion-label>Total:</ion-label>
             </ion-col>
             <ion-col class="ion-text-right">
-              <ion-label>{{formatMoney(totalExp)}}</ion-label>
+              <ion-label>{{sum(groupByProduct)}}</ion-label>
             </ion-col>
           </ion-row>
         </ion-card-content>
@@ -234,6 +234,10 @@ export default {
   },
 
   methods: {
+    sum(array){
+      return this.formatMoney(sum(array, 'price'))
+    },
+
     returnColor(item){
       if(item.category === '50'){
         if(this.calcPercentage(item.price) > 50){
