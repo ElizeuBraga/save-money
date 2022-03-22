@@ -47,26 +47,41 @@
 </template>
 
 <script lang="ts">
-import { IonPage,IonHeader,IonToolbar,IonTitle,IonContent,IonLabel,IonItem, IonList, IonIcon} from '@ionic/vue';
-import { peopleOutline, arrowForwardOutline} from 'ionicons/icons';
-// import TollbarComponent from '../components/TollbarComponent.vue'
+import { 
+  IonItem, 
+  IonList, 
+  IonIcon,
+  IonPage,
+  IonTitle,
+  IonLabel,
+  IonHeader,
+  IonToolbar,
+  IonContent,
+} from '@ionic/vue';
+
+import { 
+  peopleOutline, 
+  arrowForwardOutline
+} from 'ionicons/icons';
 
 export default  {
   name: 'Tab3',
-  components: {IonPage,IonHeader,IonToolbar,IonTitle,IonContent,IonLabel,IonItem, IonList, IonIcon},
+  components: {
+    IonItem, 
+    IonList, 
+    IonIcon,
+    IonPage,
+    IonTitle,
+    IonLabel,
+    IonHeader,
+    IonToolbar,
+    IonContent,
+  },
   setup(){
     return{
-      peopleOutline, arrowForwardOutline
+      peopleOutline, 
+      arrowForwardOutline
     }
   }
 }
 </script>
-<style scoped>
-  .wallet{
-    background: white;
-    border-radius: 15px;
-    padding: 3px 6px 3px 6px;
-    font-size: 20px!important;
-    font-weight: bold;
-  }
-</style>
