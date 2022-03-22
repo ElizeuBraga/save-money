@@ -806,8 +806,8 @@ ion-content {
 }
 
 ion-item-divider{
-  margin-top: 0px;
-  min-height: 1px!important;
+  margin-top: -10px;
+  min-height: 20px!important;
 }
 
 ion-content {
