@@ -226,10 +226,10 @@ export default {
         title: doc ? 'Editar' : 'Novo registro',
         html: html,
         didOpen:()=>{
+          const description = document.getElementById('description')
           const price = document.getElementById('price')
-
+          description.setAttribute('autocomplete', 'off')
           price.setAttribute('autocomplete', 'off')
-          price.focus()
         },
         showDenyButton: true,
         showCancelButton: true,

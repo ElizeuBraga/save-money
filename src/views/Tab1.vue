@@ -273,7 +273,6 @@ export default {
         didOpen:()=>{
           const description = document.getElementById('description')
           const price = document.getElementById('price')
-
           description.setAttribute('autocomplete', 'off')
           price.setAttribute('autocomplete', 'off')
         },
