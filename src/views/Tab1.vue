@@ -230,7 +230,7 @@ export default {
         doc = await getDataById(doc)
       }
 
-      const expiration = dates(Date.now(), null, 1)
+      const expiration = this.yearMonth + '-10'
 
       let html = `
         <input style="font-size: 16px" placeholder="Descrição" id="description" value="${doc ? doc.description : ''}" class="swal2-input">

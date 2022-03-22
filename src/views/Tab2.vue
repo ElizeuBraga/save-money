@@ -96,7 +96,7 @@ export default {
     IonCardContent, 
     TollbarComponent, 
   },
-  
+
   data: () => {
     return {
       groupByDebtor: [],
@@ -200,7 +200,7 @@ export default {
         doc = await getDataByDebtorId(this.yearMonth, doc)
       }
 
-      const expiration = dates(Date.now(), null, 1)
+      const expiration = this.yearMonth + '-10'
 
       let html = ``
 
