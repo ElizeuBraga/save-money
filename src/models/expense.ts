@@ -236,3 +236,18 @@ export function getDataByRule(yearMonth: string, rule: string){
         });
     })
 }
+
+export function getDeletedExpense(yearMonth: string){
+    const object = {
+        expiration: new RegExp(yearMonth), 
+        model: model,
+        deletedAt : { 
+            $ne : null
+        }
+    }
+    return new Promise((resolve) =>{
+        db.find(object, function (err: any, docs: any) {
+            resolve(docs)
+        });
+    })
+}
