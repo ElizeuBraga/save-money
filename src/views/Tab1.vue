@@ -126,15 +126,22 @@ import {
 } from '../Helper'
 
 import { 
-  IonFab, 
+  IonFab,
+  IonCol,
+  IonPage,
+  IonRow,
+  IonCard,
+  IonLabel,
+  IonHeader,
+  IonToolbar,
+  IonContent,
+  IonCardTitle,
   IonFabButton,
   IonItemDivider,
+  IonCardContent,
 } from "@ionic/vue";
 
 import { 
-  updateReceivable, 
-  insertReceivable, 
-  getDataByDebtorId,
   dataInMonthGroupByDebtor, 
 } from '../models/receivables'
 
@@ -153,7 +160,6 @@ import {
 } from '../models/expense'
 
 import { getRules } from '../models/rules'
-import { getPersons } from '../models/persons'
 import { getCategorys } from '../models/categories'
 
 import Swal from 'sweetalert2'
@@ -162,9 +168,19 @@ import TollbarComponent from '../components/TollbarComponent.vue'
 
 export default {
   components:{
-      IonFab, 
+      IonFab,
+      IonCol,
+      IonPage,
+      IonRow,
+      IonCard,
+      IonLabel,
+      IonHeader,
+      IonToolbar,
+      IonContent,
+      IonCardTitle,
       IonFabButton,
       IonItemDivider,
+      IonCardContent,
       TollbarComponent,
     },
   data: () => {

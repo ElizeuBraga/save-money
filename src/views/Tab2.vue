@@ -28,7 +28,7 @@
               <ion-label>Total:</ion-label>
             </ion-col>
             <ion-col class="ion-text-right">
-              <ion-label>{{formatMoney(totalExp)}}</ion-label>
+              <ion-label>{{sum(groupByDebtor)}}</ion-label>
             </ion-col>
           </ion-row>
         </ion-card-content>
@@ -53,14 +53,24 @@ import {
 import { getPersons } from '../models/persons'
 
 import { 
-  dates, 
+  sum,
+  dates
 } from '../Helper'
 
 import { 
-  IonFab, 
-  IonCard, 
+  IonFab,
+  IonCol,
+  IonPage,
+  IonRow,
+  IonCard,
+  IonLabel,
+  IonHeader,
   IonToolbar,
-  IonFabButton, 
+  IonContent,
+  IonCardTitle,
+  IonFabButton,
+  IonItemDivider,
+  IonCardContent, 
 } from "@ionic/vue";
 
 import TollbarComponent from '../components/TollbarComponent.vue'
@@ -71,12 +81,22 @@ import eventBus from '../eventBus'
 
 export default {
   components:{ 
-    IonFab, 
-    IonCard, 
+    IonFab,
+    IonCol,
+    IonPage,
+    IonRow,
+    IonCard,
+    IonLabel,
+    IonHeader,
     IonToolbar,
-    IonFabButton, 
+    IonContent,
+    IonCardTitle,
+    IonFabButton,
+    IonItemDivider,
+    IonCardContent, 
     TollbarComponent, 
   },
+  
   data: () => {
     return {
       groupByDebtor: [],
@@ -93,6 +113,10 @@ export default {
   },
 
   methods: {
+    sum(array){
+      return this.formatMoney(sum(array, 'price'))
+    },
+
     async showInfoReceivables(debtor = null){
       let array = []
       if(debtor){

@@ -1,4 +1,3 @@
-import { getAuth, onAuthStateChanged} from "firebase/auth";
 import { createRouter, createWebHistory } from '@ionic/vue-router';
 import { RouteRecordRaw } from 'vue-router';
 import Tabs from '../views/Tabs.vue'
@@ -43,7 +42,7 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: 'tab7',
         component: () => import('@/views/Tab7.vue')
-      }
+      },
     ]
   }
 ]

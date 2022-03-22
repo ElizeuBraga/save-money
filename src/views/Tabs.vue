@@ -21,34 +21,38 @@
   </ion-page>
 </template>
 
-<script lang="ts">
-import { IonTabs, IonPage, IonTabBar, IonTabButton, IonIcon, IonLabel } from '@ionic/vue';
-import { trendingUp, add, menu, arrowUp, arrowDown} from 'ionicons/icons';
-import eventBus from '../eventBus'
+<script>
+import { 
+  IonTabs, 
+  IonPage, 
+  IonIcon, 
+  IonLabel ,
+  IonTabBar, 
+  IonTabButton, 
+} from '@ionic/vue';
+
+import {  
+  menu, 
+  arrowUp, 
+  arrowDown,
+} from 'ionicons/icons';
 
 export default {
   name: 'Tabs',
-  components: {IonTabs, IonPage, IonTabBar, IonTabButton, IonIcon, IonLabel},
+  components: {
+    IonTabs, 
+    IonPage, 
+    IonIcon, 
+    IonLabel ,
+    IonTabBar, 
+    IonTabButton,
+  },
   setup() {
     return {
-      trendingUp,
-      add,
       menu,
+      arrowUp,
       arrowDown,
-      arrowUp
-    }
-  },
-
-  methods:{
-    tabChanged(){
-      eventBus().emitter.emit("tabChanged");
-    },
-
-    openModalNewExpense(){
-      eventBus().emitter.emit("openModalNewExpense");
     }
   }
-
-  // VUE_APP_API_URL=http://192.168.1.87:3000  
 }
 </script>
