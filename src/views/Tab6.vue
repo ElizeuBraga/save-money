@@ -32,27 +32,30 @@
 </template>
 
 <script>
-import { IonPage,IonHeader,IonToolbar,IonContent,IonLabel} from '@ionic/vue';
-import { peopleOutline, arrowForwardOutline} from 'ionicons/icons';
+import { 
+  IonPage,
+  IonLabel,
+  IonHeader,
+  IonToolbar,
+  IonContent,
+} from '@ionic/vue';
+
 import Swal from 'sweetalert2'
+
 import {
   getAllCategorys,
   updateCategory,
   insertCategory
 } from '../models/categories'
 
-import {
-  // updateReceivablePerson
-} from '../models/receivables'
-// import TollbarComponent from '../components/TollbarComponent.vue'
-
 export default  {
   name: 'Tab3',
-  components: {IonPage,IonHeader,IonToolbar,IonContent,IonLabel},
-  setup(){
-    return{
-      peopleOutline, arrowForwardOutline
-    }
+  components: {
+    IonPage,
+    IonLabel,
+    IonHeader,
+    IonToolbar,
+    IonContent,
   },
 
   data:()=>{
@@ -89,7 +92,6 @@ export default  {
       }).then(async (values)=>{
         if(values.isConfirmed){
           if(category){
-            // updateReceivablePerson(category.name, values.value)
             category.name = values.value
             updateCategory(category)
           }else{
