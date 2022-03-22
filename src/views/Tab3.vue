@@ -41,6 +41,12 @@
             <ion-router-link color="black" href="/tabs/tab7">Itens excluídos</ion-router-link>
           </ion-label>
         </ion-item>
+        <ion-item>
+          <ion-icon color="primary" :icon="peopleOutline" />
+          <ion-label style="margin-left:5px">
+            <ion-router-link color="black" href="/tabs/tab8">Formas de pagamento</ion-router-link>
+          </ion-label>
+        </ion-item>
       </ion-list>
     </ion-content>
   </ion-page>

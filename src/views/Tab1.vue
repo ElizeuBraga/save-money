@@ -161,6 +161,7 @@ import {
 
 import { getRules } from '../models/rules'
 import { getCategorys } from '../models/categories'
+import { getPayments } from '../models/payments'
 
 import Swal from 'sweetalert2'
 import eventBus from '../eventBus'
@@ -240,7 +241,7 @@ export default {
 
       html += `<input style="font-size: 16px" value="${doc ? doc.expiration : expiration}" id="expiration " type="date" class="swal2-input">`
       
-      const payments = ['Crédito', 'Débito', 'Reserva']
+      const payments = await getPayments() 
       html+= `<select style="font-size: 16px" class="swal2-input" value="" name="payment" id="payment">`;
       html += `<option value="">Selecione</option>`;
       payments.forEach(c => {
