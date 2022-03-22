@@ -119,108 +119,63 @@
 </template>
 
 <script>
+
 import {
-  getActualMonthInt, 
-  getNextMonthIndex, 
-  formatInputRealV3, 
-  formatInputReal, 
-  getMonths, 
-  userRef, 
-  dates, 
   sum,
+  dates, 
 } from '../Helper'
 
-import {
-  arrayUnion, 
-  updateDoc, 
-  Timestamp, 
-} from "firebase/firestore";
+import { 
+  IonFab, 
+  IonFabButton,
+  IonItemDivider,
+} from "@ionic/vue";
 
 import { 
-  dataInMonthGroupByCategory,
-  dataInMonthGroupByRule,
-  dataInMonthGroupByPayment, 
-  dataInMonthGroupByProduct,  
-  getDataByCategory, 
-  getDataByPayment, 
-  getDataByProduct, 
-  getDatesExpenses,
-  getDataByRule,
-  getDataById, 
-  update, 
-  insert
-} from '../models/expense'
-
-import { 
-  dataInMonthGroupByDebtor, 
-  getDataByDebtorId,
   updateReceivable, 
   insertReceivable, 
+  getDataByDebtorId,
+  dataInMonthGroupByDebtor, 
 } from '../models/receivables'
 
 import { 
-  getPersons
-} from '../models/persons'
+  update, 
+  insert,
+  getDataById, 
+  getDataByRule,
+  getDataByPayment, 
+  getDataByProduct, 
+  getDataByCategory, 
+  dataInMonthGroupByRule,
+  dataInMonthGroupByPayment, 
+  dataInMonthGroupByProduct,  
+  dataInMonthGroupByCategory,
+} from '../models/expense'
 
-import { 
-  getCategorys
-} from '../models/categories'
-
-import { 
-  getRules
-} from '../models/rules'
-
-import { 
-  alertController,
-  IonItemDivider,
-  IonFab, 
-  IonFabButton
-} from "@ionic/vue";
-
-import TollbarComponent from '../components/TollbarComponent.vue'
+import { getRules } from '../models/rules'
+import { getPersons } from '../models/persons'
+import { getCategorys } from '../models/categories'
 
 import Swal from 'sweetalert2'
 import eventBus from '../eventBus'
+import TollbarComponent from '../components/TollbarComponent.vue'
 
 export default {
   components:{
-      TollbarComponent,
-      IonItemDivider,
       IonFab, 
-      IonFabButton
+      IonFabButton,
+      IonItemDivider,
+      TollbarComponent,
     },
   data: () => {
     return {
-      componentKey: 0,
-      groupByCategory: [],
-      groupByRule: [],
-      groupByPayment: [],
-      groupByProduct: [],
-      groupByDebtor: [],
-      totalExp: 0,
       totalDeb: 0,
       yearMonth: '',
-      monthToShow: getActualMonthInt(),
-      slideOpts:{
-        initialSlide: getNextMonthIndex(),
-        speed: 400
-      },
-      name: '',
-      months: [],
-      loaded: false,
-      emergencyReserveGoal: 0,
-      emergencyReserveReached: 0,
-      expenses: [],
-      toReceives:[],
-
-      milliseconds: Timestamp.now().toMillis(),
-      
-      userRef: null,
-      monthRef: null,
-      expensesRef: null,
-
-      allData: null,
-      count: 0
+      groupByRule: [],
+      groupByDebtor: [],
+      groupByPayment: [],
+      groupByProduct: [],
+      groupByCategory: [],
     }
   },
 
@@ -497,11 +452,6 @@ export default {
       })
     },
 
-    getMonthName(month){
-      const monthIndex = parseInt(month) - 1
-      return getMonths(monthIndex)
-    },
-
     async loadAllData(){
       this.groupByPayment = await dataInMonthGroupByPayment(this.yearMonth)
       this.groupByPayment.sort((a, b)=>{
@@ -524,11 +474,7 @@ export default {
       })
 
       this.groupByDebtor = await dataInMonthGroupByDebtor(this.yearMonth)
-
-      this.months = await getDatesExpenses()
-
       this.totalDeb = sum(this.groupByDebtor, 'price')
-      this.totalExp = sum(this.groupByPayment, 'price')
       this.inWallet = (this.totalDeb - sum(this.groupByPayment, 'price'));
 
       eventBus().emitter.emit("loadAllData", true);
@@ -553,141 +499,6 @@ export default {
       }
     },
 
-    // getDataByDebtor
-
-    async alertToReceiveFromThirdParties(){
-      const alert = await alertController
-        .create({
-          header: 'Alterar renda mensal',
-          inputs: [
-            {
-              name: 'name',
-              id: 'name',
-              value: '',
-              placeholder: 'Nome do devedor',
-            },
-            {
-              name: 'price',
-              id: 'price',
-              value: '',
-              placeholder: 'Digite o valor',
-              type: 'number'
-            }
-          ],
-          buttons: [
-            {
-              text: 'Salvar',
-              handler:(values)=>{
-                this.newToReceiveFromThirdParties(values)
-              }
-            },
-            {
-              text: 'Cancelar'
-            }
-          ],
-        })
-      
-      await alert.present()
-    },
-
-    newToReceiveFromThirdParties(values){
-      updateDoc(this.monthRef, {
-        toReceiveFromThirdParties : arrayUnion({name: values.name, price: parseFloat(values.price)})
-      })
-
-      this.showToast('success', this.formatMoney(parseFloat(values.price)) + ' para ' + values.name + ' inserido')
-    },
-
-    async alertUpdateEmergencyReserveGoal() {
-        const alert = await alertController
-        .create({
-          header: 'Alterar meta',
-          message: this.emergencyReserveGoal === 0 ? 'Informe uma meta para reserva de emergência' : 'Altere suma meta',
-          inputs: [
-            {
-              name: 'price',
-              id: 'price',
-              value: formatInputRealV3(this.emergencyReserveGoal),
-              placeholder: 'Digite o novo valor',
-              type: 'number',
-              step:".01"
-            }
-          ],
-          buttons: [
-            {
-              text: 'Salvar',
-              handler:(values)=>{
-                console.log(values.price)
-                this.updateEmergencyReserveGoal(formatInputReal(values.price))
-              }
-            },
-            {
-              text: 'Cancelar'
-            }
-          ],
-        })
-
-      await alert.present()
-      const price = document.getElementById('price')
-      price.focus()
-      price.addEventListener("keyup", function() {
-        console.log(price.value)
-        price.value = formatInputReal(price.value)
-      });
-    },
-
-    updateEmergencyReserveGoal(price){
-      updateDoc(userRef(), {
-        emergencyReserveGoal : parseFloat(price)
-      })
-
-      this.showToast('success', 'Meta alterada!')
-    },
-
-    async alertUpdateEmergencyReserveReached() {
-        const alert = await alertController
-        .create({
-          header: 'Alterar conquista',
-          inputs: [
-            {
-              name: 'price',
-              id: 'price',
-              value: formatInputRealV3(this.emergencyReserveReached),
-              placeholder: 'Digite o novo valor',
-              type: 'number'
-            }
-          ],
-          buttons: [
-            {
-              text: 'Salvar',
-              handler: (values) => {
-                this.updateEmergencyReserveReached(formatInputReal(values.price));
-              },
-            },
-            {
-              text: 'Cancelar'
-            },
-          ],
-        })
-      
-      await alert.present();
-
-      const price = document.getElementById('price')
-      price.focus()
-      price.addEventListener("keyup", function() {
-        console.log(price.value)
-        price.value = formatInputReal(price.value)
-      });
-    },
-
-    async updateEmergencyReserveReached(price){
-      await updateDoc(userRef(), {
-        emergencyReserveReached : parseFloat(price)
-      })
-
-      this.showToast('success', 'Conquista alterada com sucesso!')
-    },
-
     calcPercentage(value){
       if(!this.totalDeb){
         return 100
@@ -710,41 +521,6 @@ export default {
 
       return total;
     },
-
-    amountExpense(){
-      let total = 0
-      this.expenses.forEach((e)=>{
-        total += e.price
-      })
-
-      return total;
-    },
-
-    totalToreceive(){
-      let total = 0
-      this.toReceives.forEach((e)=>{
-        total += e.price
-      })
-
-      return total;
-    },
-
-    calcBarEmergencyGoal(){
-      if(this.emergencyReserveReached === 0 && this.emergencyReserveGoal === 0){
-        return 0
-      }
-
-      const result = ((this.emergencyReserveReached * 100) / this.emergencyReserveGoal)/100
-      return result
-    },
-
-    allStratched(){
-      if(this.expenses.findIndex(x => (!x.scratch)) > -1){
-        return false
-      }else{
-        return true
-      }
-    }
   }
 };
 </script>
