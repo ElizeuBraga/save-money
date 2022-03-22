@@ -71,31 +71,33 @@ export default {
 
   methods:{
     returnMonthName(key){
-      switch (key.slice(-2)) {
+      const year = key.substring(0,4)
+      const month = key.slice(-2)
+      switch (month) {
         case '01':
-          return 'Janeiro'
+          return 'Janeiro/'+year
         case '02':
-          return 'Fevereiro'
+          return 'Fevereiro/'+year
         case '03':
-          return 'Março'
+          return 'Março/'+year
         case '04':
-          return 'Abril'
+          return 'Abril/'+year
         case '05':
-          return 'Maio'
+          return 'Maio/'+year
         case '06':
-          return 'Junho'
+          return 'Junho/'+year
         case '07':
-          return 'Julho'
+          return 'Julho/'+year
         case '08':
-          return 'Agosto'
+          return 'Agosto/'+year
         case '09':
-          return 'Setembro'
+          return 'Setembro/'+year
         case '10':
-          return 'Outubro'
+          return 'Outubro/'+year
         case '11':
-          return 'Novembro'
+          return 'Novembro/'+year
         case '12':
-          return 'Dezembro'
+          return 'Dezembro/'+year
         default:
           return key;
       }
