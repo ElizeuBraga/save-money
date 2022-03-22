@@ -321,89 +321,6 @@ export default {
       })
     },
 
-    async saveOrUpdateAlertIn(doc= null, getById = false){
-      if(getById){
-        doc = await getDataByDebtorId(this.yearMonth, doc)
-      }
-
-      const expiration = dates(Date.now(), null, 1)
-
-      let html = ``
-
-      const debtors = await getPersons()
-      html+= `<select style="font-size: 16px" class="swal2-input" value="" name="debtor" id="debtor">`;
-      html += `<option value="">Selecione</option>`;
-      debtors.forEach(c => {
-        const selected = (doc && c === doc.debtor) ? 'selected' : ''
-        html += `<option value="${c}" ${selected}>${c}</option>`;
-      });
-      html += `</select>`;
-
-      html += `
-        <input style="font-size: 16px" placeholder="Valor" id="price" type="number" value="${doc ? doc.price : ''}" class="swal2-input">
-        <input style="font-size: 16px" placeholder="Parcelas" id="parcel" type="number" value="${doc ? doc.parcel : '1'}" class="swal2-input">
-      `;
-
-      html += `<input style="font-size: 16px" value="${doc ? doc.expiration : expiration}" id="expiration " type="date" class="swal2-input">`
-      
-      
-      Swal.fire({
-        title: doc ? 'Editar' : 'Novo registro',
-        html: html,
-        didOpen:()=>{
-          const price = document.getElementById('price')
-
-          price.setAttribute('autocomplete', 'off')
-          price.focus()
-        },
-        showDenyButton: true,
-        showCancelButton: true,
-        cancelButtonText:'Pagar',
-        denyButtonText:'Excluir',
-        confirmButtonText: 'Salvar',
-        confirmButtonColor: 'green',
-        cancelButtonColor: 'blue',
-        showCloseButton: true,
-        preConfirm:()=>{
-          const price = document.getElementById('price').value
-          const debtor = document.getElementById('debtor').value
-          const expiration = document.querySelector('input[type="date"]').value
-
-          if(price == '' || expiration == '' || debtor == ''){
-            Swal.showValidationMessage('Preencha todos os campos')
-          }
-        }
-      }).then((values)=>{
-        if(values.isConfirmed){
-          const price = document.getElementById('price').value
-          const expiration = document.querySelector('input[type="date"]').value
-          const debtor = document.getElementById('debtor').value
-          const parcel = document.getElementById('parcel').value
-          
-          if(doc){
-            doc.price = price
-            doc.expiration = expiration
-            doc.debtor = debtor
-            updateReceivable(doc)
-          }else{
-            insertReceivable({
-              price: price,
-              expiration: expiration,
-              debtor: debtor,
-              parcel: parseInt(parcel)
-            })
-          }
-        }else if(values.isDenied){
-          doc.deletedAt = dates(null, 'yyyy-mm-dd')
-          updateReceivable(doc)
-        }else if(values.dismiss == 'cancel'){
-          doc.paid = !doc.paid
-          updateReceivable(doc)
-        }
-        this.loadAllData()
-      })
-    },
-    
     async showInfo(item, type){
       let array = []
       let title = ''
@@ -505,21 +422,6 @@ export default {
       }
 
       return ((100 * value) / this.totalDeb).toFixed(2)
-    },
-  },
-
-  computed:{
-    emergencyGoalMissing(){
-      return this.emergencyReserveGoal > this.emergencyReserveReached ? this.emergencyReserveGoal - this.emergencyReserveReached : 0
-    },
-
-    returnTotalFromThirdParties(){
-      let total = 0
-      this.toReceiveFromThirdParties.forEach(element => {
-        total += element.price
-      });
-
-      return total;
     },
   }
 };
