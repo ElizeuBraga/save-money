@@ -118,7 +118,7 @@ export default {
       const totalExp = sum(await dataInMonthGroupByPayment(this.defaultmonth), 'price')
       this.total = (totalDeb - totalExp);
 
-      this.addNegatiValueInNextMonth()
+      await this.addNegatiValueInNextMonth()
     },
 
     sendEvent(e){
@@ -143,13 +143,19 @@ export default {
         parcel: 1
       }
 
+      const data = await getDataByDescription(`${year}-${month}`, doc.description)
       if(this.total < 0){
-        const data = await getDataByDescription(`${year}-${month}`, doc.description)
         if(data.length > 0){
             doc._id = data[0]._id
             update(doc)
         }else{
             insert(doc)
+        }
+      }else{
+        if(data.length > 0){
+            doc._id = data[0]._id
+            doc.deletedAt = dates(null, 'yyyy-mm-dd')
+            update(doc)
         }
       }
     },
