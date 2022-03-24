@@ -21,6 +21,12 @@
             </ion-col>
             <ion-item-divider></ion-item-divider>
           </ion-row>
+          <ion-row  v-if="persons.length === 0">
+            <ion-col class="ion-text-center">
+              <ion-label color="danger" style="font-style: italic">Nenhum item</ion-label>
+            </ion-col>
+            <ion-item-divider></ion-item-divider>
+          </ion-row>
         </ion-card-content>
       </ion-card>
 

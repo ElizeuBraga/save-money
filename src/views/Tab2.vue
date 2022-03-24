@@ -23,7 +23,13 @@
             </ion-col>
             <ion-item-divider></ion-item-divider>
           </ion-row>
-          <ion-row style="font-weight: bold">
+          <ion-row  v-if="groupByDebtor.length === 0">
+            <ion-col class="ion-text-center">
+              <ion-label color="danger" style="font-style: italic">Nenhum item</ion-label>
+            </ion-col>
+            <ion-item-divider></ion-item-divider>
+          </ion-row>
+          <ion-row v-else style="font-weight: bold">
             <ion-col>
               <ion-label>Total:</ion-label>
             </ion-col>
