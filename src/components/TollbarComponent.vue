@@ -138,7 +138,7 @@ export default {
         price: parseFloat(Math.abs(this.total)).toFixed(2),
         rule: "30",
         category: 'Gasto extra',
-        payment: 'Débito',
+        payment: 'Reserva de emergência',
         expiration: `${year}-${month}-${day}`,
         parcel: 1
       }
@@ -147,8 +147,11 @@ export default {
       if(this.total < 0){
         if(data.length > 0){
             doc._id = data[0]._id
+            doc.deletedAt = null
             update(doc)
+            console.log('Atualizado 1')
         }else{
+            console.log('Inserido')
             insert(doc)
         }
       }else{
@@ -156,6 +159,7 @@ export default {
             doc._id = data[0]._id
             doc.deletedAt = dates(null, 'yyyy-mm-dd')
             update(doc)
+            console.log('Atualizado 2')
         }
       }
     },
