@@ -24,7 +24,10 @@ import {
 } from '@ionic/vue'
 
 import {
+  insert,
+  update, 
   getDatesExpenses,
+  getDataByDescription,
   dataInMonthGroupByPayment,
 } from '../models/expense'
 
@@ -36,6 +39,7 @@ import {
 import {
   sum,
   dates,
+  addZero
 } from '../Helper'
 
 import eventBus from '../eventBus';
@@ -113,6 +117,8 @@ export default {
       const totalDeb = sum(await dataInMonthGroupByDebtor(this.defaultmonth), 'price')
       const totalExp = sum(await dataInMonthGroupByPayment(this.defaultmonth), 'price')
       this.total = (totalDeb - totalExp);
+
+      this.addNegatiValueInNextMonth()
     },
 
     sendEvent(e){
@@ -120,6 +126,32 @@ export default {
       eventBus().emitter.emit("changeMonthSelect", this.defaultmonth);
 
       this.loadAllData()
+    },
+
+    async addNegatiValueInNextMonth(){
+      const year = this.defaultmonth.substring(0,4)
+      const month = addZero(parseInt(this.defaultmonth.slice(-2))+1)
+      const day = "10"
+
+      const doc = {
+        description: 'Mês anterior',
+        price: parseFloat(Math.abs(this.total)).toFixed(2),
+        rule: "30",
+        category: 'Gasto extra',
+        payment: 'Débito',
+        expiration: `${year}-${month}-${day}`,
+        parcel: 1
+      }
+
+      if(this.total < 0){
+        const data = await getDataByDescription(`${year}-${month}`, doc.description)
+        if(data.length > 0){
+            doc._id = data[0]._id
+            update(doc)
+        }else{
+            insert(doc)
+        }
+      }
     },
 
     formatMoney(amount) {

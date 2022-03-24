@@ -5,6 +5,7 @@ const model = 'expenses'
 
 interface Expense {
     _id: string;
+    description: string;
     createdAt: string;
     deletedAt: any;
     updatedAt: any;
@@ -58,9 +59,9 @@ export function getPaid(yearMonth: string){
     })
 }
 
-export function getDataByDescription(yearMonth: string, description: string, paid: boolean){
+export function getDataByDescription(yearMonth: string, description: string){
     return new Promise((resolve) =>{
-        db.find({description: description, paid: paid, deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
+        db.find({description: description, deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
             resolve(docs)
         });
     })
