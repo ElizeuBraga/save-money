@@ -252,3 +252,11 @@ export function getDeletedExpense(yearMonth: string){
         });
     })
 }
+
+export function updateExpenseCategory(oldCategory: string, newCategory: string){
+    db.update({ category: oldCategory }, { $set: {category: newCategory, updatedAt: dates(Date.now(), 'yyyy-mm-dd')}}, {multi: true});
+}
+
+export function updateExpensePayment(oldPayment: string, newPayment: string){
+    db.update({ payment: oldPayment }, { $set: {payment: newPayment, updatedAt: dates(Date.now(), 'yyyy-mm-dd')}}, {multi: true});
+}

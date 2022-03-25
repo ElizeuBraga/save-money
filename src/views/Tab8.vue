@@ -51,6 +51,10 @@ import {
   insertPayment
 } from '../models/payments'
 
+import {
+  updateExpensePayment
+} from '../models/expense'
+
 export default  {
   name: 'Tab3',
   components: {
@@ -95,6 +99,7 @@ export default  {
       }).then(async (values)=>{
         if(values.isConfirmed){
           if(payment){
+            updateExpensePayment(payment.name, values.value)
             payment.name = values.value
             updatePayment(payment)
           }else{
