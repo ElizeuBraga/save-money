@@ -3,7 +3,8 @@ import {dates} from '../Helper'
 const db = new Datastore({ filename: 'src/database/db.db', autoload: true })
 const model = 'categories'
 
-interface Person {
+export interface Category {
+    _id: string;
     name: string;
 }
 
@@ -44,7 +45,7 @@ export function getCategorys(){
     return new Promise((resolve) =>{
         const response: Array<string> = []
         db.find({model: model}, function (err: any, docs: any) {
-            docs.forEach((element: Person) => {
+            docs.forEach((element: Category) => {
                 response.push(element.name)
             });
             resolve(response)
@@ -52,10 +53,9 @@ export function getCategorys(){
     })
 }
 
-export function getAllCategorys(){
+export function getAllCategorys<Category>(){
     return new Promise((resolve) =>{
-        const response: Array<string> = []
-        db.find({model: model}, function (err: any, docs: any) {
+        db.find({model: model}, function (err: any, docs: Array<Category>) {
             resolve(docs)
         });
     })
