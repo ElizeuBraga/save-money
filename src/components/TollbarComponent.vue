@@ -37,12 +37,20 @@ import {
 } from '../models/receivables'
 
 import {
+  insertSystem,
+  updateSystem,
+  systemExists
+} from '../models/system'
+
+import {
   sum,
   dates,
   addZero
 } from '../Helper'
 
 import eventBus from '../eventBus';
+
+import json from '../../package.json';
 
 export default {
   components:{
@@ -119,6 +127,16 @@ export default {
       this.total = (totalDeb - totalExp);
 
       await this.addNegatiValueInNextMonth()
+
+      const doc = {
+        version: json.version
+      }
+
+      if(!await systemExists()){
+        insertSystem(doc)
+      }else{
+        updateSystem(doc)
+      }
     },
 
     sendEvent(e){
