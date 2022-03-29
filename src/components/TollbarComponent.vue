@@ -167,9 +167,7 @@ export default {
             doc._id = data[0]._id
             doc.deletedAt = null
             update(doc)
-            console.log('Atualizado 1')
         }else{
-            console.log('Inserido')
             insert(doc)
         }
       }else{

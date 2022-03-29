@@ -28,7 +28,6 @@ export function updateSystem(doc: any){
 export function systemExists(){
     return new Promise((resolve) =>{
         db.find({model: model}, function (err: any, docs: any) {
-            console.log(docs)
             if(docs.length > 0){
                 resolve(true)    
             }

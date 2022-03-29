@@ -431,8 +431,6 @@ export default {
         return a.description.localeCompare(b.description)
       })
 
-      console.log(this.groupByProduct)
-
       this.groupByDebtor = await dataInMonthGroupByDebtor(this.yearMonth)
       this.totalDeb = sum(this.groupByDebtor, 'price')
       this.inWallet = (this.totalDeb - sum(this.groupByPayment, 'price'));
