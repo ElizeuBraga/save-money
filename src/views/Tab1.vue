@@ -14,7 +14,7 @@
           Por pagamento
         </ion-card-title>
         <ion-card-content>
-          <ion-row  v-for="item in groupByPayment" :key="item" @click="showInfo(item, 'payment')">
+          <ion-row :style="item.paid ? 'text-decoration: line-through; opacity: 0.5;' : ''"  v-for="item in groupByPayment" :key="item" @click="showInfo(item, 'payment')">
             <ion-col>
               <ion-label>{{item.payment ? item.payment : '-'}}</ion-label>
             </ion-col>
@@ -45,7 +45,7 @@
           Por regra
         </ion-card-title>
         <ion-card-content>
-          <ion-row  v-for="item in groupByRule" :key="item" @click="showInfo(item, 'rule')">
+          <ion-row :style="item.paid ? 'text-decoration: line-through; opacity: 0.5;' : ''"  v-for="item in groupByRule" :key="item" @click="showInfo(item, 'rule')">
             <ion-col>
               <ion-label :color="returnColor(item)">{{item.rule ? item.rule: '-'}}</ion-label>
             </ion-col>
@@ -79,7 +79,7 @@
           Por categoria
         </ion-card-title>
         <ion-card-content>
-          <ion-row  v-for="item in groupByCategory" :key="item" @click="showInfo(item, 'category')">
+          <ion-row :style="item.paid ? 'text-decoration: line-through; opacity: 0.5;' : ''"  v-for="item in groupByCategory" :key="item" @click="showInfo(item, 'category')">
             <ion-col>
               <ion-label>{{item.category ? item.category: '-'}}</ion-label>
             </ion-col>
@@ -110,7 +110,7 @@
           Por produto
         </ion-card-title>
         <ion-card-content>
-          <ion-row  v-for="item in groupByProduct" :key="item" @click="showInfo(item, 'product')">
+          <ion-row :style="item.paid ? 'text-decoration: line-through; opacity: 0.5;' : ''"  v-for="item in groupByProduct" :key="item" @click="showInfo(item, 'product')">
             <ion-col>
               <ion-label>{{item.description ? item.description: '-'}}</ion-label>
             </ion-col>
@@ -382,8 +382,9 @@ export default {
           html += `<h3>${title}</h3>`
           html +=``
           array.forEach(element => {
+            const style = element.paid ? 'text-decoration: line-through; opacity: 0.5;' : ''
             html +=`
-              <div id="row" class="row">
+              <div style="${style}" id="row" class="row">
                   <div class="col-6" style="display: none">${element._id}</div>
                   <div class="col-6 ion-text-left">${element.description}</div>
                   <div class="col-6 ion-text-right">${this.formatMoney(element.price)}</div>
@@ -429,6 +430,8 @@ export default {
       this.groupByProduct.sort((a, b)=>{
         return a.description.localeCompare(b.description)
       })
+
+      console.log(this.groupByProduct)
 
       this.groupByDebtor = await dataInMonthGroupByDebtor(this.yearMonth)
       this.totalDeb = sum(this.groupByDebtor, 'price')

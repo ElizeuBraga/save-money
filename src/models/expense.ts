@@ -89,9 +89,14 @@ export function dataInMonthGroupByProduct(yearMonth: string){
             const result: any = []
             docs.reduce(function(res: any, value: any) {
                 if (!res[value.description]) {
-                    res[value.description] = {description: value.description, price: 0, quantity: 0};
+                    res[value.description] = {description: value.description, price: 0, quantity: 0, paid: true};
                     result.push(res[value.description])
                 }
+
+                if(!value.paid){
+                    res[value.description].paid = false
+                }
+                
                 res[value.description].price += parseFloat(value.price);
                 res[value.description].quantity += 1
                 return res;
@@ -108,9 +113,14 @@ export function dataInMonthGroupByCategory(yearMonth: string){
             const result: any = []
             docs.reduce(function(res: any, value: any) {
                 if (!res[value.category]) {
-                    res[value.category] = {category: value.category, price: 0, quantity: 0};
+                    res[value.category] = {category: value.category, price: 0, quantity: 0, paid: true};
                     result.push(res[value.category])
                 }
+
+                if(!value.paid){
+                    res[value.category].paid = false
+                }
+
                 res[value.category].price += parseFloat(value.price);
                 res[value.category].quantity += 1
                 return res;
@@ -127,9 +137,14 @@ export function dataInMonthGroupByRule(yearMonth: string){
             const result: any = []
             docs.reduce(function(res: any, value: any) {
                 if (!res[value.rule]) {
-                    res[value.rule] = {rule: value.rule, price: 0, quantity: 0};
+                    res[value.rule] = {rule: value.rule, price: 0, quantity: 0, paid: true};
                     result.push(res[value.rule])
                 }
+
+                if(!value.paid){
+                    res[value.rule].paid = false
+                }
+
                 res[value.rule].price += parseFloat(value.price);
                 res[value.rule].quantity += 1
                 return res;
@@ -146,9 +161,14 @@ export function dataInMonthGroupByPayment(yearMonth: string){
             const result: any = []
             docs.reduce(function(res: any, value: any) {
                 if (!res[value.payment]) {
-                    res[value.payment] = {payment: value.payment, price: 0, quantity: 0};
+                    res[value.payment] = {payment: value.payment, price: 0, quantity: 0, paid: true};
                     result.push(res[value.payment])
                 }
+
+                if(!value.paid){
+                    res[value.payment].paid = false
+                }
+
                 res[value.payment].price += parseFloat(value.price);
                 res[value.payment].quantity += 1
                 return res;
