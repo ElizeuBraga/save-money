@@ -386,7 +386,7 @@ export default {
             html +=`
               <div style="${style}" id="row" class="row">
                   <div class="col-6" style="display: none">${element._id}</div>
-                  <div class="col-6 ion-text-left">${element.description}</div>
+                  <div class="col-6 ion-text-left">${element.description} <span style="font-size: 11px">${element.parcelInfo ? element.parcelInfo : ''}</span></div>
                   <div class="col-6 ion-text-right">${this.formatMoney(element.price)}</div>
               </div>
               <hr>

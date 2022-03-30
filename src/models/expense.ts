@@ -27,6 +27,8 @@ export function insert(doc: Expense){
         
         let start = parseInt(dates(doc.expiration, 'mm'))
         let month = parseInt(dates(doc.expiration, 'mm'))
+        let countParcel = 1;
+
         const expiration = doc.expiration
         const end = (doc.parcel + start)
         let year = parseInt(dates(expiration, 'yyyy'))
@@ -37,11 +39,13 @@ export function insert(doc: Expense){
             }
             
             const newDoc = JSON.parse(JSON.stringify(doc))
+            newDoc.parcelInfo = `${countParcel}/${doc.parcel}`
             newDoc.expiration = String(year) + '-' + addZero(month) + '-' + dates(expiration, 'dd')
             db.insert(newDoc)
             
             month ++
             start ++
+            countParcel ++
         }
     })
 }
