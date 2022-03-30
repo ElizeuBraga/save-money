@@ -156,7 +156,7 @@ export default {
         price: parseFloat(Math.abs(this.total)).toFixed(2),
         rule: "30",
         category: 'Gasto extra',
-        payment: 'Reserva de emergência',
+        payment: 'Reserva',
         expiration: `${year}-${month}-${day}`,
         parcel: 1
       }
