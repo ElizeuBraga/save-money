@@ -125,9 +125,14 @@ export function dataInMonthGroupByDebtor(yearMonth: string){
             const result: any = []
             docs.reduce(function(res: any, value: any) {
                 if (!res[value.debtor]) {
-                    res[value.debtor] = {debtor: value.debtor, price: 0, quantity: 0};
+                    res[value.debtor] = {debtor: value.debtor, price: 0, quantity: 0, paid: true};
                     result.push(res[value.debtor])
                 }
+
+                if(!value.paid){
+                    res[value.debtor].paid = false
+                }
+
                 res[value.debtor].price += parseFloat(value.price);
                 res[value.debtor].quantity += 1
                 return res;

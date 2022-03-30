@@ -14,7 +14,7 @@
           Entradas
         </ion-card-title>
         <ion-card-content>
-          <ion-row  v-for="item in groupByDebtor" :key="item" @click="showInfoReceivables(item.debtor)">
+          <ion-row :style="item.paid ? 'text-decoration: line-through; opacity: 0.5;' : ''"  v-for="item in groupByDebtor" :key="item" @click="showInfoReceivables(item.debtor)">
             <ion-col>
               <ion-label>{{item.debtor}}</ion-label>
             </ion-col>
@@ -134,8 +134,9 @@ export default {
       let html = `<div id="${debtor ? 'tableReceivables2' : 'tableReceivables'}" class="container">`
       html += `<h4>${debtor}</h4>`
           array.forEach(element => {
+            const style = element.paid ? 'text-decoration: line-through; opacity: 0.5;' : ''
             html +=`
-              <div id="row" class="row">
+              <div style="${style}" id="row" class="row">
                 <div style="display: none" class="col-6 ion-text-left">${debtor ? element._id : ''}</div>
                 <div class="col-6 ion-text-left">${element.description? element.description : '-'}</div>
                 <div class="col-6 ion-text-right">${this.formatMoney(element.price)}</div>
@@ -143,13 +144,19 @@ export default {
               <hr>
             `
           });
+          html+=`
+            <div id="row" class="row" style="font-weight: bold">
+              <div class="col-6 ion-text-left">Total:</div>
+              <div class="col-6 ion-text-right">${this.formatMoney(sum(array, 'price'))}</div>
+            </div>`;
 
           html+=`</div>`;
+
       
       Swal.fire({
         html: html,
         showCloseButton: true,
-        showConfirmButton: true,
+        showConfirmButton: false,
         didOpen:()=>{
           if(debtor){
             this.addRowHandlersReceiv2()
