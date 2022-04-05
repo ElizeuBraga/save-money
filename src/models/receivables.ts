@@ -1,5 +1,6 @@
 import Datastore from 'nedb'
 import {dates, addZero} from '../Helper'
+import {insertDoc, updateDoc} from './db'
 const db = new Datastore({ filename: 'src/database/db.db', autoload: true })
 const model = 'receivables'
 
@@ -34,7 +35,7 @@ export function insertReceivable(doc: Receivable){
         
         const newDoc = JSON.parse(JSON.stringify(doc))
         newDoc.expiration = String(year) + '-' + addZero(month) + '-' + dates(expiration, 'dd')
-        db.insert(newDoc)
+        insertDoc(newDoc)
         
         month ++
         start ++
@@ -49,8 +50,7 @@ export function update(){
 }
 
 export function updateReceivable(doc: Receivable){
-    doc.updatedAt = dates(Date.now(), 'yyyy-mm-dd')
-    db.update({ _id: doc._id }, { $set: doc });
+    updateDoc(doc)
 }
 
 export function updateReceivablePerson(oldDebtor: string, newDebtor: string){

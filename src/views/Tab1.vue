@@ -227,6 +227,8 @@ export default {
       await this.loadAllData()
     });
     await this.loadAllData()
+
+    // updateLocal()
   },
 
   methods: {

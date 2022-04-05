@@ -24,8 +24,6 @@ import {
 } from '@ionic/vue'
 
 import {
-  insert,
-  update, 
   getDatesExpenses,
   getDataByDescription,
   dataInMonthGroupByPayment,
@@ -37,8 +35,6 @@ import {
 } from '../models/receivables'
 
 import {
-  insertSystem,
-  updateSystem,
   systemExists
 } from '../models/system'
 
@@ -47,6 +43,10 @@ import {
   dates,
   addZero
 } from '../Helper'
+
+import {
+  insertDoc, updateDoc
+} from '../models/db'
 
 import eventBus from '../eventBus';
 
@@ -128,14 +128,12 @@ export default {
 
       await this.addNegatiValueInNextMonth()
 
-      const doc = {
-        version: json.version
-      }
-
-      if(!await systemExists()){
-        insertSystem(doc)
+      const system = await systemExists()
+      system.version = json.version
+      if(!system){
+        insertDoc(system)
       }else{
-        updateSystem(doc)
+        updateDoc(system)
       }
     },
 
@@ -166,16 +164,15 @@ export default {
         if(data.length > 0){
             doc._id = data[0]._id
             doc.deletedAt = null
-            update(doc)
+            updateDoc(doc)
         }else{
-            insert(doc)
+            insertDoc(doc)
         }
       }else{
         if(data.length > 0){
             doc._id = data[0]._id
             doc.deletedAt = dates(null, 'yyyy-mm-dd')
-            update(doc)
-            console.log('Atualizado 2')
+            updateDoc(doc)
         }
       }
     },

@@ -1,5 +1,7 @@
 import Datastore from 'nedb'
 import {addZero, dates} from '../Helper'
+import {backup} from './backup'
+import {insertDoc, updateDoc} from './db'
 const db = new Datastore({ filename: 'src/database/db.db', autoload: true })
 const model = 'expenses'
 
@@ -41,8 +43,8 @@ export function insert(doc: Expense){
             const newDoc = JSON.parse(JSON.stringify(doc))
             newDoc.parcelInfo = `${countParcel}/${doc.parcel}`
             newDoc.expiration = String(year) + '-' + addZero(month) + '-' + dates(expiration, 'dd')
-            db.insert(newDoc)
-            
+            insertDoc(newDoc)
+
             month ++
             start ++
             countParcel ++
@@ -51,8 +53,7 @@ export function insert(doc: Expense){
 }
 
 export function update(doc: Expense){
-    doc.updatedAt = dates(Date.now(), 'yyyy-mm-dd')
-    db.update({ _id: doc._id }, { $set: doc });
+    updateDoc(doc)
 }
 
 export function getPaid(yearMonth: string){

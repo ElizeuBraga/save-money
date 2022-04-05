@@ -1,5 +1,18 @@
 import { createApp } from 'vue'
 import { IonicVue } from '@ionic/vue';
+import { initializeApp } from "firebase/app";
+
+const firebaseConfig = {
+  apiKey: process.env.VUE_APP_FIRE_API_KEY,
+  authDomain: process.env.VUE_APP_FIRE_AUTH_DOMAIN,
+  projectId: process.env.VUE_APP_FIRE_PROJECT_ID,
+  storageBucket: process.env.VUE_APP_FIRE_STORAGE_BUCKET,
+  messagingSenderId: process.env.VUE_APP_FIRE_MESSAGING_SENDER_ID,
+  appId: process.env.VUE_APP_FIRE_APP_ID,
+  measurementId: process.env.VUE_APP_FIRE_MEASUREMENT_ID
+};
+
+initializeApp(firebaseConfig);
 
 import App from './App.vue'
 import router from './router';
