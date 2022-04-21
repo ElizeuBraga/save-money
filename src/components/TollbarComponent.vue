@@ -24,6 +24,10 @@ import {
 } from '@ionic/vue'
 
 import {
+  insertDoc, updateDoc
+} from '../models/db'
+
+import {
   getDatesExpenses,
   getDataByDescription,
   dataInMonthGroupByPayment,
@@ -44,9 +48,6 @@ import {
   addZero
 } from '../Helper'
 
-import {
-  insertDoc, updateDoc
-} from '../models/db'
 
 import eventBus from '../eventBus';
 
@@ -129,11 +130,11 @@ export default {
       await this.addNegatiValueInNextMonth()
 
       const system = await systemExists()
-      system.version = json.version
+      // system.version = json.version
       if(!system){
-        insertDoc(system)
+        // insertDoc(system)
       }else{
-        updateDoc(system)
+        // updateDoc(system)
       }
     },
 

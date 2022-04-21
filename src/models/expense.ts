@@ -1,7 +1,6 @@
 import Datastore from 'nedb'
 import {addZero, dates} from '../Helper'
-import {backup} from './backup'
-import {insertDoc, updateDoc} from './db'
+import {insertDoc, updateDoc, select} from './db'
 const db = new Datastore({ filename: 'src/database/db.db', autoload: true })
 const model = 'expenses'
 
@@ -52,8 +51,10 @@ export function insert(doc: Expense){
     })
 }
 
-export function update(doc: Expense){
-    updateDoc(doc)
+export async function update(doc: Expense){
+    return new Promise((resolve) =>{
+        resolve(updateDoc(doc))
+    })
 }
 
 export function getPaid(yearMonth: string){
@@ -160,27 +161,28 @@ export function dataInMonthGroupByRule(yearMonth: string){
     })
 }
 
-export function dataInMonthGroupByPayment(yearMonth: string){
+export async function dataInMonthGroupByPayment(yearMonth: string){
+    const params = {deletedAt: null, expiration: new RegExp(yearMonth), model: model}
+    const docs: Array<Expense> = await select(params) as Array<Expense>
+
     return new Promise((resolve) =>{
-        db.find({deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
-            const result: any = []
-            docs.reduce(function(res: any, value: any) {
-                if (!res[value.payment]) {
-                    res[value.payment] = {payment: value.payment, price: 0, quantity: 0, paid: true};
-                    result.push(res[value.payment])
-                }
+        const result: any = []
+        docs.reduce(function(res: any, value: any) {
+            if (!res[value.payment]) {
+                res[value.payment] = {payment: value.payment, price: 0, quantity: 0, paid: true};
+                result.push(res[value.payment])
+            }
 
-                if(!value.paid){
-                    res[value.payment].paid = false
-                }
+            if(!value.paid){
+                res[value.payment].paid = false
+            }
 
-                res[value.payment].price += parseFloat(value.price);
-                res[value.payment].quantity += 1
-                return res;
-            }, {});
+            res[value.payment].price += parseFloat(value.price);
+            res[value.payment].quantity += 1
+            return res;
+        }, {});
 
-            resolve(result)
-        });
+        resolve(result)
     })
 }
 

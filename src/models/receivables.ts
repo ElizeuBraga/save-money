@@ -1,6 +1,6 @@
 import Datastore from 'nedb'
 import {dates, addZero} from '../Helper'
-import {insertDoc, updateDoc} from './db'
+import {insertDoc, select, updateDoc} from './db'
 const db = new Datastore({ filename: 'src/database/db.db', autoload: true })
 const model = 'receivables'
 
@@ -119,33 +119,41 @@ export function getDatesReceivables(){
     })
 }
 
-export function dataInMonthGroupByDebtor(yearMonth: string){
+export async function dataInMonthGroupByDebtor(yearMonth: string){
+    const params = {deletedAt: null, expiration: new RegExp(yearMonth), model: model}
+    const docs: Array<Receivable> = await select(params) as Array<Receivable>
     return new Promise((resolve) =>{
-        db.find({deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
-            const result: any = []
-            docs.reduce(function(res: any, value: any) {
-                if (!res[value.debtor]) {
-                    res[value.debtor] = {debtor: value.debtor, price: 0, quantity: 0, paid: true};
-                    result.push(res[value.debtor])
-                }
+        const result: any = []
+        docs.reduce(function(res: any, value: any) {
+            if (!res[value.debtor]) {
+                res[value.debtor] = {debtor: value.debtor, price: 0, quantity: 0, paid: true};
+                result.push(res[value.debtor])
+            }
 
-                if(!value.paid){
-                    res[value.debtor].paid = false
-                }
+            if(!value.paid){
+                res[value.debtor].paid = false
+            }
 
-                res[value.debtor].price += parseFloat(value.price);
-                res[value.debtor].quantity += 1
-                return res;
-            }, {});
-            
-            resolve(result)
-        });
+            res[value.debtor].price += parseFloat(value.price);
+            res[value.debtor].quantity += 1
+            return res;
+        }, {});
+        
+        resolve(result)
     })
 }
 
 export function getDataByDebtor(yearMonth: string, debtor: string){
     return new Promise((resolve) =>{
         db.find({debtor: debtor, deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
+            resolve(docs)
+        });
+    })
+}
+
+export function getReceivableByDescription(yearMonth: string, description: string){
+    return new Promise((resolve) =>{
+        db.find({description: description, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
             resolve(docs)
         });
     })
