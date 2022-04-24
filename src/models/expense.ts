@@ -1,6 +1,6 @@
 import Datastore from 'nedb'
 import {addZero, dates} from '../Helper'
-import {insertDoc, updateDoc, select} from './db'
+import {insertDoc, updateDoc, select, selectOne} from './db'
 const db = new Datastore({ filename: 'src/database/db.db', autoload: true })
 const model = 'expenses'
 
@@ -65,12 +65,9 @@ export function getPaid(yearMonth: string){
     })
 }
 
-export function getDataByDescription(yearMonth: string, description: string){
-    return new Promise((resolve) =>{
-        db.find({description: description, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
-            resolve(docs)
-        });
-    })
+export async function getDataByDescription(params: any){
+    const data = await selectOne(params) 
+    console.log(data)
 }
 
 export function getDataById(id: boolean){

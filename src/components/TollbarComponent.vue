@@ -160,20 +160,25 @@ export default {
         parcel: 1
       }
 
-      const data = await getDataByDescription(`${year}-${month}`, doc.description)
+      const params = {description: doc.description, expiration: new RegExp(`${year}-${month}`), model: 'expenses'}
+
+      const data = await getDataByDescription(params)
+
+      console.log(data)
+
       if(this.total < 0){
-        if(data.length > 0){
+        if(data){
             doc._id = data[0]._id
             doc.deletedAt = null
-            updateDoc(doc)
+            // updateDoc(doc)
         }else{
-            insertDoc(doc)
+            // insertDoc(doc)
         }
       }else{
-        if(data.length > 0){
+        if(data){
             doc._id = data[0]._id
             doc.deletedAt = dates(null, 'yyyy-mm-dd')
-            updateDoc(doc)
+            // updateDoc(doc)
         }
       }
     },

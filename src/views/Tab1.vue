@@ -170,6 +170,10 @@ import {
 } from '../models/receivables'
 
 import { 
+  restore, 
+} from '../models/backup'
+
+import { 
   update, 
   insert,
   getDataById, 
@@ -228,6 +232,7 @@ export default {
     });
     await this.loadAllData()
 
+  restore()
     // updateLocal()
   },
 
