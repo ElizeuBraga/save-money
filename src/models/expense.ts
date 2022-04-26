@@ -86,9 +86,11 @@ export function getUnPaid(yearMonth: string){
     })
 }
 
-export function dataInMonthGroupByProduct(yearMonth: string){
+export async function dataInMonthGroupByProduct(yearMonth: string){
+    const params = {deletedAt: null, expiration: new RegExp(yearMonth), model: model}
+    const docs: Array<Expense> = await select(params) as Array<Expense>
+
     return new Promise((resolve) =>{
-        db.find({deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
             const result: any = []
             docs.reduce(function(res: any, value: any) {
                 if (!res[value.description]) {
@@ -106,13 +108,14 @@ export function dataInMonthGroupByProduct(yearMonth: string){
             }, {});
             
             resolve(result)
-        });
     })
 }
 
-export function dataInMonthGroupByCategory(yearMonth: string){
+export async function dataInMonthGroupByCategory(yearMonth: string){
+    const params = {deletedAt: null, expiration: new RegExp(yearMonth), model: model}
+    const docs: Array<Expense> = await select(params) as Array<Expense>
+
     return new Promise((resolve) =>{
-        db.find({deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
             const result: any = []
             docs.reduce(function(res: any, value: any) {
                 if (!res[value.category]) {
@@ -130,13 +133,13 @@ export function dataInMonthGroupByCategory(yearMonth: string){
             }, {});
 
             resolve(result)
-        });
     })
 }
 
-export function dataInMonthGroupByRule(yearMonth: string){
+export async function dataInMonthGroupByRule(yearMonth: string){
+    const params = {deletedAt: null, expiration: new RegExp(yearMonth), model: model}
+    const docs: Array<Expense> = await select(params) as Array<Expense>
     return new Promise((resolve) =>{
-        db.find({deletedAt: null, expiration: new RegExp(yearMonth), model: model}, function (err: any, docs: any) {
             const result: any = []
             docs.reduce(function(res: any, value: any) {
                 if (!res[value.rule]) {
@@ -154,7 +157,6 @@ export function dataInMonthGroupByRule(yearMonth: string){
             }, {});
 
             resolve(result)
-        });
     })
 }
 

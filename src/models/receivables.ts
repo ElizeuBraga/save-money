@@ -122,6 +122,7 @@ export function getDatesReceivables(){
 export async function dataInMonthGroupByDebtor(yearMonth: string){
     const params = {deletedAt: null, expiration: new RegExp(yearMonth), model: model}
     const docs: Array<Receivable> = await select(params) as Array<Receivable>
+    
     return new Promise((resolve) =>{
         const result: any = []
         docs.reduce(function(res: any, value: any) {

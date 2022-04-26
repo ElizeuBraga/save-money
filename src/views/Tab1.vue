@@ -232,7 +232,7 @@ export default {
     });
     await this.loadAllData()
 
-  restore()
+    restore()
     // updateLocal()
   },
 

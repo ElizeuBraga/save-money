@@ -128,14 +128,6 @@ export default {
       this.total = (totalDeb - totalExp);
 
       await this.addNegatiValueInNextMonth()
-
-      const system = await systemExists()
-      // system.version = json.version
-      if(!system){
-        // insertDoc(system)
-      }else{
-        // updateDoc(system)
-      }
     },
 
     sendEvent(e){
@@ -163,8 +155,6 @@ export default {
       const params = {description: doc.description, expiration: new RegExp(`${year}-${month}`), model: 'expenses'}
 
       const data = await getDataByDescription(params)
-
-      console.log(data)
 
       if(this.total < 0){
         if(data){
