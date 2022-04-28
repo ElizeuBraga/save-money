@@ -411,13 +411,14 @@ export default {
       Swal.fire({
         html: html,
         showCloseButton: true,
+        showConfirmButton: (item.payment === 'Crédito'),
         confirmButtonText: 'Diferença',
         didOpen:()=>{
           this.addRowHandlers()
         }
       }).then((values)=>{
         if(values.isConfirmed){
-          this.showDiff()
+          this.showDiff(array)
         }
       })
     },
@@ -477,7 +478,7 @@ export default {
       return ((100 * value) / this.totalDeb).toFixed(2)
     },
 
-    showDiff(){
+    showDiff(arrayExpenses){
       Swal.fire({
         input: 'textarea',
         confirmButtonText: 'Verificar'
@@ -492,10 +493,8 @@ export default {
           }
         })
 
-        const array2 = await getDataByPayment(this.yearMonth, 'Débito')
-
         const arrayValues2 = []
-        array2.forEach((element)=>{
+        arrayExpenses.forEach((element)=>{
           arrayValues2.push(parseFloat(element.price).toFixed(2).replace('.', ','))
         })
 
