@@ -208,17 +208,18 @@ export function getDatesExpenses(){
     })
 }
 
-export function getDataByPayment(yearMonth: string, payment: string){
-    const object = {
+export async function getDataByPayment(yearMonth: string, payment: string){
+    const params = {
         deletedAt: null, 
         expiration: new RegExp(yearMonth), 
         model: model,
         payment: payment
     }
+
+    const docs: Array<Expense> = await select(params) as Array<Expense>
+
     return new Promise((resolve) =>{
-        db.find(object, function (err: any, docs: any) {
-            resolve(docs)
-        });
+        resolve(docs)
     })
 }
 

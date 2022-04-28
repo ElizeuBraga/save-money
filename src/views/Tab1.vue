@@ -225,6 +225,7 @@ export default {
   },
 
   async mounted() {
+
     this.yearMonth = dates(null, 'yyyy-mm', 1);
     eventBus().emitter.on("changeMonthSelect", async (e)=>{
       this.yearMonth = e
@@ -233,7 +234,7 @@ export default {
     await this.loadAllData()
 
     restore()
-    // updateLocal()
+    
   },
 
   methods: {
@@ -410,9 +411,13 @@ export default {
       Swal.fire({
         html: html,
         showCloseButton: true,
-        showConfirmButton: false,
+        confirmButtonText: 'Diferença',
         didOpen:()=>{
           this.addRowHandlers()
+        }
+      }).then((values)=>{
+        if(values.isConfirmed){
+          this.showDiff()
         }
       })
     },
@@ -471,6 +476,42 @@ export default {
 
       return ((100 * value) / this.totalDeb).toFixed(2)
     },
+
+    showDiff(){
+      Swal.fire({
+        input: 'textarea',
+        confirmButtonText: 'Verificar'
+      }).then(async (values)=>{
+        const stringValues = values.value
+        const array1 = stringValues.split(' ')
+
+        const arrayValues1 = []
+        array1.forEach((element)=>{
+          if(element.includes(',') && !element.includes('-')){
+            arrayValues1.push(element)
+          }
+        })
+
+        const array2 = await getDataByPayment(this.yearMonth, 'Débito')
+
+        const arrayValues2 = []
+        array2.forEach((element)=>{
+          arrayValues2.push(parseFloat(element.price).toFixed(2).replace('.', ','))
+        })
+
+      
+        const difference = arrayValues1.filter(x => !arrayValues2.includes(x));
+
+        let text = ''
+        difference.forEach((element)=>{
+          text += '<p>->' + element + '</p></br>'
+        })
+
+        Swal.fire({
+          html: text
+        })
+      })
+    }
   }
 };
 </script>
