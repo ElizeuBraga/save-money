@@ -411,7 +411,7 @@ export default {
       Swal.fire({
         html: html,
         showCloseButton: true,
-        showConfirmButton: (item.payment === 'Crédito'),
+        showConfirmButton: (item.payment === 'Crédito Nubank'),
         confirmButtonText: 'Diferença',
         didOpen:()=>{
           this.addRowHandlers()
